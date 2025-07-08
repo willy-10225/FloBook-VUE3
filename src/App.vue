@@ -1,54 +1,96 @@
 <template>
-  <v-dialog v-model="showDialog" max-width="400">
-    <v-card>
-      <v-card-text class="text-center">
-        <template v-if="isLoading">
-          <v-progress-circular indeterminate color="primary" size="40" />
-          <div class="mt-3">Loading, please wait...</div>
-        </template>
-        <template v-else>
-          <v-icon color="success" size="48">mdi-check-circle</v-icon>
-          <div class="mt-3">Load successful!</div>
-        </template>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="closeDialog">Close</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <div id="app" v-shortkey="shortkeys" @shortkey="shortkeyAction">
+    <router-view />
+    <loading />
+  </div>
 </template>
 
-<script setup lang="ts">
-import { ref, watch } from "vue"
+<script lang="ts">
+import { defineComponent, onMounted, reactive } from "vue"
+import { useStore } from "vuex"
+import Loading from "@/components/common/Loading.vue"
 
-// 假設用 props 或 Vuex 之類方式控制，這裡示範簡單內部狀態
-const showDialog = ref(false)
-const isLoading = ref(true)
+export default defineComponent({
+  name: "App",
+  components: { Loading },
+  setup() {
+    const store = useStore()
 
-// 模擬 3 秒後 loading 完成
-setTimeout(() => {
-  isLoading.value = false
-}, 3000)
+    const shortkeys = reactive({
+      showSidenav1: ["meta", "b"],
+      showSidenav2: ["ctrl", "b"],
+    })
 
-function closeDialog() {
-  showDialog.value = false
-}
+    const shortkeyAction = (e: any) => {
+      switch (e.srcKey) {
+        case "showSidenav1":
+        case "showSidenav2":
+          store.dispatch("toggleSideNav")
+          break
+      }
+    }
 
-// 這裡可用 watch 外部狀態控制 showDialog，例如 Vuex
-watch(isLoading, newVal => {
-  if (newVal) {
-    showDialog.value = true
-  }
+    onMounted(() => {
+      store.dispatch("checkMobileAndTablet")
+    })
+
+    return {
+      shortkeys,
+      shortkeyAction,
+    }
+  },
 })
 </script>
 
-<style scoped>
-.mt-3 {
-  margin-top: 1rem;
+<style>
+html {
+  height: 100%;
 }
-.text-center {
+body {
+  background-color: #1b1b1b !important;
+  color: white;
+  min-height: 100%;
+}
+#app {
+  font-family: sans-serif, Arial, "Microsoft JhengHei", "STHeiti";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-align: center;
+  font-size: 20px;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+/* Change the white to any color ;) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  box-shadow: 0 0 0 30px #333 inset !important;
+  -webkit-box-shadow: 0 0 0 30px #333 inset !important;
+  -webkit-text-fill-color: #fff;
+}
+:-ms-input-placeholder {
+  color: #ccc !important;
+}
+.mu-form-item-label {
+  font-size: 20px !important;
+}
+.mu-input,
+.mu-chip {
+  font-size: 20px !important;
+}
+.mu-button > :first-child {
+  text-transform: none;
+}
+.mu-switch-track {
+  background-color: #555 !important;
+  opacity: 0.9;
+}
+.mu-switch-checked .mu-switch-track {
+  background-color: #135699 !important;
+}
+.mu-switch-checked {
+  color: #135699 !important;
 }
 </style>

@@ -1,173 +1,195 @@
 <template>
   <section>
     <LogoHead />
+
     <div class="login-block">
       <div class="login-block-head">
-        <mu-menu
-          cover
-          class="menu-wrapper"
-          v-model:open="openLangMenu"
-          popover-class="menu"
+        <!-- 語言選單 -->
+        <v-menu
+          v-model="openLangMenu"
+          :close-on-content-click="false"
+          offset-y
+          transition="scale-transition"
         >
-          <mu-button fab small color="primary">
-            <i class="material-icons">language</i>
-          </mu-button>
-          <mu-list slot="content">
-            <mu-list-item button @click="closeLangMenu('en-us')">
-              <mu-list-item-title>{{ $t("lang.en-us") }}</mu-list-item-title>
-            </mu-list-item>
-            <mu-list-item button @click="closeLangMenu('zh-tw')">
-              <mu-list-item-title>{{ $t("lang.zh-tw") }}</mu-list-item-title>
-            </mu-list-item>
-            <mu-list-item button @click="closeLangMenu('zh-cn')">
-              <mu-list-item-title>{{ $t("lang.zh-cn") }}</mu-list-item-title>
-            </mu-list-item>
-          </mu-list>
-        </mu-menu>
+          <template #activator="{ props }">
+            <v-btn icon v-bind="props" color="primary">
+              <v-icon>mdi-earth</v-icon>
+            </v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item
+              v-for="lang in languages"
+              :key="lang.code"
+              @click="changeLang(lang.code)"
+              style="cursor: pointer"
+            >
+              <v-list-item-title>{{ $t(lang.label) }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
-      <mu-form
+
+      <v-form
         ref="loginForm"
-        :model="loginForm"
+        v-model="valid"
         class="login-form"
-        :label-position="'left'"
-        label-width="120"
+        lazy-validation
       >
-        <mu-form-item
-          prop="account"
+        <v-text-field
+          v-if="versionOption.official"
+          v-model="loginForm.account"
           :label="$t('account.account')"
-          v-if="versionOption.official"
           :rules="accountRules"
-        >
-          <mu-text-field
-            v-model="loginForm.account"
-            prop="account"
-            v-focus
-          ></mu-text-field>
-        </mu-form-item>
-        <mu-form-item
-          prop="password"
+          required
+        ></v-text-field>
+
+        <v-text-field
+          v-model="loginForm.password"
           :label="$t('account.password')"
+          :type="visibility ? 'text' : 'password'"
+          :append-icon="visibility ? 'mdi-eye-off' : 'mdi-eye'"
+          @click:append="toggleVisibility"
           :rules="passwordRules"
-        >
-          <mu-text-field
-            v-model="loginForm.password"
-            :action-icon="visibility ? 'visibility_off' : 'visibility'"
-            :action-click="() => (visibility = !visibility)"
-            :type="visibility ? 'text' : 'password'"
-            @keydown.enter="login"
-            prop="password"
-          ></mu-text-field>
-        </mu-form-item>
-      </mu-form>
+          @keyup.enter="login"
+          required
+        ></v-text-field>
+      </v-form>
+
       <div class="login-block-footer">
-        <mu-button
-          color="blueGrey500"
-          @click="signUp"
-          style="margin-right: 10px"
+        <v-btn
           v-if="versionOption.official"
+          color="grey darken-1"
+          class="mr-2"
+          @click="signUp"
           tabindex="-1"
-          >{{ $t("account.signUp") }}</mu-button
         >
-        <mu-button color="primary" @click="login">
+          {{ $t("account.signUp") }}
+        </v-btn>
+
+        <v-btn color="primary" class="mr-2" @click="login">
           {{ $t("account.logIn") }}
-        </mu-button>
+        </v-btn>
       </div>
     </div>
   </section>
 </template>
-<script setup lang="ts">
-import { ref, reactive, computed, nextTick } from "vue"
+
+<script lang="ts" setup>
+import { ref, reactive, computed } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
-import { apiLogin } from "@/assets/ts/api"
 import LogoHead from "@/components/layout/LogoHead.vue"
-import { useI18n } from "vue-i18n"
+import { apiLogin } from "@/assets/ts/api"
 
-const { t } = useI18n()
-
-const router = useRouter()
+// Vuex 相關
 const store = useStore()
+const router = useRouter()
 
+// 語言選單
 const openLangMenu = ref(false)
-const visibility = ref(false)
+const languages = [
+  { code: "en-us", label: "lang.en-us" },
+  { code: "zh-tw", label: "lang.zh-tw" },
+  { code: "zh-cn", label: "lang.zh-cn" },
+]
 
+// 表單資料與狀態
 const loginForm = reactive({
   account: "",
   password: "",
   eventId: "",
 })
 
-const loginFormRef = ref()
+const visibility = ref(false) // 密碼顯示狀態
+const valid = ref(false)
 
+// 取得 Vuex 狀態
 const versionOption = computed(() => store.getters.versionOption)
 
-const accountRules = computed(() => [
-  { validate: (val: string) => !!val, message: t("validate.required") },
-  {
-    validate: (val: string) => val.length >= 3 && val.length <= 20,
-    message: t("validate.wrongAccountLength"),
-  },
-  {
-    validate: (val: string) => /^[a-zA-Z0-9]+([_ .-]?[a-zA-Z0-9])*$/g.test(val),
-    message: t("validate.wrongAccountFormat"),
-  },
-])
+// 驗證規則
+const accountRules = [
+  (v: string) => !!v || store.state.i18n.t("validate.required"),
+  (v: string) =>
+    (v && v.length >= 3 && v.length <= 20) ||
+    store.state.i18n.t("validate.wrongAccountLength"),
+  (v: string) =>
+    /^[a-zA-Z0-9]+([_ -.][a-zA-Z0-9]+)*$/.test(v) ||
+    store.state.i18n.t("validate.wrongAccountFormat"),
+]
 
-const passwordRules = computed(() => [
-  { validate: (val: string) => !!val, message: t("validate.required") },
-  {
-    validate: (val: string) => val.length >= 4 && val.length <= 32,
-    message: t("validate.wrongPasswordFormat"),
-  },
-])
+const passwordRules = [
+  (v: string) => !!v || store.state.i18n.t("validate.required"),
+  (v: string) =>
+    (v && v.length >= 4 && v.length <= 32) ||
+    store.state.i18n.t("validate.wrongPasswordFormat"),
+]
 
-const signUp = () => {
+function toggleVisibility() {
+  visibility.value = !visibility.value
+}
+
+function changeLang(lang: string) {
+  openLangMenu.value = false
+  store.dispatch("changeLanguage", lang)
+  // 如果你用vue-i18n這樣設定locale
+  // @ts-ignore
+  store.state.i18n.locale = lang
+}
+
+function signUp() {
   router.push({ name: "Sign Up" })
 }
 
-const login = () => {
-  loginFormRef.value.validate().then((isValidated: boolean) => {
-    if (isValidated) {
-      store.dispatch("changeLoadingState", true)
+async function login() {
+  const form = loginForm as any // 因為v-form的validate沒給ts類型，只能any
 
-      const payload = {
-        AccountName: loginForm.account,
-        Password: loginForm.password,
-      }
+  // 先驗證
+  if (!valid.value) return
 
-      apiLogin(payload)
-        .then(res => {
-          return new Promise((resolve, reject) => {
-            if (res.data[0] === "Reject" || res.data === "Reject")
-              reject("wrongLogInput")
-            else resolve(res.data)
-          })
-        })
-        .then((data: any) => {
-          store.dispatch("changeLoadingState", false)
-          loginSuccess(data)
-        })
-        .catch(err => {
-          store.dispatch("changeLoadingState", {
-            showDialog: true,
-            isLoading: false,
-            isSuccess: false,
-            showAction: true,
-            error: "wrongLogInput",
-          })
-          console.log(err)
-        })
+  store.dispatch("changeLoadingState", true)
+
+  const payload = {
+    AccountName: loginForm.account,
+    Password: loginForm.password,
+  }
+
+  try {
+    const res = await apiLogin(payload)
+    const data = res.data
+    if (data[0] === "Reject" || data === "Reject") {
+      throw new Error("wrongLogInput")
     }
-  })
+
+    store.dispatch("changeLoadingState", false)
+    loginSuccess(data)
+  } catch (err) {
+    store.dispatch("changeLoadingState", {
+      showDialog: true,
+      isLoading: false,
+      isSuccess: false,
+      showAction: true,
+      error: "wrongLogInput",
+    })
+    console.error(err)
+  }
 }
 
-const loginSuccess = (data: any) => {
-  const payload = {
-    userId: parseInt(data.id),
+function loginSuccess(data: any) {
+  const payload: {
+    userId: number
+    displayName: string
+    account: string
+    name: string
+    roles: string[]
+    isAdmin: boolean
+    email: string
+  } = {
+    userId: Number(data.id),
     displayName: data.display_name,
     account: data.computeraccount,
     name: loginForm.account,
-    roles: [] as string[],
+    roles: [],
     isAdmin: data.isAdmin,
     email: data.email,
   }
@@ -175,22 +197,11 @@ const loginSuccess = (data: any) => {
 
   store.dispatch("setUserInfo", payload)
 
-  nextTick(() => {
-    router.push("/home")
-  })
-}
-
-const closeLangMenu = (lang: string) => {
-  openLangMenu.value = false
-  store.dispatch("changeLanguage", lang)
-  // @ts-ignore
-  $i18n.locale = lang
+  router.push("/home")
 }
 </script>
+
 <style scoped>
-.cursor-loading {
-  cursor: progress;
-}
 .login-block {
   width: 50vw;
   margin: auto;
@@ -198,6 +209,7 @@ const closeLangMenu = (lang: string) => {
   padding: 20px;
   border-radius: 10px;
   background-color: #333;
+  color: white;
 }
 @media only screen and (max-width: 600px) {
   .login-block {
@@ -210,31 +222,16 @@ const closeLangMenu = (lang: string) => {
   max-width: 700px;
   text-align: center;
 }
-.login-form .mu-form-item-label {
-  font-size: 16px;
-}
-.help-message {
-  margin-top: 3px;
-  margin-bottom: 5px;
-  width: 460px;
-  font-size: 24px;
-}
 .login-block-head {
   position: relative;
   margin-bottom: 50px;
+  display: flex;
+  justify-content: flex-end;
 }
 .login-block-footer {
   position: relative;
-}
-.login-block-footer .right-down-button {
-  position: absolute;
-  right: 0;
-}
-.menu-wrapper {
-  position: absolute;
-  right: 0;
-}
-.mu-popover.menu .mu-list {
-  background: #1976d2;
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

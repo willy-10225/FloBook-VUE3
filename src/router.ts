@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router"
 import type { RouteRecordRaw } from "vue-router"
 import store from "@/store/index"
 import auth from "@/assets/ts/auth"
+import jwt_decode from "jwt-decode"
 
 const routes: Array<RouteRecordRaw> = [
   {

@@ -6,6 +6,7 @@
     "strict": true,
     "jsx": "preserve",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -14,7 +15,8 @@
       "@/*": ["src/*"]
     },
     "skipLibCheck": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "typeRoots": ["/node_modules/@types", "/node_modules"]
   },
   "include": ["src", "public/ts"]
 }

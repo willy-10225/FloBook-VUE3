@@ -5,13 +5,13 @@ import router from "./router"
 import store from "./store"
 import i18n from "@/assets/ts/i18n" // 請確認 i18n 設定 Vue 3 版本
 import directive from "@/directive/index"
-import { cloneSessionStorage } from "./session-sharing"
 
 import "vuetify/styles"
 import { createVuetify } from "vuetify"
 import { aliases, mdi } from "vuetify/iconsets/mdi"
 import * as components from "vuetify/components"
 import * as directives from "vuetify/directives"
+import "@mdi/font/css/materialdesignicons.css"
 
 console.log("run MAIN.TS")
 import VueShortkey from "vue3-shortkey"
@@ -62,7 +62,7 @@ app.config.globalProperties.$isToday = function (date: Date) {
 }
 
 // 生產環境禁用 Vue Devtools（避免型別錯誤）
-if (process.env.NODE_ENV === "production") {
+if (import.meta.env.NODE_ENV === "production") {
   // @ts-expect-error - devtools 屬性在 AppConfig 中未定義，但實際可用
   app.config.devtools = false
 }
@@ -76,6 +76,5 @@ if ("MSInputMethodContext" in window && "documentMode" in document) {
     }
   })
 }
-
 // 掛載到 DOM
 app.mount("#app")

@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken"
-import type { JwtPayload } from "jsonwebtoken"
-const EXPIRATION = 7 * 24 * 60 * 60 // 7 days
-const key = "secretkey"
+import { jwtDecode } from "jwt-decode"
+
+const EXPIRATION = 7 * 24 * 60 * 60 // 7 天（秒）
+const key = "secretkey" // ⚠️ 這在 jwt-decode 中其實沒用，因為不驗證簽名
 
 export interface UserDetail {
   account: string
@@ -9,31 +9,50 @@ export interface UserDetail {
   email: string
   isAdmin: boolean
   name: string
-  roles: string[] // 如果 roles 是字串陣列，否則你可以調整
+  roles: string[]
   userId: number
 }
 
-export interface TokenPayload extends JwtPayload {
+export interface TokenPayload {
   exp: number
   userName: string
   userInfo: UserDetail
-  deviceIpList: string[] // 如果 IP 是字串，例如 "192.168.1.1"
+  deviceIpList: string[]
+}
+
+function base64Encode(obj: object) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
 }
 
 export default {
-  createToken(payload: TokenPayload): string {
-    payload.exp = Math.floor(Date.now() / 1000) + EXPIRATION
-    return jwt.sign(payload, key)
+  createToken(payload: Omit<TokenPayload, "exp">): string {
+    const exp = Math.floor(Date.now() / 1000) + EXPIRATION
+    const fullPayload = { ...payload, exp }
+
+    // 模擬 jwt 結構：header.payload.signature
+    const header = base64Encode({ alg: "HS256", typ: "JWT" })
+    const body = base64Encode(fullPayload)
+    const fakeSignature = "signature" // 前端沒法算出正確 signature
+
+    return `${header}.${body}.${fakeSignature}`
   },
+
   verifyToken(token: string): Promise<TokenPayload> {
     return new Promise((resolve, reject) => {
-      jwt.verify(token, key, (err, decoded) => {
-        if (err) {
+      try {
+        const decoded = jwtDecode<TokenPayload>(token)
+        const now = Math.floor(Date.now() / 1000)
+
+        if (decoded.exp < now) {
+          const err = new Error("TokenExpiredError")
+          ;(err as any).name = "TokenExpiredError"
           reject(err)
         } else {
-          resolve(decoded as TokenPayload)
+          resolve(decoded)
         }
-      })
+      } catch (e) {
+        reject(e)
+      }
     })
   },
 }
