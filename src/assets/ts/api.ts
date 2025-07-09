@@ -2,7 +2,7 @@ import axios from "axios"
 import type { AxiosResponse } from "axios"
 
 let baseDomain = "."
-if (process.env.NODE_ENV !== "production") {
+if (import.meta.env.NODE_ENV !== "production") {
   baseDomain = "http://61.219.187.38:100"
   //  baseDomain = 'http://192.168.33.112'
 }

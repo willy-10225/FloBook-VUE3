@@ -14,16 +14,16 @@ const routes: Array<RouteRecordRaw> = [
     name: "Login",
     component: () => import("@/views/Account/Login.vue"),
   },
-  // {
-  //   path: "/SignUp",
-  //   name: "SignUp",
-  //   component: () => import("@/views/Account/SignUp.vue"),
-  // },
-  // {
-  //   path: "/Home",
-  //   name: "Home",
-  //   component: () => import("@/views/Home.vue"),
-  // },
+  {
+    path: "/SignUp",
+    name: "SignUp",
+    component: () => import("@/views/Account/SignUp.vue"),
+  },
+  {
+    path: "/Home",
+    name: "Home",
+    component: () => import("@/views/Home.vue"),
+  },
   // {
   //   path: "/FlobookMaster",
   //   name: "FlobookMaster",

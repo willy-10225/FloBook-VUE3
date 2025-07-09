@@ -31,7 +31,7 @@
       </div>
 
       <v-form
-        ref="loginForm"
+        ref="loginFormRef"
         v-model="valid"
         class="login-form"
         lazy-validation
@@ -41,9 +41,12 @@
           v-model="loginForm.account"
           :label="$t('account.account')"
           :rules="accountRules"
+          variant="outlined"
+          density="comfortable"
+          prepend-inner-icon="mdi-account"
+          class="mb-4 rounded-lg shadow-sm"
           required
         ></v-text-field>
-
         <v-text-field
           v-model="loginForm.password"
           :label="$t('account.password')"
@@ -51,6 +54,10 @@
           :append-icon="visibility ? 'mdi-eye-off' : 'mdi-eye'"
           @click:append="toggleVisibility"
           :rules="passwordRules"
+          variant="outlined"
+          density="comfortable"
+          prepend-inner-icon="mdi-lock"
+          class="mb-4 rounded-lg shadow-sm"
           @keyup.enter="login"
           required
         ></v-text-field>
@@ -81,12 +88,15 @@ import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 import LogoHead from "@/components/layout/LogoHead.vue"
 import { apiLogin } from "@/assets/ts/api"
+import { useI18n } from "vue-i18n"
+import type { VForm } from "vuetify/components"
 
-// Vuex 相關
+const { locale } = useI18n()
 const store = useStore()
 const router = useRouter()
 
-// 語言選單
+
+// 語言切換
 const openLangMenu = ref(false)
 const languages = [
   { code: "en-us", label: "lang.en-us" },
@@ -94,17 +104,17 @@ const languages = [
   { code: "zh-cn", label: "lang.zh-cn" },
 ]
 
-// 表單資料與狀態
+// 表單資料
 const loginForm = reactive({
   account: "",
   password: "",
   eventId: "",
 })
-
-const visibility = ref(false) // 密碼顯示狀態
+const visibility = ref(false)
 const valid = ref(false)
+const loginFormRef = ref<VForm | null>(null)
 
-// 取得 Vuex 狀態
+// Vuex getter
 const versionOption = computed(() => store.getters.versionOption)
 
 // 驗證規則
@@ -117,7 +127,6 @@ const accountRules = [
     /^[a-zA-Z0-9]+([_ -.][a-zA-Z0-9]+)*$/.test(v) ||
     store.state.i18n.t("validate.wrongAccountFormat"),
 ]
-
 const passwordRules = [
   (v: string) => !!v || store.state.i18n.t("validate.required"),
   (v: string) =>
@@ -125,16 +134,17 @@ const passwordRules = [
     store.state.i18n.t("validate.wrongPasswordFormat"),
 ]
 
+// 密碼顯示
 function toggleVisibility() {
   visibility.value = !visibility.value
 }
 
+// 語言切換
 function changeLang(lang: string) {
+  locale.value = lang
+  localStorage.setItem("lang", lang)
   openLangMenu.value = false
   store.dispatch("changeLanguage", lang)
-  // 如果你用vue-i18n這樣設定locale
-  // @ts-ignore
-  store.state.i18n.locale = lang
 }
 
 function signUp() {
@@ -142,10 +152,8 @@ function signUp() {
 }
 
 async function login() {
-  const form = loginForm as any // 因為v-form的validate沒給ts類型，只能any
-
-  // 先驗證
-  if (!valid.value) return
+  const isValid = await loginFormRef.value?.validate()
+  if (!isValid) return
 
   store.dispatch("changeLoadingState", true)
 
@@ -176,27 +184,17 @@ async function login() {
 }
 
 function loginSuccess(data: any) {
-  const payload: {
-    userId: number
-    displayName: string
-    account: string
-    name: string
-    roles: string[]
-    isAdmin: boolean
-    email: string
-  } = {
+  const payload = {
     userId: Number(data.id),
     displayName: data.display_name,
     account: data.computeraccount,
     name: loginForm.account,
-    roles: [],
+    roles: data.admin ? ["admin"] : [],
     isAdmin: data.isAdmin,
     email: data.email,
   }
-  if (data.admin) payload.roles.push("admin")
 
   store.dispatch("setUserInfo", payload)
-
   router.push("/home")
 }
 </script>
@@ -232,6 +230,7 @@ function loginSuccess(data: any) {
   position: relative;
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  gap: 16px;
 }
 </style>

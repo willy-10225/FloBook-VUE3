@@ -1,119 +1,102 @@
 <template>
-  <mu-dialog
-    width="380"
-    :overlay-close="false"
-    :esc-press-close="false"
-    v-model:open="loadingDialog.showDialog"
+  <v-dialog
+    v-model="loadingDialog.showDialog"
+    max-width="400"
+    persistent
     class="custom-dialog"
-    :dialog-class="{ 'upload-success': isSuccess, 'upload-fail': isFail }"
   >
-    <div style="text-align: center">
-      <div class="loading-body" v-if="loadingDialog.isLoading">
-        <div class="dialog-message">{{ title || t("common.wait") }}</div>
-        <mu-circular-progress :size="36"></mu-circular-progress>
+    <v-card :class="dialogClass" class="pa-4 text-center">
+      <div v-if="loadingDialog.isLoading">
+        <div class="dialog-message">{{ title || $t("common.wait") }}</div>
+        <v-progress-circular indeterminate color="white" size="36" />
       </div>
-      <div v-else class="loading-body">
-        <div v-if="loadingDialog.isSuccess">{{ t("common.success") }}</div>
-        <div v-else>{{ t("common.fail") }}</div>
-        <pre v-if="loadingDialog.error !== ''" class="error-message">{{
-          errorMessage
-        }}</pre>
-        <pre v-if="loadingDialog.message !== ''" class="error-message">{{
-          loadingDialog.message
-        }}</pre>
+
+      <div v-else>
+        <div v-if="loadingDialog.isSuccess" class="text-white text-h6">
+          {{ $t("common.success") }}
+        </div>
+        <div v-else class="text-white text-h6">
+          {{ $t("common.fail") }}
+        </div>
+        <pre
+          v-if="loadingDialog.error"
+          class="error-message text-white text-left"
+          >{{ errorMessage }}</pre
+        >
+        <pre
+          v-if="loadingDialog.message"
+          class="error-message text-white text-left"
+          >{{ message }}</pre
+        >
+        <div
+          v-if="!loadingDialog.isSuccess"
+          class="cae-support text-white mt-6"
+          v-html="$t('common.cae-support')"
+        ></div>
       </div>
-    </div>
-    <p v-if="isFail" class="cae-support" v-html="t('common.cae-support')"></p>
-    <mu-button
-      v-focus
-      ref="loadingClose"
-      slot="actions"
-      class="dialog-button"
-      flat
-      color="white"
-      @click="closeLoadingDialog"
-      v-if="loadingDialog.showAction"
-    >
-      OK
-    </mu-button>
-  </mu-dialog>
+
+      <v-card-actions v-if="loadingDialog.showAction" class="justify-center">
+        <v-btn
+          ref="loadingClose"
+          color="white"
+          variant="text"
+          class="dialog-button"
+          @click="closeLoadingDialog"
+        >
+          OK
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, onMounted } from "vue"
+import { computed, ref } from "vue"
 import { useStore } from "vuex"
 import { useI18n } from "vue-i18n"
 
-// 自訂指令 focus
-import { Directive } from "vue"
-const focus: Directive = {
-  mounted(el) {
-    el.focus()
-  },
-}
-
-// Vuex store
 const store = useStore()
-
-// 取得 loadingDialog 狀態（假設你的 getter 名稱還是 loadingDialog）
-const loadingDialog = computed(() => store.getters.loadingDialog)
-
-// i18n
 const { t } = useI18n()
 
-// 計算屬性
-const title = computed(() => loadingDialog.value.title)
+const loadingDialog = computed(() => store.getters.loadingDialog)
 
+const title = computed(() => loadingDialog.value.title)
 const isSuccess = computed(
   () => !loadingDialog.value.isLoading && loadingDialog.value.isSuccess
 )
 const isFail = computed(
-  () => !loadingDialog.value.isLoading && !loadingDialog.value.isSuccess
+  () =>
+    !loadingDialog.value.isLoading && loadingDialog.value.isSuccess === false
 )
 
 const errorMessage = computed(() => {
   const key = "error." + loadingDialog.value.error
-  if (loadingDialog.value.error) {
-    return t(key)
-  }
+  return key !== "error." ? t(key) : ""
+})
+
+const message = computed(() => loadingDialog.value.message)
+
+const dialogClass = computed(() => {
+  if (isSuccess.value) return "upload-success"
+  if (isFail.value) return "upload-fail"
   return ""
 })
 
-// methods
-function closeLoadingDialog() {
+const closeLoadingDialog = () => {
   store.dispatch("changeLoadingState", false)
 }
-
-// ref for button (可用於後續操作)
-const loadingClose = ref<InstanceType<typeof HTMLElement> | null>(null)
-</script>
-
-<script lang="ts">
-// 註冊自訂指令 focus
-import { defineComponent } from "vue"
-export default defineComponent({
-  directives: {
-    focus,
-  },
-})
 </script>
 
 <style scoped>
-.custom-dialog.mu-dialog {
+.custom-dialog >>> .v-overlay__content {
   text-align: center;
-  background-color: rgb(112, 112, 112);
 }
-.upload-success.mu-dialog {
-  text-align: center;
+
+.upload-success {
   background-color: #1ea296;
 }
-.upload-fail.mu-dialog {
-  text-align: center;
+.upload-fail {
   background-color: rgb(180, 57, 57);
-}
-.loading-body {
-  font-size: 30px;
-  color: white;
 }
 .dialog-message {
   font-weight: bold;
@@ -122,24 +105,17 @@ export default defineComponent({
   margin-bottom: 20px;
 }
 .dialog-button {
-  font-size: x-large;
+  font-size: large;
 }
 .error-message {
   margin-top: 10px;
   font-size: 20px;
-  text-align: left;
   word-break: break-word;
   font-family: "Microsoft JhengHei", Arial, sans-serif;
-}
-a.contact {
-  text-decoration: underline;
-  color: #4fb4e6;
-  font-size: 20px;
-  margin: 30px 0;
+  white-space: pre-wrap;
 }
 .cae-support {
+  font-size: 18px;
   margin-top: 40px;
-  margin-bottom: 0px;
-  text-align: center;
 }
 </style>
