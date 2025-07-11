@@ -277,10 +277,15 @@ export function apiModifyProject(payload: ModifyProjectPayload) {
  * @param { String } payload.checkPoints[].checkPointName
  * @param { Boolean } payload.checkPoints[].isDone
  */
+interface CheckPoint {
+  checkPointName: string
+  isDone: boolean
+}
+
 interface ModifyCheckPointPayload {
-  userName: String
-  projectId: Number
-  checkPoints: Object[]
+  userName: string | null // sessionStorage.getItem 可能回傳 null
+  projectId: string | null // sessionStorage.getItem 回傳字串，若要數字需要轉型
+  checkPoints: CheckPoint[]
 }
 
 export function apiModifyCheckPoint(payload: ModifyCheckPointPayload) {
@@ -344,7 +349,7 @@ export function apiGetHardwareUserListByIp(payload: IpDateRangePayload) {
 }
 
 export interface GetHardwareHistoryPayload {
-  ip: number
+  ip: string
   user: string
   start: string
   end: string
