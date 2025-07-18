@@ -11,9 +11,8 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { RadarChart } from "echarts/charts"
 import { TooltipComponent, LegendComponent } from "echarts/components"
-import type { EChartsOption } from "echarts"
+import type { EChartsOption, RadarSeriesOption } from "echarts"
 import VChart from "vue-echarts"
-
 // 注入 echarts 元件
 use([CanvasRenderer, RadarChart, TooltipComponent, LegendComponent])
 
@@ -22,9 +21,9 @@ interface UserData {
   value: number[]
 }
 
-const option = ref<EChartsOption>({
+const option = ref({
   backgroundColor: {
-    type: "radial",
+    type: "radial" as const,
     x: 0.5,
     y: 0.4,
     r: 0.3,
@@ -49,7 +48,7 @@ const option = ref<EChartsOption>({
     width: "100%",
     height: 80,
     align: "auto",
-    data: [],
+    data: [] as string[],
     textStyle: {
       color: "#fff",
       fontSize: 14,
@@ -65,7 +64,9 @@ const option = ref<EChartsOption>({
     center: ["50%", "40%"],
     radius: 160,
     startAngle: 90,
-    nameGap: 16,
+    name: {
+      distance: 16, // ✅ 正確寫法
+    },
     splitNumber: 4,
     shape: "polygon",
     axisLine: {
@@ -127,7 +128,7 @@ function randomData() {
   }
 
   if (Array.isArray(option.value.series)) {
-    option.value.series[0].data = data
+    ;(option.value.series[0] as RadarSeriesOption).data = data
   }
 }
 

@@ -535,6 +535,7 @@ export interface TerminateLicensePayload {
   EndTime: string
   Task: number
   Handle: number
+  terminating: string
 }
 export function apiTerminateLicense(payload: TerminateLicensePayload) {
   return flobookApi.post("/TerminateLicense", payload)

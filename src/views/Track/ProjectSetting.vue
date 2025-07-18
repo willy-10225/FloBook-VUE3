@@ -1,33 +1,32 @@
 <template>
-  <confirm-dialog
+  <ConfirmDialog
     title="設定專案權限"
     safeOption="取消"
     dangerOption="確定"
     :openAlert="openSetting"
     confirmColor="teal"
-    @closeConfirmDialog="confirmProjectSetting($event)"
-  ></confirm-dialog>
+    @closeConfirmDialog="confirmProjectSetting"
+  />
 </template>
 
-<script>
-import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+<script setup lang="ts">
+import { defineProps, defineEmits } from "vue"
+import ConfirmDialog from "@/components/common/ConfirmDialog.vue"
 
-export default {
-  name: 'ProjectSetting',
-  components: { ConfirmDialog },
-  props: ['openSetting'],
-  data() {
-    return {
-      title: 'hi'
-    }
-  },
-  methods: {
-    confirmProjectSetting(isConfirm) {
-      if (isConfirm) console.log('Updated')
-      else console.log('WTF')
-      this.$emit('closeProjectSetting')
-    }
-  }
+// 定義 props 型別
+const props = defineProps<{
+  openSetting: boolean
+}>()
+
+// 定義 emit 事件型別
+const emit = defineEmits<{
+  (e: "closeProjectSetting"): void
+}>()
+
+function confirmProjectSetting(isConfirm: boolean) {
+  if (isConfirm) console.log("Updated")
+  else console.log("WTF")
+  emit("closeProjectSetting")
 }
 </script>
 
