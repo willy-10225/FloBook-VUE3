@@ -1,99 +1,97 @@
 <template>
   <v-app-bar
-    :elevation="4"
-    color="primary"
     app
-    class="top-nav"
-    :class="{ 'top-nav-hidden': hideTopnav }"
+    dark
+    class="qi-topnav"
+    :class="{ 'qi-topnav-hidden': hideTopnav }"
   >
-    <v-app-bar-nav-icon @click="toggleSideNav" />
-    <v-toolbar-title>{{ currentRouteName }}</v-toolbar-title>
+    <!-- 左邊 -->
+    <template #prepend>
+      <v-btn icon @click="toggleSideNav">
+        <v-icon>mdi-menu</v-icon>
+      </v-btn>
+      <span class="text-white text-h6 ml-2">{{ routeName }}</span>
+    </template>
 
-    <v-spacer></v-spacer>
+    <!-- 右邊 -->
+    <template #append>
+      <v-btn variant="text" class="qi-topnav-item" to="/profile">
+        <v-icon start>mdi-account-circle</v-icon>
+        {{ userInfo.displayName }}
+      </v-btn>
 
-    <v-btn v-if="userInfo.isAdmin" icon :to="{ name: 'Setting' }">
-      <v-icon>mdi-cog</v-icon>
-    </v-btn>
+      <v-btn variant="text" class="qi-topnav-item" @click="logoutAlert = true">
+        {{ loginState }}
+      </v-btn>
 
-    <v-btn icon :to="{ name: 'Profile' }">
-      <v-icon>mdi-account-circle</v-icon>
-      <span class="ml-2">{{ userInfo.displayName }}</span>
-    </v-btn>
+      <v-btn
+        v-if="userInfo.isAdmin"
+        variant="text"
+        class="qi-topnav-item"
+        to="/setting"
+      >
+        <v-icon>mdi-cog</v-icon>
+      </v-btn>
 
-    <v-btn text @click="logoutAlert = true">
-      {{ loginState }}
-    </v-btn>
+      <!-- 語言選單 -->
+      <v-menu v-model="openLangMenu" location="bottom">
+        <template #activator="{ props }">
+          <v-btn icon v-bind="props">
+            <v-icon>mdi-earth</v-icon>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item @click="changeLang('en-us')">
+            <v-list-item-title>{{ $t("lang.en-us") }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="changeLang('zh-tw')">
+            <v-list-item-title>{{ $t("lang.zh-tw") }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="changeLang('zh-cn')">
+            <v-list-item-title>{{ $t("lang.zh-cn") }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </template>
 
-    <v-menu v-model="openLangMenu" location="bottom">
-      <template #activator="{ props }">
-        <v-btn icon v-bind="props">
-          <v-icon>mdi-earth</v-icon>
-        </v-btn>
-      </template>
-
-      <v-list>
-        <v-list-item
-          v-for="lang in languages"
-          :key="lang.code"
-          @click="changeLang(lang.code)"
-        >
-          <v-list-item-title>{{ lang.label }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
-
-    <ConfirmDialog
-      :title="$t('account.confirm-logout')"
-      :openAlert="logoutAlert"
-      :sec="0"
-      confirmColor="primary"
-      @closeConfirmDialog="logout"
-    />
+    <!-- 登出對話框 -->
+    <v-dialog v-model="logoutAlert" max-width="360">
+      <v-card>
+        <v-card-title>{{ $t("account.confirm-logout") }}</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" text @click="logoutAlert = false">取消</v-btn>
+          <v-btn color="primary" text @click="logout(true)">確認</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app-bar>
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue"
-import { useRoute, useRouter } from "vue-router"
-import { useI18n } from "vue-i18n"
-import ConfirmDialog from "@/components/common/ConfirmDialog.vue"
-
-// 若使用 Vuex，改為 import { useStore } from 'vuex'
-// 若用 Pinia，請改成 import { useUserStore } from '@/stores/user'
 import { useStore } from "vuex"
+import { useRouter, useRoute } from "vue-router"
 
 const store = useStore()
 const router = useRouter()
 const route = useRoute()
-const { t, locale } = useI18n()
 
 const openLangMenu = ref(false)
 const logoutAlert = ref(false)
 const hideTopnav = ref(false)
-const prevScrollTop = ref(0)
+let prevScrollTop = 0
 
 const userInfo = computed(() => store.getters.userInfo)
 const layout = computed(() => store.getters.layout)
+
+const routeName = computed(() => route.name)
 
 const loginState = computed(() =>
   localStorage.getItem("login_token") ? "Logout" : "Login"
 )
 
-const currentRouteName = computed(() => route.name as string)
-
-const languages = [
-  { code: "en-us", label: t("lang.en-us") },
-  { code: "zh-tw", label: t("lang.zh-tw") },
-  { code: "zh-cn", label: t("lang.zh-cn") },
-]
-
-function changeLang(lang: string) {
-  openLangMenu.value = false
-  store.dispatch("changeLanguage", lang)
-  locale.value = lang
-}
-
-function logout(isConfirm: boolean) {
+function logout(isConfirm) {
   if (loginState.value === "Logout" && isConfirm) {
     store.dispatch("removeUserInfo")
     router.push({ name: "Login" })
@@ -101,31 +99,49 @@ function logout(isConfirm: boolean) {
   logoutAlert.value = false
 }
 
+function changeLang(lang) {
+  openLangMenu.value = false
+  store.dispatch("changeLanguage", lang)
+  // 假設 i18n 是全域的
+  window.$i18n.locale = lang
+  window.dispatchEvent(new CustomEvent("changeLanguage"))
+}
+
 function toggleSideNav() {
   store.dispatch("toggleSideNav")
 }
 
-function onScroll() {
+function displayOnScroll() {
   const currScrollTop = window.pageYOffset
-  hideTopnav.value = currScrollTop > prevScrollTop.value
-  prevScrollTop.value = currScrollTop
+  hideTopnav.value = currScrollTop > prevScrollTop
+  prevScrollTop = currScrollTop
 }
 
 onMounted(() => {
-  window.addEventListener("scroll", onScroll)
+  window.addEventListener("scroll", displayOnScroll)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener("scroll", onScroll)
+  window.removeEventListener("scroll", displayOnScroll)
 })
 </script>
 
 <style scoped>
-.top-nav-hidden {
-  top: -60px !important;
-  transition: top 0.3s ease;
+.qi-topnav {
+  z-index: 10190225;
+  transition: 0.1s ease;
 }
-.ml-2 {
-  margin-left: 8px;
+.qi-topnav-hidden {
+  top: -60px !important;
+  transition: 0.3s ease;
+}
+.qi-topnav-item {
+  color: #f2f2f2;
+  font-size: 17px;
+  text-transform: none;
+  letter-spacing: 1px;
+}
+.qi-topnav-item:hover {
+  color: #0b9c9c;
 }
 </style>

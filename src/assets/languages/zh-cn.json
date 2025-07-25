@@ -1,12 +1,12 @@
 {
   "lang": {
-    "languages": "语言",
+    "languages": "語言",
     "en-us": "English",
-    "zh-cn": "简体中文",
-    "zh-tw": "繁體中文"
+    "zh-tw": "繁體中文",
+    "zh-cn": "简体中文"
   },
   "common": {
-    "cae-support": "虎门科技CAE对外技术支援团队: <br> cae-support@cadmen.com",
+    "cae-support": "虎门科技CAE对外技术支援团队: ",
     "fail": "失败",
     "success": "成功",
     "wait": "请稍后...",

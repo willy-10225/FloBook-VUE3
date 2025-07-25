@@ -64,73 +64,73 @@ const routes: Array<RouteRecordRaw> = [
         props: true,
         component: () => import("@/views/Monitor/UnnormalUseList.vue"),
       },
-      //     {
-      //       path: "Track/Index",
-      //       name: "Track",
-      //       component: () => import("@/views/Track/Track.vue"),
-      //     },
-      //     {
-      //       path: "Track/Knowledge",
-      //       name: "KnowledgeDatabase",
-      //       component: () => import("@/views/Track/Knowledge.vue"),
-      //     },
-      //     {
-      //       path: "Track/Files",
-      //       name: "Files",
-      //       component: () => import("@/views/Track/Files.vue"),
-      //     },
-      //     {
-      //       path: "Track/ProjectCreate",
-      //       name: "CreateProject",
-      //       component: () => import("@/views/Track/ProjectCreate.vue"),
-      //     },
-      //     {
-      //       path: "Track/ProjectDetail",
-      //       name: "ProjectDetail",
-      //       props: true,
-      //       component: () => import("@/views/Track/ProjectDetail.vue"),
-      //     },
-      //     {
-      //       path: "Track/TeamStatistic",
-      //       name: "TeamStatistic",
-      //       component: () => import("@/views/Track/TeamStatistic.vue"),
-      //     },
-      //     {
-      //       path: "Track/PersonalStatistic",
-      //       name: "PersonalStatistic",
-      //       component: () => import("@/views/Track/PersonalStatistic.vue"),
-      //     },
-      //     {
-      //       path: "Solve/JobSubmission",
-      //       name: "JobSubmission",
-      //       component: () => import("@/views/Solve/JobSubmission.vue"),
-      //     },
-      //     {
-      //       path: "Solve/JobManager",
-      //       name: "JobManager",
-      //       component: () => import("@/views/Solve/JobManager.vue"),
-      //     },
-      //     {
-      //       path: "Solve/SolveConfig",
-      //       name: "SolveConfig",
-      //       component: () => import("@/views/Solve/SolveConfig.vue"),
-      //     },
-      //     {
-      //       path: "Light/MonitorDetailLight",
-      //       name: "MonitorDetailLight",
-      //       component: () => import("@/views/Light/MonitorDetailLight.vue"),
-      //     },
-      //     {
-      //       path: "Light/ProjectDetailLight",
-      //       name: "ProjectDetailLight",
-      //       props: true,
-      //       component: () => import("@/views/Light/ProjectDetailLight.vue"),
-      //     },
-      //     {
-      //       path: "Light/StatisticLight",
-      //       name: "StatisticLight",
-      //       component: () => import("@/views/Light/StatisticLight.vue"),
-      //     },
+      // {
+      //   path: "Track/Index",
+      //   name: "Track",
+      //   component: () => import("@/views/Track/Track.vue"),
+      // },
+      {
+        path: "Track/Knowledge",
+        name: "KnowledgeDatabase",
+        component: () => import("@/views/Track/Knowledge.vue"),
+      },
+      // {
+      //   path: "Track/Files",
+      //   name: "Files",
+      //   component: () => import("@/views/Track/Files.vue"),
+      // },
+      // {
+      //   path: "Track/ProjectCreate",
+      //   name: "CreateProject",
+      //   component: () => import("@/views/Track/ProjectCreate.vue"),
+      // },
+      // {
+      //   path: "Track/ProjectDetail",
+      //   name: "ProjectDetail",
+      //   props: true,
+      //   component: () => import("@/views/Track/ProjectDetail.vue"),
+      // },
+      // {
+      //   path: "Track/TeamStatistic",
+      //   name: "TeamStatistic",
+      //   component: () => import("@/views/Track/TeamStatistic.vue"),
+      // },
+      // {
+      //   path: "Track/PersonalStatistic",
+      //   name: "PersonalStatistic",
+      //   component: () => import("@/views/Track/PersonalStatistic.vue"),
+      // },
+      {
+        path: "Solve/JobSubmission",
+        name: "JobSubmission",
+        component: () => import("@/views/Solve/JobSubmission.vue"),
+      },
+      {
+        path: "Solve/JobManager",
+        name: "JobManager",
+        component: () => import("@/views/Solve/JobManager.vue"),
+      },
+      {
+        path: "Solve/SolveConfig",
+        name: "SolveConfig",
+        component: () => import("@/views/Solve/SolveConfig.vue"),
+      },
+      // {
+      //   path: "Light/MonitorDetailLight",
+      //   name: "MonitorDetailLight",
+      //   component: () => import("@/views/Light/MonitorDetailLight.vue"),
+      // },
+      // {
+      //   path: "Light/ProjectDetailLight",
+      //   name: "ProjectDetailLight",
+      //   props: true,
+      //   component: () => import("@/views/Light/ProjectDetailLight.vue"),
+      // },
+      // {
+      //   path: "Light/StatisticLight",
+      //   name: "StatisticLight",
+      //   component: () => import("@/views/Light/StatisticLight.vue"),
+      // },
       {
         path: "Account/Setting",
         name: "Setting",

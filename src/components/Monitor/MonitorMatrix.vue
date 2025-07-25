@@ -4,10 +4,16 @@
     <template v-if="currentView === 'matrix'">
       <v-row class="matrix-header">
         <v-col cols="1"></v-col>
-        <v-col cols="3" @click="sortMatrix('Users')">Users</v-col>
+        <v-col cols="3" @click="sortMatrix('Users')" style="cursor: pointer"
+          >Users</v-col
+        >
         <v-col cols="3">IP</v-col>
-        <v-col cols="2" @click="sortMatrix('CPU')">CPU (Core)</v-col>
-        <v-col cols="3" @click="sortMatrix('RAM')">RAM (GB)</v-col>
+        <v-col cols="2" @click="sortMatrix('CPU')" style="cursor: pointer"
+          >CPU (Core)</v-col
+        >
+        <v-col cols="3" @click="sortMatrix('RAM')" style="cursor: pointer"
+          >RAM (GB)</v-col
+        >
       </v-row>
 
       <v-row
@@ -20,7 +26,6 @@
           <v-checkbox
             v-model="selectedusers"
             :value="item.user"
-            :label="''"
             density="compact"
             hide-details
           />
@@ -36,7 +41,7 @@
       </v-row>
     </template>
 
-    <!-- 圖表視圖 -->
+    <!-- 詳細圖表視圖 -->
     <template v-else>
       <v-btn
         class="mb-4"
@@ -99,7 +104,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed, defineProps } from "vue"
+import { ref, watch, computed } from "vue"
 import { useStore } from "vuex"
 
 interface Device {
@@ -202,7 +207,9 @@ function updateMatrix() {
       return b.cpu - a.cpu || b.ram - a.ram
     })
 
-  sortMatrix(sortBy.value)
+  if (sortBy.value) {
+    sortMatrix(sortBy.value)
+  }
 }
 
 function redirectToDetail(user: string) {
@@ -249,10 +256,12 @@ function getBlockColor(value: string | number) {
   font-weight: bold;
   text-align: center;
   margin-bottom: 8px;
+  user-select: none;
 }
 .matrix-row {
   align-items: center;
   margin-bottom: 4px;
+  cursor: pointer;
 }
 .matrix-block {
   display: flex;
@@ -260,7 +269,7 @@ function getBlockColor(value: string | number) {
   align-items: center;
   height: 60px;
   font-size: 18px;
-  font-family: sans-serif, "微軟正黑體";
+  font-family: "微軟正黑體", sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

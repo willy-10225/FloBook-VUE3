@@ -50,7 +50,7 @@ export interface FloBookLicense {
 }
 
 export interface UserInfo {
-  userId: number 
+  userId: number
   displayName: string
   account: string
   name: string
@@ -152,6 +152,10 @@ const getters = {
 }
 
 const mutations = {
+  setSidenavShown(state: RootState, payload: boolean) {
+    state.layout.isSidenavShown = payload
+    localStorage.setItem("layout", JSON.stringify(state.layout))
+  },
   changeLanguage(state: RootState, payload: string) {
     state.lang = payload
     localStorage.setItem("lang", payload)
@@ -291,7 +295,7 @@ const actions = {
 }
 
 export default createStore({
-  strict: process.env.NODE_ENV !== "production",
+  strict: import.meta.env.MODE !== "production",
   state,
   getters,
   mutations,

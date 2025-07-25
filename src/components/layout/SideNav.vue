@@ -1,13 +1,21 @@
 <template>
-  <aside class="qi-sidenav" :style="qiSidenavShown">
+  <v-navigation-drawer
+    app
+    class="qi-sidenav"
+    :model-value="layout.isSidenavShown"
+    :width="layout.sidenavWidth"
+    :scrim="false"
+  >
+    <!-- LOGO 區 -->
     <router-link to="/" class="qi-sidenav-head">
-      <img src="/img/Home/logo-flobook-wbg.png" alt="Home" />
+      <v-img src="/img/Home/logo-flobook-wbg.png" alt="Home" width="170" />
     </router-link>
 
-    <section class="qi-sidenav-body">
+    <!-- 主選單項目 -->
+    <v-list class="qi-sidenav-body">
       <SideNavItem v-for="(item, index) in items" :key="index" :item="item" />
-    </section>
-  </aside>
+    </v-list>
+  </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
@@ -15,35 +23,40 @@ import { computed, reactive } from "vue"
 import { useStore } from "vuex"
 import SideNavItem from "@/components/layout/SideNavItem.vue"
 
-const props = defineProps<{
-  showSideNav?: boolean
-}>()
-
 const store = useStore()
 const layout = computed(() => store.getters.layout)
-
-const qiSidenavShown = computed(() => ({
-  width: layout.value.isSidenavShown ? layout.value.sidenavWidth + "px" : "0px",
-}))
 
 const items = reactive([
   {
     text: "Monitor",
+    icon: "mdi-monitor",
     childrens: [
-      { text: "Monitor", routeName: "Monitor" },
-      { text: "Detail", routeName: "Monitor Detail" },
+      { text: "Monitor", routeName: "Monitor", icon: "mdi-chart-line" },
+      { text: "Detail", routeName: "MonitorDetail", icon: "mdi-information" },
     ],
   },
   {
     text: "Track",
-    childrens: [{ text: "Knowledge", routeName: "Knowledge Database" }],
+    icon: "mdi-trackpad",
+    childrens: [
+      {
+        text: "Knowledge",
+        routeName: "KnowledgeDatabase",
+        icon: "mdi-book-open",
+      },
+    ],
   },
   {
     text: "Solve",
+    icon: "mdi-tools",
     childrens: [
-      { text: "Job Submission", routeName: "Job Submission" },
-      { text: "Job Manager", routeName: "Job Manager" },
-      { text: "Solve Config", routeName: "Solve Config" },
+      { text: "Job Submission", routeName: "JobSubmission", icon: "mdi-send" },
+      {
+        text: "Job Manager",
+        routeName: "JobManager",
+        icon: "mdi-clipboard-list",
+      },
+      { text: "Solve Config", routeName: "SolveConfig", icon: "mdi-cog" },
     ],
   },
 ])
@@ -55,14 +68,6 @@ const items = reactive([
   top: 0;
 }
 .qi-sidenav {
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 100%;
-  position: fixed;
-  z-index: 20190225;
-  transition: 0.1s ease;
-  overflow-x: hidden;
   background-color: #222;
 }
 .qi-sidenav a {
@@ -100,6 +105,7 @@ const items = reactive([
   margin-left: 50px;
   cursor: pointer;
 }
+
 .sidenav-footer {
   width: 100%;
   height: fit-content;

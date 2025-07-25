@@ -6,11 +6,13 @@
     class="custom-dialog"
   >
     <v-card :class="dialogClass" class="pa-4 text-center">
+      <!-- 載入中 -->
       <div v-if="loadingDialog.isLoading">
         <div class="dialog-message">{{ title || $t("common.wait") }}</div>
         <v-progress-circular indeterminate color="white" size="36" />
       </div>
 
+      <!-- 載入結束 -->
       <div v-else>
         <div v-if="loadingDialog.isSuccess" class="text-white text-h6">
           {{ $t("common.success") }}
@@ -18,16 +20,19 @@
         <div v-else class="text-white text-h6">
           {{ $t("common.fail") }}
         </div>
+
         <pre
           v-if="loadingDialog.error"
           class="error-message text-white text-left"
           >{{ errorMessage }}</pre
         >
+
         <pre
           v-if="loadingDialog.message"
           class="error-message text-white text-left"
           >{{ message }}</pre
         >
+
         <div
           v-if="!loadingDialog.isSuccess"
           class="cae-support text-white mt-6"
@@ -35,6 +40,7 @@
         ></div>
       </div>
 
+      <!-- 確認按鈕 -->
       <v-card-actions v-if="loadingDialog.showAction" class="justify-center">
         <v-btn
           ref="loadingClose"
@@ -50,8 +56,8 @@
   </v-dialog>
 </template>
 
-<script lang="ts" setup>
-import { computed, ref } from "vue"
+<script setup lang="ts">
+import { computed } from "vue"
 import { useStore } from "vuex"
 import { useI18n } from "vue-i18n"
 
@@ -88,25 +94,30 @@ const closeLoadingDialog = () => {
 </script>
 
 <style scoped>
-.custom-dialog >>> .v-overlay__content {
+/* ✅ 使用 :deep() 替代 >>>，支援 scoped 樣式下影響 Vuetify 元件 */
+:deep(.custom-dialog .v-overlay__content) {
   text-align: center;
 }
 
 .upload-success {
   background-color: #1ea296;
 }
+
 .upload-fail {
   background-color: rgb(180, 57, 57);
 }
+
 .dialog-message {
   font-weight: bold;
   color: white;
   font-size: 24px;
   margin-bottom: 20px;
 }
+
 .dialog-button {
   font-size: large;
 }
+
 .error-message {
   margin-top: 10px;
   font-size: 20px;
@@ -114,8 +125,11 @@ const closeLoadingDialog = () => {
   font-family: "Microsoft JhengHei", Arial, sans-serif;
   white-space: pre-wrap;
 }
+
 .cae-support {
-  font-size: 18px;
+  white-space: pre-wrap;
+  color: white;
   margin-top: 40px;
+  font-size: 18px;
 }
 </style>

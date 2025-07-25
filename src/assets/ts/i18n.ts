@@ -3,18 +3,17 @@ import en_us from "@/assets/languages/en-us.json"
 import zh_tw from "@/assets/languages/zh-tw.json"
 import zh_cn from "@/assets/languages/zh-cn.json"
 
-const savedLang = localStorage.getItem("lang") || "zh-tw"
-
 const i18n = createI18n({
-  legacy: false, // Composition API 模式
-  locale: savedLang,
-  fallbackLocale: "en-us",
+  legacy: false,
+  globalInjection: true,
+  locale: "zh-tw",
+  fallbackLocale: "zh-tw",
   messages: {
     "en-us": en_us,
-    "zh-tw": zh_tw,
     "zh-cn": zh_cn,
+    "zh-tw": zh_tw,
   },
-  globalInjection: true,
+  escapeParameterHtml: false, // ✅ 關鍵設定
 })
 
 export default i18n

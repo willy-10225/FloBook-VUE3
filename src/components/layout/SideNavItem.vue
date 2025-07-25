@@ -1,38 +1,58 @@
 <template>
   <div class="side-nav-item">
+    <!-- 有子選單 -->
     <div v-if="!item.routeName">
-      <a
+      <v-btn
+        block
+        variant="text"
         class="sidenav-accordion"
-        @click="togglePanel"
         :class="{ active: open }"
+        @click="togglePanel"
+        elevation="0"
+        rounded="md"
+        dense
       >
-        {{ item.text }}
-      </a>
-      <transition name="slide-fade">
-        <div class="sidenav-accordion-panel" ref="panelRef">
-          <router-link
+        <span class="text-start">{{ item.text }}</span>
+        <v-icon class="ml-auto" :class="{ rotated: open }" size="20">
+          mdi-chevron-right
+        </v-icon>
+      </v-btn>
+
+      <v-expand-transition>
+        <div v-show="open" class="sidenav-accordion-panel">
+          <RouterLink
             v-for="(child, index) in item.childrens"
             :key="index"
+            class="sub-link"
             :to="buildLink(child)"
           >
             {{ child.text }}
-          </router-link>
+          </RouterLink>
         </div>
-      </transition>
+      </v-expand-transition>
     </div>
 
-    <router-link
-      class="sidenav-accordion-self"
+    <!-- 單一選單 -->
+    <RouterLink
       v-else
+      class="sidenav-accordion-self"
       :to="{ name: item.routeName }"
     >
-      {{ item.text }}
-    </router-link>
+      <v-btn
+        block
+        variant="text"
+        class="text-start"
+        elevation="0"
+        rounded="md"
+        dense
+      >
+        {{ item.text }}
+      </v-btn>
+    </RouterLink>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Value } from "sass"
 import { ref } from "vue"
 
 interface NavItem {
@@ -47,103 +67,85 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
-const panelRef = ref<HTMLDivElement | null>(null)
 
 function togglePanel() {
   open.value = !open.value
-  const panel = panelRef.value
-  if (panel) {
-    if (open.value) {
-      panel.style.maxHeight = panel.scrollHeight + "px"
-    } else {
-      panel.style.maxHeight = "0px"
-    }
-  }
 }
+
 function buildLink(obj: NavItem) {
   return obj.params
     ? { name: obj.routeName, params: obj.params }
     : { name: obj.routeName }
 }
 </script>
+
 <style scoped>
-.sidenav-accordion,
-.sidenav-accordion-self,
-.sidenav-accordion-panel a {
+.side-nav-item {
   width: 100%;
-  height: 52px;
-  border: none;
-  display: block;
-  cursor: pointer;
-  font-size: 20px;
-  color: #818181;
-  transition: 0.2s;
-  text-align: left;
-  text-decoration: none;
-  overflow: hidden;
-  background-color: inherit;
-  padding: 10px 8px 8px 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
-.sidenav-accordion:after {
-  color: #818181;
-  font-weight: bold;
-  float: right;
-  margin-left: 5px;
-  content: "\2023";
-  transform-origin: center;
-  transform: rotate(180deg);
-  transition: 0.2s;
+
+/* 項目按鈕 */
+.sidenav-accordion {
+  text-transform: none;
+  font-size: 16px;
+  color: #bbb;
+  justify-content: space-between;
+  padding: 12px 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 6px;
+  user-select: none;
 }
-.sidenav-accordion.active {
-  background-color: #888;
-  color: white;
-}
-.sidenav-accordion.active:after {
-  color: white;
-  content: "\2023";
-  transform-origin: center;
-  transform: rotate(90deg) translateY(-3px);
-  transition: 0.2s;
-}
-.sidenav-accordion :focus {
-  outline: none;
-}
-.sidenav-accordion-self a {
-  color: #818181;
-}
-.sidenav-accordion-self:hover,
+.sidenav-accordion.active,
 .sidenav-accordion:hover {
-  color: #f1f1f1;
-  background-color: #888;
+  background-color: #555;
+  color: #fff;
 }
-.sidenav-accordion-self:hover a,
-.sidenav-accordion:hover:after {
-  color: #f1f1f1;
+.sidenav-accordion .v-icon {
+  transition: transform 0.3s ease;
+  color: inherit;
 }
+.sidenav-accordion .v-icon.rotated {
+  transform: rotate(90deg);
+}
+
+/* 子選單區域 */
 .sidenav-accordion-panel {
-  background-color: #333;
-  padding-left: 8px;
-  max-height: 0px;
-  overflow: hidden;
-  transition: 0.2s;
+  background-color: #2c2c2c;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-left: 1px solid #444;
+  user-select: none;
 }
-.sidenav-accordion-panel a.sidenav-accordion:hover {
-  background-color: #888;
-  color: #f1f1f1;
+
+/* 子選單連結 */
+.sub-link {
+  display: block;
+  padding: 8px 0px;
+  font-size: 14px;
+  color: #ccc;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  user-select: none;
 }
-.sidenav-accordion-panel a:hover {
-  background-color: #333;
-  color: #f1f1f1;
+.sub-link:hover {
+  background-color: #444;
+  color: #fff;
+  text-decoration: none;
 }
-.slide-fade-enter-active {
-  transition: all 0.3s;
+
+/* 單一選單按鈕 */
+.sidenav-accordion-self .v-btn {
+  font-size: 16px;
+  color: #bbb;
+  text-transform: none;
+  justify-content: flex-start;
+  border-radius: 6px;
+  user-select: none;
 }
-.slide-fade-leave-active {
-  transition: all 0.3s;
-}
-.slide-fade-enter,
-.slide-fade-leave-active {
-  transform: translateY(-30px);
-  opacity: 0;
+.sidenav-accordion-self .v-btn:hover {
+  background-color: #555;
+  color: #fff;
 }
 </style>

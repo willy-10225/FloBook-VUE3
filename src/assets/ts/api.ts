@@ -466,7 +466,7 @@ export interface UploadJobFilePayload {
   file: File
 }
 
-export function apiUploadJobFile(payload: UploadJobFilePayload) {
+export function apiUploadJobFile(payload: FormData) {
   return flobookApi.post("/UploadJobFile", payload)
 }
 /**

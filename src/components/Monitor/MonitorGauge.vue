@@ -1,6 +1,6 @@
 <template>
   <div class="monitor-gauge">
-    <router-link :to="{ name: 'Monitor Detail', params: { ip: gauge.Ip } }">
+    <router-link :to="{ name: 'MonitorDetail', params: { ip: gauge.Ip } }">
       {{ gauge.Id }}
     </router-link>
 

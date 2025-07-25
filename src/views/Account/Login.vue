@@ -43,6 +43,7 @@
           :rules="accountRules"
           variant="outlined"
           density="comfortable"
+          autocomplete="current-password"
           prepend-inner-icon="mdi-account"
           class="mb-4 rounded-lg shadow-sm"
           required
@@ -56,6 +57,7 @@
           :rules="passwordRules"
           variant="outlined"
           density="comfortable"
+          autocomplete="current-password"
           prepend-inner-icon="mdi-lock"
           class="mb-4 rounded-lg shadow-sm"
           @keyup.enter="login"
@@ -91,10 +93,9 @@ import { apiLogin } from "@/assets/ts/api"
 import { useI18n } from "vue-i18n"
 import type { VForm } from "vuetify/components"
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const store = useStore()
 const router = useRouter()
-
 
 // 語言切換
 const openLangMenu = ref(false)
@@ -119,19 +120,17 @@ const versionOption = computed(() => store.getters.versionOption)
 
 // 驗證規則
 const accountRules = [
-  (v: string) => !!v || store.state.i18n.t("validate.required"),
+  (v: string) => !!v || t("validate.required"),
   (v: string) =>
-    (v && v.length >= 3 && v.length <= 20) ||
-    store.state.i18n.t("validate.wrongAccountLength"),
+    (v && v.length >= 3 && v.length <= 20) || t("validate.wrongAccountLength"),
   (v: string) =>
     /^[a-zA-Z0-9]+([_ -.][a-zA-Z0-9]+)*$/.test(v) ||
-    store.state.i18n.t("validate.wrongAccountFormat"),
+    t("validate.wrongAccountFormat"),
 ]
 const passwordRules = [
-  (v: string) => !!v || store.state.i18n.t("validate.required"),
+  (v: string) => !!v || t("validate.required"),
   (v: string) =>
-    (v && v.length >= 4 && v.length <= 32) ||
-    store.state.i18n.t("validate.wrongPasswordFormat"),
+    (v && v.length >= 4 && v.length <= 32) || t("validate.wrongPasswordFormat"),
 ]
 
 // 密碼顯示
