@@ -44,35 +44,25 @@
         @mouseleave="hideTooltip"
       >
         {{ item.cpu }}
-      </v-col>
-
-      <div
-        v-if="tooltip.visible"
-        class="custom-tooltip"
-        :style="{ top: tooltip.y + 'px', left: tooltip.x + 'px' }"
-      >
-        <template v-if="tooltip.users.length > 0">
-          <v-table class="custom-tooltip-table" density="compact">
+        <span class="tooltip">
+          <table class="tooltip-table" v-if="item.userCPU.length > 0">
             <tbody>
-              <tr v-for="(user, i) in tooltip.users" :key="'cpu-user-' + i">
-                <td>
-                  <v-icon :color="colorFromIndex(i)" class="me-2"
-                    >mdi-circle</v-icon
-                  >
+              <tr v-for="(i, index) in item.userCPU" :key="'cpu' + index">
+                <td class="dot-cell">
+                  <span class="dot" :style="colorFromIndex(index)"></span>
                 </td>
-                <td>{{ user.user }}</td>
-                <td>
-                  {{
-                    Math.round(((user.cpu ?? 0) / 100) * item.cpuDenominator)
-                  }}
-                  Core
+                <td class="tooltip-ctd">
+                  {{ i.user }}
+                </td>
+                <td class="user-ram-cell">
+                  {{ Math.round((i.cpu / 100) * item.cpuDenominator) }} Core
                 </td>
               </tr>
             </tbody>
-          </v-table>
-        </template>
-        <span v-else>No Data</span>
-      </div>
+          </table>
+          <span v-else>{{ $t("common.no-data") }}</span>
+        </span>
+      </v-col>
 
       <!-- RAM -->
       <v-col cols="2" :class="getBlockColor(item.ram)">
@@ -218,8 +208,8 @@ import { useRouter } from "vue-router"
 
 interface UserCpuRam {
   user: string
-  cpu?: number
-  ram?: number
+  cpu: number
+  ram: number
 }
 
 interface DiskData {
