@@ -1,5 +1,5 @@
 // src/assets/ts/colorPalette.ts
-const colorPalette: string[] = [
+const Color: string[] = [
   "#c23531",
   "#2f4554",
   "#61a0a8",
@@ -46,4 +46,4 @@ const colorPalette: string[] = [
   "#dee1ec",
 ]
 
-export default colorPalette
+export default Color

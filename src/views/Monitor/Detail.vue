@@ -247,7 +247,7 @@ import {
   apiTerminateLicense,
   apiMonitorList,
   apiAdminConfig,
-} from "@/assets/js/api"
+} from "@/assets/ts/api"
 
 let almTooltipData = []
 

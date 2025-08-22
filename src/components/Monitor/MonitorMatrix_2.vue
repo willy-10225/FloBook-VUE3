@@ -40,152 +40,76 @@
       <v-col
         cols="2"
         :class="getBlockColor(item.cpu)"
-        @mousemove="e => moveTooltip(e, item.userCPU)"
+        @mousemove="e => moveTooltip(e, item, 'cpu')"
         @mouseleave="hideTooltip"
       >
         {{ item.cpu }}
-        <span class="tooltip">
-          <table class="tooltip-table" v-if="item.userCPU.length > 0">
-            <tbody>
-              <tr v-for="(i, index) in item.userCPU" :key="'cpu' + index">
-                <td class="dot-cell">
-                  <span class="dot" :style="colorFromIndex(index)"></span>
-                </td>
-                <td class="tooltip-ctd">
-                  {{ i.user }}
-                </td>
-                <td class="user-ram-cell">
-                  {{ Math.round((i.cpu / 100) * item.cpuDenominator) }} Core
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <span v-else>{{ $t("common.no-data") }}</span>
-        </span>
       </v-col>
-
+      <span
+        class="tooltip"
+        v-show="tooltip.visible"
+        :style="{
+          position: 'absolute',
+          top: tooltip.y + 'px',
+          left: tooltip.x + 'px',
+          zIndex: 9999,
+        }"
+      >
+        <table class="tooltip-table" v-if="tooltip.users.length > 0">
+          <tbody>
+            <tr v-for="(i, index) in tooltip.users" :key="'cpu' + index">
+              <td class="dot-cell">
+                <v-icon size="10" :color="colorFromIndex(index)" class="me-2"
+                  >mdi-circle</v-icon
+                >
+              </td>
+              <td class="tooltip-ctd">{{ i.user }}</td>
+              <td class="user-ram-cell">
+                {{ i.value }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <span v-else>{{ $t("common.no-data") }}</span>
+      </span>
       <!-- RAM -->
-      <v-col cols="2" :class="getBlockColor(item.ram)">
-        <v-tooltip location="bottom" open-on-hover :close-delay="100">
-          <template #activator="{ props }">
-            <div v-bind="props">{{ item.ram }}</div>
-          </template>
-          <template #default>
-            <template v-if="item.userRAM.length > 0">
-              <v-table density="compact">
-                <tbody>
-                  <tr v-for="(user, i) in item.userRAM" :key="'ram-user-' + i">
-                    <td>
-                      <v-icon size="10" :color="colorFromIndex(i)" class="me-2"
-                        >mdi-circle</v-icon
-                      >
-                    </td>
-                    <td>{{ user.user }}</td>
-                    <td>
-                      {{
-                        Math.round(
-                          ((user.ram ?? 0) / 100) * item.ramDenominator
-                        )
-                      }}
-                      GB
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </template>
-            <span v-else>No Data</span>
-          </template>
-        </v-tooltip>
+      <v-col
+        cols="2"
+        :class="getBlockColor(item.ram)"
+        @mousemove="e => moveTooltip(e, item, 'ram')"
+        @mouseleave="hideTooltip"
+      >
+        {{ item.ram }}
       </v-col>
 
       <!-- Disk -->
-      <v-col cols="2" :class="getBlockColor(item.disk)">
-        <v-tooltip location="bottom" open-on-hover :close-delay="100">
-          <template #activator="{ props }">
-            <div v-bind="props">{{ item.disk }}</div>
-          </template>
-          <template #default>
-            <template v-if="item.disklen > 0">
-              <v-table density="compact">
-                <tbody>
-                  <tr v-for="(name, i) in item.diskCapacity" :key="'disk-' + i">
-                    <td>
-                      <v-icon size="10" :color="colorFromIndex(i)" class="me-2"
-                        >mdi-circle</v-icon
-                      >
-                    </td>
-                    <td>{{ name }}</td>
-                    <td>
-                      {{ item.diskUsespace[i] }}/{{ item.diskTotalspace[i] }}
-                      (GB)
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </template>
-            <span v-else>No Data</span>
-          </template>
-        </v-tooltip>
+      <v-col
+        cols="2"
+        :class="getBlockColor(item.disk)"
+        @mousemove="e => moveTooltip(e, item, 'disk')"
+        @mouseleave="hideTooltip"
+      >
+        {{ item.disk }}
       </v-col>
 
       <!-- Users -->
-      <v-col cols="2" class="normal-block">
-        <v-tooltip location="bottom" open-on-hover :close-delay="100">
-          <template #activator="{ props }">
-            <div v-bind="props">{{ item.userNum }}</div>
-          </template>
-          <template #default>
-            <template v-if="item.userNum > 0">
-              <v-table density="compact">
-                <tbody>
-                  <tr v-for="(user, i) in item.userCPU" :key="'user-' + i">
-                    <td>
-                      <v-icon size="10" :color="colorFromIndex(i)" class="me-2"
-                        >mdi-circle</v-icon
-                      >
-                    </td>
-                    <td>{{ user.user }}</td>
-                    <td>
-                      <span v-if="(user.cpu ?? 0) > 0">running</span>
-                      <span v-else>idle</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </template>
-            <span v-else>No Data</span>
-          </template>
-        </v-tooltip>
+      <v-col
+        cols="2"
+        class="normal-block"
+        @mousemove="e => moveTooltip(e, item, 'users')"
+        @mouseleave="hideTooltip"
+      >
+        {{ item.userNum }}
       </v-col>
 
       <!-- Duty Licenses -->
-      <v-col cols="2" class="unable-block">
-        <v-tooltip location="bottom" open-on-hover :close-delay="100">
-          <template #activator="{ props }">
-            <div v-bind="props">{{ item.licenseNum }}</div>
-          </template>
-          <template #default>
-            <template v-if="(item.licenseNum ?? 0) > 0">
-              <v-table density="compact">
-                <tbody>
-                  <tr
-                    v-for="(feature, i) in item.FeatureList"
-                    :key="'license-' + i"
-                  >
-                    <td>
-                      <v-icon size="10" :color="colorFromIndex(i)" class="me-2"
-                        >mdi-circle</v-icon
-                      >
-                    </td>
-                    <td>{{ feature }}:</td>
-                    <td>{{ (item.licenseList ?? [])[i] }}</td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </template>
-            <span v-else>No Data</span>
-          </template>
-        </v-tooltip>
+      <v-col
+        cols="2"
+        class="unable-block"
+        @mousemove="e => moveTooltip(e, item, 'licenses')"
+        @mouseleave="hideTooltip"
+      >
+        {{ item.licenseNum }}
       </v-col>
     </v-row>
   </v-container>
@@ -272,6 +196,7 @@ interface UserCpu {
   user: string
   cpu?: number
   ram?: number
+  value: string
 }
 
 interface TooltipState {
@@ -301,7 +226,7 @@ export default defineComponent({
       visible: false,
       x: 0,
       y: 0,
-      users: [],
+      users: [] as { user: string; value: string }[],
     })
     const sortOrder = ref<"asc" | "dsc">("asc")
     const sortBy = ref<string>("")
@@ -333,50 +258,76 @@ export default defineComponent({
       () => store.getters["common/dataLoading"] || "Loading..."
     )
 
-    function moveTooltip(e: MouseEvent, users: UserCpu[]) {
+    function moveTooltip(e: MouseEvent, items: MatrixItem, type: string) {
+      console.log("moveTooltip", items)
+      const margin = 10
       const tooltipWidth = 220
       const tooltipHeight = 160
-      const margin = 10
-
-      const sidenavWidth = layout.value.sidenavWidth || 0
-      const matrixEl = document.querySelector(".monitor-matrix")
-      const matrixHeight = matrixEl
-        ? matrixEl.getBoundingClientRect().height + 120
-        : window.innerHeight
-      const maxheight = Math.max(matrixHeight, window.innerHeight)
 
       let x = e.clientX
-      if (layout.value.isSidenavShown) {
-        x -= sidenavWidth
-      }
-
-      // 限制 x 不超出左右邊界
-      if (x + tooltipWidth + margin > document.body.clientWidth) {
-        x = document.body.clientWidth - tooltipWidth - margin
-      }
-      if (x < margin) {
-        x = margin
-      }
-
-      // 預設顯示在滑鼠下方
       let y = e.clientY + window.scrollY + 10
 
-      // 如果下方空間不足，就顯示在滑鼠上方
-      if (y + tooltipHeight > maxheight) {
+      if (x + tooltipWidth + margin > window.innerWidth) {
+        x = window.innerWidth - tooltipWidth - margin
+      }
+      if (x < margin) x = margin
+
+      if (y + tooltipHeight > window.innerHeight + window.scrollY) {
         y = e.clientY + window.scrollY - tooltipHeight - 10
-        // 如果上方也會超出畫面，就貼齊頂部
-        if (y < window.scrollY + margin) {
-          y = window.scrollY + margin
-        }
+        if (y < window.scrollY + margin) y = window.scrollY + margin
+      }
+      if (type === "cpu") {
+        tooltip.users = items.userCPU.map((e, i) => {
+          return {
+            user: e.user,
+            value:
+              Math.round((e.cpu / 100) * items.cpuDenominator).toString() +
+              " Core",
+          }
+        })
+      } else if (type === "ram") {
+        tooltip.users = items.userRAM.map((e, i) => {
+          return {
+            user: e.user,
+            value:
+              Math.round((e.ram / 100) * items.ramDenominator).toString() +
+              " GB",
+          }
+        })
+      } else if (type === "disk") {
+        tooltip.users = items.diskCapacity.map((e, i) => {
+          return {
+            user: e,
+            value:
+              items.diskUsespace[i].toString() +
+              "/" +
+              items.diskTotalspace[i].toString() +
+              " (GB)",
+          }
+        })
+      } else if (type === "users") {
+        tooltip.users = items.userCPU.map((e, i) => {
+          return {
+            user: e.user,
+            value: e.cpu > 0 ? "running" : "idle",
+          }
+        })
+      } else if (type === "licenses") {
+        tooltip.users = (items?.FeatureList ?? []).map((e, i) => {
+          return {
+            user: e,
+            value: items?.licenseList?.[i] ?? "N/A",
+            cpu: undefined, // 可選填，或填 0
+            ram: undefined, // 可選填，或填 0
+          }
+        })
       }
 
       tooltip.x = x
-      tooltip.y = y - 100
-      tooltip.users = users
+      tooltip.y = y - 90
       tooltip.visible = true
     }
 
-    // 隱藏 tooltip
     function hideTooltip() {
       tooltip.visible = false
     }
@@ -481,7 +432,6 @@ export default defineComponent({
           }
         }
       })
-
       matrixData.value = newData
 
       if (props.rawLicensesList) {
@@ -736,7 +686,6 @@ export default defineComponent({
   opacity: 1;
 }
 .tooltip {
-  display: none;
   position: absolute;
   border-radius: 6px;
   padding: 6px;
@@ -750,6 +699,7 @@ export default defineComponent({
   z-index: 999;
   pointer-events: none;
 }
+
 .list-wrap {
   height: 24px;
   text-align: left;

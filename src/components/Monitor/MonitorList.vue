@@ -1,45 +1,87 @@
 <template>
-  <v-container fluid class="monitor-matrix">
-    <v-row class="table-container" no-gutters>
-      <v-col
-        v-for="(tableChunk, location) in splitTables"
-        :key="location"
-        cols="12"
-        md="4"
-        lg="3"
+  <section class="monitor-matrix">
+    <div class="table-container">
+      <div
+        v-for="(rows, groupName) in splitTables"
+        :key="groupName"
         class="table-wrapper"
+        style="height: 80vh; width: 260px"
       >
         <!-- 卡片顯示主要資訊 -->
-        <v-card class="server-card">
-          <v-card-text class="server-header">
-            <div class="server-status">
-              <span v-if="getOverallStatus(tableChunk) === 'green'">🟢</span>
-              <span v-else-if="getOverallStatus(tableChunk) === 'yellow'"
+        <v-card
+          class="server-card"
+          elevation="0"
+          style="margin-top: 10px; height: 100px; display: flex"
+        >
+          <div class="server-header" style="display: flex; height: 100%">
+            <div
+              class="server-status"
+              style="font-size: 40px; margin-right: 10px; display: flex"
+            >
+              <span
+                v-if="getOverallStatus(rows) === 'green'"
+                class="status-icon"
+                >🟢</span
+              >
+              <span
+                v-else-if="getOverallStatus(rows) === 'yellow'"
+                class="status-icon"
                 >🟡</span
               >
-              <span v-else-if="getOverallStatus(tableChunk) === 'red'">🔴</span>
-              <span v-else>⚠️</span>
+              <span
+                v-else-if="getOverallStatus(rows) === 'red'"
+                class="status-icon"
+                >🔴</span
+              >
+              <span v-else-if="getOverallStatus(rows) === 'alert'">⚠️</span>
             </div>
-            <div class="server-name">{{ location }}</div>
-          </v-card-text>
+            <div
+              class="server-name"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              {{ groupName }}
+            </div>
+          </div>
         </v-card>
 
-        <!-- 表格顯示詳細資訊 -->
+        <!-- 表格顯示詳細資訊（Vuetify 3） -->
         <v-data-table
-          :items="tableChunk"
-          class="elevation-1 white--text"
-          hide-default-footer
           :headers="headers"
-          item-value="no"
-          density="compact"
+          :items="rows"
+          class="big-table-text"
+          density="comfortable"
+          hide-default-footer
+          item-key="no"
+          style="min-width: 100%; overflow-x: auto"
         >
-          <template #item.status="{ item }">
-            <span v-if="item.status === 'green'">🟢</span>
-            <span v-else-if="item.status === 'yellow'">🟡</span>
-            <span v-else-if="item.status === 'red'">🔴</span>
-            <span v-else-if="item.status === 'alert'">⚠️</span>
+          <!-- No -->
+          <template #item.no="{ item }">
+            <div class="text-center" style="width: 15px">{{ item.no }}</div>
           </template>
 
+          <!-- Status -->
+          <template #item.status="{ item }">
+            <div class="text-center" style="width: 15px">
+              <span v-if="item.status === 'green'" style="font-size: 22px"
+                >🟢</span
+              >
+              <span v-else-if="item.status === 'yellow'" style="font-size: 22px"
+                >🟡</span
+              >
+              <span v-else-if="item.status === 'red'" style="font-size: 22px"
+                >🔴</span
+              >
+              <span v-else-if="item.status === 'alert'" style="font-size: 22px"
+                >⚠️</span
+              >
+            </div>
+          </template>
+
+          <!-- IP + 自訂 Tooltip（保留你的外觀與行為） -->
           <template #item.ip="{ item }">
             <span
               class="ip-hover"
@@ -50,61 +92,51 @@
             </span>
           </template>
         </v-data-table>
-      </v-col>
-    </v-row>
-    <div
-      v-if="tooltip.visible"
-      class="tooltip"
-      :style="tooltipStyle"
-      v-html="tooltip.content"
-    ></div>
-  </v-container>
+      </div>
+    </div>
+
+    <!-- 自訂 Tooltip（保留你的樣式與排版） -->
+    <div class="tooltip" v-if="tooltip.visible" v-html="tooltip.content"></div>
+  </section>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue"
-import { useRouter } from "vue-router"
+<script lang="ts" setup>
+import { computed, reactive, ref, onMounted, nextTick } from "vue"
 import { apiGetList } from "@/assets/ts/api"
 import { classdict, serverdict } from "@/assets/ts/classdict"
-import type { CSSProperties } from "vue"
 
-const tooltip = ref({
-  visible: false,
-  top: 0,
-  left: 0,
-  content: "",
-})
+type LicenseLog = { Task?: number }
 
-const tooltipStyle = computed<CSSProperties>(() => ({
-  top: `${tooltip.value.top}px`,
-  left: `${tooltip.value.left}px`,
-  position: "fixed",
-  display: tooltip.value.visible ? "block" : "none",
-  padding: "8px 12px",
-  border: "1px solid",
-  borderRadius: "5px",
-  boxShadow: "0 2px 6px",
-  zIndex: "9999",
-  pointerEvents: "none",
-  whiteSpace: "pre-line",
-  fontSize: "14px",
-  lineHeight: "1.5",
-}))
-export interface RawDeviceData {
-  ip: string
-  cpu: string
-  ram: string
-  gpu: string
-  username: string
-  updateTime: string
-  [key: string]: any // 為了容錯，可保留索引簽名
+interface DiskData {
+  Capacity: number | string
+  Total_space: number | string
+  Utilization: number // 0~1 或 0~100？下方以 0~1 * Total_space 用
 }
-export type StatusType = "green" | "yellow" | "red" | "alert"
 
-export interface TableRow {
+interface CpuData {
+  Number: number
+  Utilization: number // 0~100
+}
+
+interface MemoryData {
+  Size: number // MB
+  Utilization: number // 0~100
+}
+
+interface Device {
+  Id: string
+  Ip: string
+  CpuData: CpuData
+  MemoryData: MemoryData
+  DiskData: DiskData[]
+  UserList: any[]
+  LicenseLogList: LicenseLog[]
+}
+
+interface TableRow {
   no: number
   Device: string
-  status: StatusType
+  status: "green" | "yellow" | "red" | "alert"
   ip: string
   cpu: string
   disk: string
@@ -113,36 +145,54 @@ export interface TableRow {
   License: number
 }
 
-const props = defineProps<{ rawData: RawDeviceData[] }>()
-const router = useRouter()
+const props = defineProps<{ rawData: Device[] }>()
 
-const someMapping = ref<Record<string, string>>({})
+// 表頭（與原本欄寬/對齊一致）
+const headers = ref([
+  { title: "No", key: "no", align: "center" as const, width: 55 },
+  { title: "Status", key: "status", align: "center" as const, width: 65 },
+  { title: "IP", key: "ip", align: "center" as const },
+])
 
-const headers = [
-  { text: "No", value: "no" },
-  { text: "Status", value: "status" },
-  { text: "IP", value: "ip" },
-]
+// Tooltip 狀態（保留你的行為）
+const tooltip = reactive({
+  visible: false,
+  top: 0,
+  left: 0,
+  content: "",
+})
+const tooltipStyle = computed(() => ({
+  position: "fixed",
+  top: tooltip.top + "px",
+  left: tooltip.left + "px",
+  display: tooltip.visible ? "block" : "none",
+  padding: "8px 12px",
+  border: "1px solid ",
+  borderRadius: "5px",
+  boxShadow: "0 2px 6px ",
+  zIndex: 9999,
+  pointerEvents: "none",
+  whiteSpace: "pre-line",
+  fontSize: "14px",
+  lineHeight: "1.5",
+}))
 
-const getLocation = (ip: string): string => {
-  const ipLast = parseInt(ip.split(".").pop() || "0")
-  for (const key in someMapping.value) {
-    if (key.includes("~")) {
-      const keyHead = key.split(".").slice(0, 3).join(".") + "."
-      if (ip.startsWith(keyHead)) {
-        const [start, end] = key.split("~")
-        const startLast = parseInt(start.split(".").pop() || "0")
-        const endLast = parseInt(end.split(".").pop() || "0")
-        if (ipLast >= startLast && ipLast <= endLast)
-          return someMapping.value[key]
-      }
-    } else if (ip.startsWith(key)) return someMapping.value[key]
-  }
-  return "Unknown"
-}
+// IP 區間對應（預設值，會被 API 覆寫）
+let someMapping = ref<Record<string, string>>({
+  "192.168.33.112~192.168.33.116": "server",
+  "192.168.168.112~192.168.168.113": "server",
+  "192.168.11.1~192.168.11.10": "Banqiao Classroom B",
+  "192.168.11.111~192.168.11.130": "Banqiao Classroom A",
+  "192.168.12.": "Taichung Classroom",
+  "192.168.13.": "Tainan Classroom",
+})
 
+/** 依 IP 分群並整理表格資料（保留你的規則與顏色門檻/字串格式） */
 const splitTables = computed<Record<string, TableRow[]>>(() => {
   if (!Array.isArray(props.rawData)) return {}
+
+  const categorizedData: Record<string, TableRow[]> = {}
+
   const sortedData = [...props.rawData].sort((a, b) => {
     const ipA = a.Ip.split(".").map(Number)
     const ipB = b.Ip.split(".").map(Number)
@@ -152,68 +202,124 @@ const splitTables = computed<Record<string, TableRow[]>>(() => {
     return 0
   })
 
-  const categorizedData: Record<string, TableRow[]> = { server: [] }
+  sortedData.forEach(device => {
+    const ip = String(device.Ip)
+    const group = getLocation(ip)
 
-  for (const device of sortedData) {
-    const ip = device.Ip
-    const location = getLocation(ip)
+    if (!categorizedData[group]) categorizedData[group] = []
 
-    if (!categorizedData[location]) categorizedData[location] = []
-
+    // 磁碟：用 Total_space * Utilization 求使用量總和 / 總空間
     const capacitySum = Math.round(
-      device.DiskData.reduce((acc, x) => acc + x.Total_space * x.Utilization, 0)
+      device.DiskData.reduce((acc, x) => {
+        const total = Number(x.Total_space) || 0
+        const util = Number(x.Utilization) // 可能是 0~1 或 0~100，若後端是 0~100 可自行調整 /100
+        const ratio = util > 1 ? util / 100 : util
+        return acc + total * ratio
+      }, 0)
     )
-    const totalSum = device.DiskData.reduce((sum, d) => sum + d.Total_space, 0)
+    const totalSum = device.DiskData.reduce(
+      (sum, d) => sum + (Number(d.Total_space) || 0),
+      0
+    )
 
     const maxValue = Math.max(
-      device.CpuData.Utilization / 100,
-      capacitySum / totalSum,
-      device.MemoryData.Utilization / 100
+      (device.CpuData?.Utilization || 0) / 100,
+      totalSum ? capacitySum / totalSum : 0,
+      (device.MemoryData?.Utilization || 0) / 100
     )
 
-    const color = maxValue > 0.7 ? "red" : maxValue > 0.4 ? "yellow" : "green"
+    let color: TableRow["status"] = "green"
+    if (maxValue > 0.7) color = "red"
+    else if (maxValue > 0.4) color = "yellow"
 
     const deviceName =
-      serverdict[device.Id]?.[0] || classdict[device.Id]?.[1] || device.Id
+      (serverdict as any)[device.Id]?.[0] ||
+      (classdict as any)[device.Id]?.[1] ||
+      device.Id
 
-    categorizedData[location].push({
-      no: categorizedData[location].length + 1,
+    const diskText = (() => {
+      const total = device.DiskData.reduce(
+        (acc, disk) => {
+          acc.capacity += parseInt(String(disk.Capacity || 0))
+          acc.total_space += parseInt(String(disk.Total_space || 0))
+          return acc
+        },
+        { capacity: 0, total_space: 0 }
+      )
+      return ` ${total.capacity} / ${total.total_space}`
+    })()
+
+    categorizedData[group].push({
+      no: categorizedData[group].length + 1,
       Device: deviceName,
       status: color,
       ip,
       cpu: `${Math.round(
-        (device.CpuData.Number * device.CpuData.Utilization) / 100
-      )} / ${device.CpuData.Number}`,
-      disk: `${device.DiskData.reduce(
-        (a, d) => a + d.Capacity,
-        0
-      )} / ${device.DiskData.reduce((a, d) => a + d.Total_space, 0)}`,
+        ((device.CpuData?.Number || 0) * (device.CpuData?.Utilization || 0)) /
+          100
+      )} / ${device.CpuData?.Number || 0}`,
+      disk: diskText,
       MemoryData: `${Math.round(
-        (device.MemoryData.Size * device.MemoryData.Utilization) / 102400
-      )} / ${Math.round(device.MemoryData.Size / 1024)}`,
-      Users: device.UserList.length,
-      License: device.LicenseLogList.reduce(
-        (acc, log) => acc + (log.Task || 0),
-        0
-      ),
+        ((device.MemoryData?.Size || 0) *
+          (device.MemoryData?.Utilization || 0)) /
+          102400
+      )} / ${Math.round((device.MemoryData?.Size || 0) / 1024)}`,
+      Users: device.UserList?.length || 0,
+      License:
+        device.LicenseLogList?.reduce(
+          (acc: number, log: LicenseLog) => acc + (log.Task || 0),
+          0
+        ) || 0,
     })
-  }
+  })
+
   return categorizedData
 })
 
-const moveTooltip = (event: MouseEvent, row: TableRow) => {
+function getOverallStatus(tableChunk: TableRow[]): TableRow["status"] {
+  if (!tableChunk?.length) return "green"
+  if (tableChunk.some(i => i.status === "red")) return "red"
+  if (tableChunk.some(i => i.status === "yellow")) return "yellow"
+  return "green"
+}
+
+function getLocation(ip: string): string {
+  const iplast = parseInt(ip.split(".").pop() || "0")
+  for (const key in someMapping.value) {
+    if (key.includes("~")) {
+      const keyhead = key.split(".").slice(0, 3).join(".") + "."
+      if (ip.startsWith(keyhead)) {
+        const [start, end] = key.split("~")
+        const s = parseInt(start.split(".").pop() || "0")
+        const e = parseInt(end.split(".").pop() || "0")
+        if (iplast >= s && iplast <= e) return someMapping.value[key]
+      }
+    } else {
+      if (ip.startsWith(key)) return someMapping.value[key]
+    }
+  }
+  return "Unknown"
+}
+
+// Tooltip 行為（保留你原本的自訂 HTML 表格）
+function moveTooltip(event: MouseEvent, row: TableRow) {
   const offset = 10
-  tooltip.value.visible = true
+  tooltip.top = -9999
+  tooltip.left = -9999
+  tooltip.visible = true
+
   nextTick(() => {
-    const tooltipHeight = 150
+    const tooltipEl = document.querySelector(".tooltip") as HTMLElement | null
+    const tooltipHeight = (tooltipEl && tooltipEl.offsetHeight) || 150
     const windowHeight = window.innerHeight
+
     const shouldDisplayAbove =
       event.clientY + tooltipHeight + offset > windowHeight
-    tooltip.value.top = shouldDisplayAbove
+    tooltip.top = shouldDisplayAbove
       ? event.clientY - tooltipHeight - offset
       : event.clientY + offset
-    tooltip.value.left = event.clientX + offset
-    tooltip.value.content = `
+    tooltip.left = event.clientX + offset
+    tooltip.content = `
       <table class="listtooltip-table">
         <tr><td class="tooltd1">IP</td><td class="tooltd2">:</td><td class="tooltd3">${row.ip}</td></tr>
         <tr><td class="tooltd1">Device</td><td class="tooltd2">:</td><td class="tooltd3">${row.Device}</td></tr>
@@ -222,66 +328,131 @@ const moveTooltip = (event: MouseEvent, row: TableRow) => {
         <tr><td class="tooltd1">Disk</td><td class="tooltd2">:</td><td class="tooltd3">${row.disk}</td></tr>
         <tr><td class="tooltd1">Users</td><td class="tooltd2">:</td><td class="tooltd3">${row.Users}</td></tr>
         <tr><td class="tooltd1">License</td><td class="tooltd2">:</td><td class="tooltd3">${row.License}</td></tr>
-      </table>`
+      </table>
+    `
   })
 }
-
-const hideTooltip = () => {
-  tooltip.value.visible = false
+function hideTooltip() {
+  tooltip.visible = false
 }
 
-const getOverallStatus = (chunk: TableRow[]) => {
-  if (!chunk.length) return "green"
-  if (chunk.some(item => item.status === "red")) return "red"
-  if (chunk.some(item => item.status === "yellow")) return "yellow"
-  return "green"
-}
-
-apiGetList()
-  .then(response => {
-    if (response.data) {
+// 取回 IP 對應名稱（容錯：支援回傳陣列或 axios response）
+onMounted(async () => {
+  try {
+    const res = await apiGetList()
+    const list: Array<{ ip: string; name: string }> = Array.isArray(res)
+      ? res
+      : Array.isArray((res as any)?.data)
+      ? (res as any).data
+      : []
+    if (list.length) {
       someMapping.value = Object.fromEntries(
-        response.data.map(({ ip, name }: any) => [ip, name])
+        list.map(({ ip, name }) => [ip, name])
       )
     }
-  })
-  .catch(console.error)
+  } catch (err) {
+    // 這裡不阻塞畫面；若 CORS/網路錯誤，維持預設 someMapping
+    console.error("API apiGetList error:", err)
+  }
+})
 </script>
 
 <style scoped>
-.monitor-matrix {
-  background-color: #1e1e1e;
-  color: white;
-}
-.server-card {
-  background-color: #3b3b3b;
-  color: white;
-  margin-bottom: 10px;
-}
-.server-status {
-  font-size: 40px;
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-}
-.server-name {
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-}
 .tooltip {
   max-width: 300px;
+  position: fixed;
+  pointer-events: none;
   background-color: #222a35;
   color: #fff;
   padding: 8px 12px;
   border: 1px solid #444;
   border-radius: 5px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  position: fixed;
   z-index: 9999;
-  pointer-events: none;
   white-space: normal;
   font-size: 14px;
   line-height: 1.5;
+}
+
+.status-icon {
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.9);
+}
+.server-name {
+  text-align: left;
+}
+.server-card {
+  background-color: #3b3b3b;
+  color: white;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+
+  /* 新增這兩行 */
+  border: none;
+  box-shadow: none;
+}
+.server-header {
+  display: flex;
+  align-items: center; /* 垂直置中 */
+  justify-content: flex-start; /* 讓內容靠左排列 */
+  gap: 5px; /* 減少間距 */
+}
+
+.table-container {
+  display: flex;
+  flex-wrap: wrap; /* 新增這行讓區塊換行 */
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.table-wrapper {
+  display: flex;
+  flex-direction: column; /* 垂直排列 */
+  gap: 10px; /* 間隔值依需求調整 */
+  height: auto !important; /* 移除固定高度 */
+}
+
+@media (max-width: 768px) {
+  /* 讓容器自適應內容高度，並使用垂直排列 */
+  .table-wrapper {
+    width: 100%;
+    height: auto; /* 改成自適應高度 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 可調整間隔 */
+  }
+
+  /* 調整卡片在手機模式下的高度與間距 */
+  .server-card {
+    height: auto; /* 改成根據內容 */
+    margin-bottom: 10px; /* 確保卡片和表格間有空隙 */
+    flex-shrink: 0;
+  }
+}
+
+:deep(.v-table__wrapper thead) {
+  background-color: #666; /* 確保背景顏色 */
+  border-radius: 5px; /* 應用圓角 */
+  overflow: hidden; /* 確保圓角顯示 */
+}
+
+:deep(.v-table__wrapper thead th) {
+  font-weight: bold; /* 不使用 !important */
+  text-align: center; /* 不使用 !important */
+  color: white; /* 不使用 !important */
+}
+
+:deep(.v-table),
+:deep(.v-table th),
+:deep(.v-table tr) {
+  background-color: transparent !important;
+}
+
+:deep(.v-table),
+:deep(.v-table th),
+:deep(.v-table td) {
+  color: white !important;
 }
 </style>

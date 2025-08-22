@@ -3,17 +3,32 @@
     <!-- 矩陣視圖 -->
     <template v-if="currentView === 'matrix'">
       <v-row class="matrix-header">
-        <v-col cols="1"></v-col>
-        <v-col cols="3" @click="sortMatrix('Users')" style="cursor: pointer"
-          >Users</v-col
+        <v-col cols="1" class="gray-col"></v-col>
+        <v-col
+          cols="3"
+          @click="sortMatrix('Users')"
+          style="cursor: pointer"
+          class="gray-col"
         >
-        <v-col cols="3">IP</v-col>
-        <v-col cols="2" @click="sortMatrix('CPU')" style="cursor: pointer"
-          >CPU (Core)</v-col
+          Users
+        </v-col>
+        <v-col cols="3" class="gray-col">IP</v-col>
+        <v-col
+          cols="2"
+          @click="sortMatrix('CPU')"
+          style="cursor: pointer"
+          class="gray-col"
         >
-        <v-col cols="3" @click="sortMatrix('RAM')" style="cursor: pointer"
-          >RAM (GB)</v-col
+          CPU (Core)
+        </v-col>
+        <v-col
+          cols="3"
+          @click="sortMatrix('RAM')"
+          style="cursor: pointer"
+          class="gray-col"
         >
+          RAM (GB)
+        </v-col>
       </v-row>
 
       <v-row
@@ -22,7 +37,7 @@
         class="matrix-row"
         @click="redirectToDetail(item.user)"
       >
-        <v-col cols="1" @click.stop>
+        <v-col cols="1" @click.stop class="gray-col">
           <v-checkbox
             v-model="selectedusers"
             :value="item.user"
@@ -30,12 +45,20 @@
             hide-details
           />
         </v-col>
-        <v-col cols="3" v-html="item.user" class="matrix-block" />
-        <v-col cols="3" v-html="item.Ip" class="matrix-block" />
-        <v-col cols="2" :class="getBlockColor(item.cpu)" class="matrix-block">
+        <v-col cols="3" v-html="item.user" class="matrix-block gray-col" />
+        <v-col cols="3" v-html="item.Ip" class="matrix-block gray-col" />
+        <v-col
+          cols="2"
+          :class="getBlockColor(item.cpu)"
+          class="matrix-block gray-col"
+        >
           {{ item.cpu }}
         </v-col>
-        <v-col cols="3" :class="getBlockColor(item.ram)" class="matrix-block">
+        <v-col
+          cols="3"
+          :class="getBlockColor(item.ram)"
+          class="matrix-block gray-col"
+        >
           {{ item.ram }}
         </v-col>
       </v-row>
@@ -58,19 +81,19 @@
           <h3>Details for User: {{ selecteduser }}</h3>
 
           <v-row class="matrix-header">
-            <v-col cols="4">IP</v-col>
-            <v-col cols="4">CPU (Core)</v-col>
-            <v-col cols="4">RAM (GB)</v-col>
+            <v-col cols="4" class="gray-col">IP</v-col>
+            <v-col cols="4" class="gray-col">CPU (Core)</v-col>
+            <v-col cols="4" class="gray-col">RAM (GB)</v-col>
           </v-row>
 
           <v-row
             v-for="(ip, idx) in groupedData[selecteduser]?.IpList || []"
             :key="'sub' + idx"
           >
-            <v-col cols="4" class="matrix-block" v-html="ip" />
+            <v-col cols="4" class="matrix-block gray-col" v-html="ip" />
             <v-col
               cols="4"
-              class="matrix-block"
+              class="matrix-block gray-col"
               :class="
                 getBlockColor(
                   `${groupedData[selecteduser].cpuList[idx]} / ${groupedData[selecteduser].cpuNumber[idx]}`
@@ -82,7 +105,7 @@
             </v-col>
             <v-col
               cols="4"
-              class="matrix-block"
+              class="matrix-block gray-col"
               :class="
                 getBlockColor(
                   `${groupedData[selecteduser].ramList[idx]} / ${groupedData[selecteduser].ramTotal[idx]}`
@@ -252,38 +275,48 @@ function getBlockColor(value: string | number) {
 </script>
 
 <style scoped>
-.matrix-header {
+/* 灰色背景和邊框樣式 */
+.gray-col {
+  background-color: #999999 !important;
+  border: 1px solid #e0e0e0 !important;
+  padding: 12px !important;
+}
+
+/* 表格標題行樣式 */
+.matrix-header .gray-col {
+  background-color: #040404 !important;
   font-weight: bold;
-  text-align: center;
-  margin-bottom: 8px;
-  user-select: none;
+  border: 1px solid #d0d0d0 !important;
 }
+
+/* 表格行樣式 */
 .matrix-row {
-  align-items: center;
-  margin-bottom: 4px;
-  cursor: pointer;
+  margin: 0 !important;
 }
+
+.matrix-row:hover .gray-col {
+  background-color: #e8f5e8 !important;
+}
+
+/* 區塊樣式 */
 .matrix-block {
+  min-height: 40px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 60px;
-  font-size: 18px;
-  font-family: "微軟正黑體", sans-serif;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  transition: background-color 0.2s ease;
 }
-.normal {
-  background-color: #4abd71 !important;
+
+/* 移除 Vuetify 預設的 margin */
+.v-row {
+  margin: 0 !important;
 }
-.warn {
-  background-color: #ffd564 !important;
+
+.v-col {
+  padding: 0 !important;
 }
-.error {
-  background-color: #f15e75 !important;
-}
-.unable {
-  background-color: gray !important;
+
+/* 確保邊框線條清楚顯示 */
+.monitor-container {
+  border-collapse: separate;
 }
 </style>

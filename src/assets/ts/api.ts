@@ -1,17 +1,7 @@
 import axios from "axios"
-import type { AxiosResponse } from "axios"
-
-let baseDomain = "."
-if (import.meta.env.NODE_ENV !== "production") {
-  baseDomain = "http://61.219.187.38:100"
-  //  baseDomain = 'http://192.168.33.112'
-}
-
-const apiAccessor = "api"
-const baseURL = `${baseDomain}/${apiAccessor}`
 
 const flobookApi = axios.create({
-  baseURL: baseURL,
+  baseURL: "/api", // 這裡走 Vite proxy，不直接寫死 http://61.219.187.38:100
 })
 
 flobookApi.interceptors.request.use(config => {
@@ -61,7 +51,13 @@ export function apiDeleteList(ip: DeleteGroupPayload) {
 }
 
 export function apiGetList() {
-  return flobookApi.get("/GetList")
+  return flobookApi
+    .get("/GetList") // 會被 proxy 成 http://61.219.187.38:100/api/GetList
+    .then(response => response.data)
+    .catch(error => {
+      console.error("Error fetching data:", error)
+      throw error
+    })
 }
 /**
  * AdminConfig

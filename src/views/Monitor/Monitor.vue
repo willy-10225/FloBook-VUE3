@@ -16,26 +16,40 @@
       </v-btn>
     </v-tabs>
 
-    <v-window v-model="tabNo">
-      <v-window-item :value="0">
+    <!-- 添加key來強制重新渲染，防止組件狀態衝突 -->
+    <v-window v-model="tabNo" :key="`window-${windowKey}`">
+      <v-window-item :value="0" :key="`item-0-${windowKey}`">
         <MonitorMatrix2
+          v-if="!isUnmounting && tabNo === 0"
           :rawData="filteredData"
           :rawLicensesList="rawLicensesList"
         />
       </v-window-item>
-      <v-window-item :value="1">
+
+      <v-window-item :value="1" :key="`item-1-${windowKey}`">
         <MonitorMatrix
+          v-if="!isUnmounting && tabNo === 1"
           :rawData="filteredData"
           :rawLicensesList="rawLicensesList"
         />
       </v-window-item>
-      <v-window-item :value="2">
-        <div v-for="(item, index) in rawData" :key="'mg' + index">
-          <MonitorGauge :gauge="item" :i="index" />
+
+      <v-window-item :value="2" :key="`item-2-${windowKey}`">
+        <div v-if="!isUnmounting && tabNo === 2" class="gauge-container">
+          <MonitorGauge
+            v-for="(item, index) in rawData"
+            :key="`mg-${item.Ip}-${index}-${windowKey}`"
+            :gauge="item"
+            :i="index"
+          />
         </div>
       </v-window-item>
-      <v-window-item :value="3">
-        <MonitorList :rawData="filteredData" />
+
+      <v-window-item :value="3" :key="`item-3-${windowKey}`">
+        <MonitorList
+          v-if="!isUnmounting && tabNo === 3"
+          :rawData="filteredData"
+        />
       </v-window-item>
     </v-window>
 
@@ -98,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue"
+import { ref, onMounted, onBeforeUnmount, nextTick, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
@@ -120,8 +134,11 @@ const rawData = ref<any[]>([])
 const rawLicensesList = ref<any[]>([])
 const filteredData = ref<any[]>([])
 const conditions = ref<Condition[]>([])
-
 const dialog = ref(false)
+
+// 添加狀態管理
+const windowKey = ref(0)
+const isUnmounting = ref(false)
 
 const router = useRouter()
 const store = useStore()
@@ -132,93 +149,137 @@ let licenseMonitorTimer: number | undefined
 const hardwareMonitorTimerPeriod = 2000
 const licenseMonitorTimerPeriod = 10000
 
+// 監聽標籤切換，強制重新渲染防止狀態衝突
+watch(tabNo, async (newTab, oldTab) => {
+  if (isUnmounting.value) return
+
+  try {
+    // 增加windowKey來強制重新渲染VWindow
+    windowKey.value++
+    await nextTick()
+  } catch (error) {
+    console.warn("Tab change error:", error)
+  }
+})
+
 function getData(item: any, field: Condition["field"]) {
-  switch (field) {
-    case "CPU":
-      if (item.CpuData.Number > 0) {
-        return (
-          Math.round((item.CpuData.Number * item.CpuData.Utilization) / 100) /
-          item.CpuData.Number
-        )
-      }
-      return 0
+  try {
+    switch (field) {
+      case "CPU":
+        if (item?.CpuData?.Number > 0) {
+          return (
+            Math.round((item.CpuData.Number * item.CpuData.Utilization) / 100) /
+            item.CpuData.Number
+          )
+        }
+        return 0
 
-    case "RAM":
-      if (item.MemoryData.Size > 0) {
-        return (
-          Math.round(
-            (item.MemoryData.Size * item.MemoryData.Utilization) / 102400
-          ) / Math.round(item.MemoryData.Size / 1024)
-        )
-      }
-      return 0
+      case "RAM":
+        if (item?.MemoryData?.Size > 0) {
+          return (
+            Math.round(
+              (item.MemoryData.Size * item.MemoryData.Utilization) / 102400
+            ) / Math.round(item.MemoryData.Size / 1024)
+          )
+        }
+        return 0
 
-    case "Disk": {
-      const diskTemp = item.DiskData.reduce(
-        (acc: { used: number; total: number }, x: any) => ({
-          used: acc.used + x.Total_space - x.Capacity,
-          total: acc.total + x.Total_space,
-        }),
-        { used: 0, total: 0 }
-      )
-      if (diskTemp.total > 0) {
-        return Math.round(diskTemp.used) / Math.round(diskTemp.total)
+      case "Disk": {
+        if (!item?.DiskData || !Array.isArray(item.DiskData)) return 0
+
+        const diskTemp = item.DiskData.reduce(
+          (acc: { used: number; total: number }, x: any) => {
+            if (
+              x &&
+              typeof x.Total_space === "number" &&
+              typeof x.Capacity === "number"
+            ) {
+              return {
+                used: acc.used + x.Total_space - x.Capacity,
+                total: acc.total + x.Total_space,
+              }
+            }
+            return acc
+          },
+          { used: 0, total: 0 }
+        )
+        if (diskTemp.total > 0) {
+          return Math.round(diskTemp.used) / Math.round(diskTemp.total)
+        }
+        return 0
       }
-      return 0
+
+      case "Users":
+        return item?.UserList?.length || 0
+
+      default:
+        console.warn(`Unknown field: ${field}`)
+        return 0
     }
-
-    case "Users":
-      return item.UserList.length || 0
-
-    default:
-      console.warn(`Unknown field: ${field}`)
-      return 0
+  } catch (error) {
+    console.warn(`Error getting data for field ${field}:`, error)
+    return 0
   }
 }
 
 function checkCondition(item: any, conds: Condition[]) {
-  return conds.every(({ field, operator, value }) => {
-    const dataValue = getData(item, field)
-    switch (operator) {
-      case "=":
-        return dataValue == value
-      case ">":
-        return dataValue > value
-      case "<":
-        return dataValue < value
-      case ">=":
-        return dataValue >= value
-      case "<=":
-        return dataValue <= value
-      case "Not":
-        return dataValue != value
-      case "Include":
-        return String(dataValue).includes(String(value))
-      default:
-        return true
-    }
-  })
+  try {
+    return conds.every(({ field, operator, value }) => {
+      const dataValue = getData(item, field)
+      switch (operator) {
+        case "=":
+          return dataValue == value
+        case ">":
+          return dataValue > value
+        case "<":
+          return dataValue < value
+        case ">=":
+          return dataValue >= value
+        case "<=":
+          return dataValue <= value
+        case "Not":
+          return dataValue != value
+        case "Include":
+          return String(dataValue).includes(String(value))
+        default:
+          return true
+      }
+    })
+  } catch (error) {
+    console.warn("Error checking condition:", error)
+    return true
+  }
 }
 
 function applyFilter() {
-  filteredData.value = rawData.value.filter(item =>
-    checkCondition(item, conditions.value)
-  )
-  dialog.value = false
+  if (isUnmounting.value) return
+
+  try {
+    filteredData.value = rawData.value.filter(item =>
+      checkCondition(item, conditions.value)
+    )
+    dialog.value = false
+  } catch (error) {
+    console.error("Error applying filter:", error)
+  }
 }
 
 function addCondition() {
+  if (isUnmounting.value) return
   conditions.value.push({ field: "CPU", operator: "=", value: 0 })
 }
 
 function removeCondition(index: number) {
+  if (isUnmounting.value) return
   conditions.value.splice(index, 1)
 }
 
 async function updateHardwareMonitor() {
+  if (isUnmounting.value) return
+
   try {
     const res = await apiMonitorList()
-    if (res.data) {
+    if (res.data && !isUnmounting.value) {
       rawData.value = res.data
       applyFilter()
       store.dispatch(
@@ -231,65 +292,91 @@ async function updateHardwareMonitor() {
       store.dispatch("changeLoadingState", false)
     }
   } catch (e) {
-    console.error(e)
+    if (!isUnmounting.value) {
+      console.error(e)
+    }
   }
 }
 
 async function updateLicenseMonitor() {
+  if (isUnmounting.value) return
+
   try {
     const res = await apiGetLicensesByIps()
-    rawLicensesList.value = res.data.map((item: any) => ({
-      Ip: item.ip,
-      LicenseList: item.licenses,
-    }))
-    const check = JSON.parse(sessionStorage.getItem("deviceIpList") || "null")
-    if (
-      check &&
-      !check.some((item: any) => item.hasOwnProperty("totalLicense"))
-    ) {
-      store.dispatch(
-        "setDeviceIpList",
-        rawData.value.map((item: any) => {
-          const temp = res.data.find((d: any) => d.ip === item.Ip)
-          return {
-            ip: item.Ip,
-            id: item.Id,
-            totalLicense: temp
-              ? temp.licenses.reduce(
-                  (acc: number, obj: any) => acc + obj.Issued,
-                  0
-                )
-              : null,
-            licenses: temp ? temp.licenses : [],
-          }
-        })
-      )
+    if (!isUnmounting.value) {
+      rawLicensesList.value = res.data.map((item: any) => ({
+        Ip: item.ip,
+        LicenseList: item.licenses,
+      }))
+      const check = JSON.parse(sessionStorage.getItem("deviceIpList") || "null")
+      if (
+        check &&
+        !check.some((item: any) => item.hasOwnProperty("totalLicense"))
+      ) {
+        store.dispatch(
+          "setDeviceIpList",
+          rawData.value.map((item: any) => {
+            const temp = res.data.find((d: any) => d.ip === item.Ip)
+            return {
+              ip: item.Ip,
+              id: item.Id,
+              totalLicense: temp
+                ? temp.licenses.reduce(
+                    (acc: number, obj: any) => acc + obj.Issued,
+                    0
+                  )
+                : null,
+              licenses: temp ? temp.licenses : [],
+            }
+          })
+        )
+      }
     }
   } catch (e) {
-    console.error(e)
+    if (!isUnmounting.value) {
+      console.error(e)
+    }
   }
 }
 
 function OverAllowedListLink() {
+  if (isUnmounting.value) return
   router.push({ name: "Over Allowed List" })
 }
 
-onMounted(() => {
-  store.dispatch("changeLoadingState", true)
+onMounted(async () => {
+  try {
+    store.dispatch("changeLoadingState", true)
 
-  hardwareMonitorTimer = window.setInterval(
-    updateHardwareMonitor,
-    hardwareMonitorTimerPeriod
-  )
-  licenseMonitorTimer = window.setInterval(
-    updateLicenseMonitor,
-    licenseMonitorTimerPeriod
-  )
+    hardwareMonitorTimer = window.setInterval(
+      updateHardwareMonitor,
+      hardwareMonitorTimerPeriod
+    )
+    licenseMonitorTimer = window.setInterval(
+      updateLicenseMonitor,
+      licenseMonitorTimerPeriod
+    )
+
+    // 初始加載數據
+    await updateHardwareMonitor()
+    await updateLicenseMonitor()
+  } catch (error) {
+    console.error("Mount error:", error)
+  }
 })
 
 onBeforeUnmount(() => {
-  if (hardwareMonitorTimer) clearInterval(hardwareMonitorTimer)
-  if (licenseMonitorTimer) clearInterval(licenseMonitorTimer)
+  isUnmounting.value = true
+
+  // 清理定時器
+  if (hardwareMonitorTimer) {
+    clearInterval(hardwareMonitorTimer)
+    hardwareMonitorTimer = undefined
+  }
+  if (licenseMonitorTimer) {
+    clearInterval(licenseMonitorTimer)
+    licenseMonitorTimer = undefined
+  }
 })
 </script>
 
@@ -299,8 +386,12 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0;
 }
+
+.gauge-container {
+  width: 100%;
+}
+
 .monitor-tab {
   font-size: 20px;
 }
-/* 你可根據需求增加其它樣式 */
 </style>

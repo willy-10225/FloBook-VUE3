@@ -1,315 +1,467 @@
 <template>
   <div class="monitor-gauge">
-    <router-link :to="{ name: 'MonitorDetail', params: { ip: gauge.Ip } }">
-      {{ gauge.Id }}
-    </router-link>
-
-    <v-chart class="echarts" :option="gaugeOption" />
-
+    <router-link :to="{ name: 'MonitorDetail', params: { ip: gauge.Ip } }">{{
+      gauge.Id
+    }}</router-link>
+    <div class="chart-container">
+      <v-chart
+        :option="gaugeOption"
+        :autoresize="true"
+        style="width: 100%; height: 200px"
+        ref="gaugeChart"
+      />
+    </div>
     <div class="icon-frame">
       <ul>
         <li v-if="gauge.AnsysLicenseServer">
-          <div class="IconServer" title="Server"></div>
+          <div
+            class="IconServer"
+            data-toggle="tooltip"
+            data-placement="top"
+            title="Server"
+          ></div>
         </li>
-        <li v-else>
-          <div class="IconClient" title="Workstation"></div>
+        <li v-if="!gauge.AnsysLicenseServer">
+          <div
+            class="IconClient"
+            data-toggle="tooltip"
+            data-placement="top"
+            title="Workstation"
+          ></div>
         </li>
         <li v-if="gauge.AnsysLicenseServer">
-          <div class="IconLicenseY" title="ANSYS License"></div>
+          <div
+            class="IconLicenseY"
+            data-toggle="tooltip"
+            data-placement="top"
+            title="ANSYS License"
+          ></div>
         </li>
-        <li v-else>
-          <div class="IconLicenseN" title="Workstation"></div>
+        <li v-if="!gauge.AnsysLicenseServer">
+          <div
+            class="IconLicenseN"
+            data-toggle="tooltip"
+            data-placement="top"
+            title="Workstation"
+          ></div>
         </li>
       </ul>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { onMounted, watch, ref } from "vue"
-import { useI18n } from "vue-i18n"
-import { EChartsOption } from "echarts"
+<script>
+import { use } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
+import { GaugeChart } from "echarts/charts"
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+} from "echarts/components"
 import VChart from "vue-echarts"
-export interface DiskDataItem {
-  Capacity: number
-  Total_space: number
-}
 
-export interface CpuData {
-  Utilization: string
-}
+use([
+  CanvasRenderer,
+  GaugeChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+])
 
-export interface MemoryData {
-  Utilization: string
-}
-
-export interface GaugeProps {
-  Ip: string
-  Id: string
-  DiskData: DiskDataItem[]
-  CpuData: CpuData
-  MemoryData: MemoryData
-  AnsysLicenseServer: boolean
-}
-
-const props = defineProps<{
-  gauge: GaugeProps
-}>()
-
-const { t } = useI18n()
-
-const gaugeOption = ref<EChartsOption>({
-  /* 初始設定略 */
-})
-
-const updateGauge = (data: GaugeProps) => {
-  let totalCapacity = 0
-  let availableCapacity = 0
-
-  for (const disk of data.DiskData) {
-    totalCapacity += disk.Total_space
-    availableCapacity += disk.Capacity
-  }
-
-  const diskUsage =
-    totalCapacity > 0
-      ? Math.round(((totalCapacity - availableCapacity) / totalCapacity) * 100)
-      : 0
-  const cpuUsage = parseInt(data.CpuData?.Utilization ?? "0")
-  const ramUsage = parseInt(data.MemoryData?.Utilization ?? "0")
-
-  const isConnected = !isNaN(cpuUsage)
-  const color = isConnected
-    ? [
-        [0.2, "#106000"],
-        [0.8, "#026e84"],
-        [1, "#ba0707"],
-      ]
-    : [
-        [0.2, "grey"],
-        [0.8, "grey"],
-        [1, "grey"],
-      ]
-
-  gaugeOption.value = {
-    backgroundColor: "#1b1b1b",
-    tooltip: {
-      formatter: isConnected
-        ? "{a}<br/>{c}(%)"
-        : t("monitor.device-disconnected"),
+export default {
+  name: "MonitorGauge",
+  props: {
+    gauge: Object,
+    i: Number,
+  },
+  components: {
+    VChart,
+  },
+  data() {
+    return {
+      gaugeOption: {
+        backgroundColor: "#1b1b1b",
+        tooltip: {
+          formatter: "{a}<br/>{c}(%)",
+        },
+        series: [
+          {
+            name: "CPU",
+            type: "gauge",
+            min: 0,
+            max: 100,
+            splitNumber: 10,
+            radius: "90%",
+            axisLine: {
+              lineStyle: {
+                color: [
+                  [0.2, "#106000"],
+                  [0.8, "#026e84"],
+                  [1, "#ba0707"],
+                ],
+                width: 4,
+              },
+            },
+            axisLabel: {
+              textStyle: {
+                fontWeight: "normal",
+                color: "#fff",
+                fontSize: 9,
+              },
+            },
+            axisTick: {
+              length: 9,
+              lineStyle: {
+                color: "auto",
+              },
+            },
+            splitLine: {
+              length: 13,
+              lineStyle: {
+                width: 1,
+                color: "#fff",
+              },
+            },
+            pointer: {
+              width: 5,
+            },
+            title: {
+              textStyle: {
+                fontWeight: "normal",
+                fontSize: 25,
+                fontStyle: "italic",
+                color: "#fff",
+              },
+            },
+            detail: {
+              offsetCenter: [0, "50%"],
+              formatter: "{value}%",
+              textStyle: {
+                fontWeight: "normal",
+                fontSize: 25,
+                color: "#fff",
+              },
+            },
+            data: [{ value: 0, name: "CPU" }],
+          },
+          {
+            name: "RAM",
+            type: "gauge",
+            center: ["17%", "50%"],
+            radius: "62%",
+            min: 0,
+            max: 100,
+            startAngle: 315,
+            endAngle: 45,
+            splitNumber: 10,
+            axisLine: {
+              lineStyle: {
+                color: [
+                  [0.2, "#106000"],
+                  [0.8, "#026e84"],
+                  [1, "#ba0707"],
+                ],
+                width: 2,
+              },
+            },
+            axisLabel: {
+              textStyle: {
+                fontWeight: "normal",
+                color: "#1b1b1b",
+                fontSize: 8,
+              },
+            },
+            axisTick: {
+              length: 6,
+              lineStyle: {
+                color: "auto",
+              },
+            },
+            splitLine: {
+              length: 11,
+              lineStyle: {
+                width: 1,
+                color: "#fff",
+              },
+            },
+            pointer: {
+              width: 4,
+            },
+            title: {
+              offsetCenter: [0, "-30%"],
+              textStyle: {
+                fontWeight: "normal",
+                fontStyle: "italic",
+                fontSize: 15,
+                color: "#fff",
+              },
+            },
+            detail: {
+              width: 80,
+              height: 30,
+              offsetCenter: [10, "20%"],
+              formatter: "{value}%",
+              textStyle: {
+                fontWeight: "normal",
+                color: "#fff",
+                fontSize: 20,
+              },
+            },
+            data: [{ value: 0, name: "RAM" }],
+          },
+          {
+            name: "Disk",
+            type: "gauge",
+            center: ["80%", "45%"],
+            radius: "50%",
+            min: 0,
+            max: 100,
+            startAngle: 135,
+            endAngle: -125,
+            splitNumber: 10,
+            axisLine: {
+              lineStyle: {
+                color: [
+                  [0.2, "#106000"],
+                  [0.8, "#026e84"],
+                  [1, "#ba0707"],
+                ],
+                width: 2,
+              },
+            },
+            axisTick: {
+              length: 6,
+              lineStyle: {
+                color: "auto",
+              },
+            },
+            axisLabel: {
+              textStyle: {
+                fontWeight: "normal",
+                color: "#1b1b1b",
+                fontSize: 5,
+              },
+            },
+            splitLine: {
+              length: 8,
+              lineStyle: {
+                width: 1,
+                color: "#fff",
+              },
+            },
+            pointer: {
+              width: 4,
+            },
+            title: {
+              show: true,
+              textStyle: {
+                fontWeight: "normal",
+                fontStyle: "italic",
+                fontSize: 13,
+                color: "#fff",
+              },
+            },
+            detail: {
+              width: 80,
+              height: 30,
+              offsetCenter: [3, "20%"],
+              formatter: "{value}%",
+              textStyle: {
+                fontWeight: "normal",
+                color: "#fff",
+                fontSize: 15,
+              },
+            },
+            data: [{ value: 0, name: "Disk" }],
+          },
+        ],
+      },
+    }
+  },
+  mounted() {
+    this.updateGauge(this.gauge)
+    // 確保圖表在DOM準備好後進行渲染
+    this.$nextTick(() => {
+      if (this.$refs.gaugeChart) {
+        this.$refs.gaugeChart.resize()
+      }
+    })
+  },
+  watch: {
+    gauge: {
+      handler(val) {
+        this.updateGauge(val)
+      },
+      deep: true,
     },
-    series: [
-      {
-        name: "CPU",
-        type: "gauge",
-        min: 0,
-        max: 100,
-        splitNumber: 10,
-        radius: "90%",
-        axisLine: {
-          lineStyle: {
-            color: [
-              [0.2, "#106000"],
-              [0.8, "#026e84"],
-              [1, "#ba0707"],
-            ],
-            width: 4,
-          },
-        },
-        axisLabel: {
-          fontSize: 9,
-          color: "#fff",
-        },
-        axisTick: {
-          length: 9,
-          lineStyle: {
-            color: "auto",
-          },
-        },
-        splitLine: {
-          length: 13,
-          lineStyle: {
-            width: 1,
-            color: "#fff",
-          },
-        },
-        pointer: {
-          width: 5,
-        },
-        title: {
-          fontSize: 25,
-          fontStyle: "italic",
-          color: "#fff",
-        },
-        detail: {
-          offsetCenter: [0, "50%"],
-          formatter: "{value}%",
-          fontSize: 25,
-          color: "#fff",
-        },
-        data: [{ value: 0, name: "CPU" }],
-      },
-      {
-        name: "RAM",
-        type: "gauge",
-        center: ["17%", "50%"],
-        radius: "62%",
-        min: 0,
-        max: 100,
-        startAngle: 315,
-        endAngle: 45,
-        splitNumber: 10,
-        axisLine: {
-          lineStyle: {
-            color: [
-              [0.2, "#106000"],
-              [0.8, "#026e84"],
-              [1, "#ba0707"],
-            ],
-            width: 2,
-          },
-        },
-        axisLabel: {
-          fontSize: 8,
-          color: "#1b1b1b",
-        },
-        axisTick: {
-          length: 6,
-          lineStyle: {
-            color: "auto",
-          },
-        },
-        splitLine: {
-          length: 11,
-          lineStyle: {
-            width: 1,
-            color: "#fff",
-          },
-        },
-        pointer: {
-          width: 4,
-        },
-        title: {
-          offsetCenter: [0, "-30%"],
-          fontStyle: "italic",
-          fontSize: 15,
-          color: "#fff",
-        },
-        detail: {
-          width: 80,
-          height: 30,
-          offsetCenter: [10, "20%"],
-          formatter: "{value}%",
-          fontSize: 20,
-          color: "#fff",
-        },
-        data: [{ value: 0, name: "RAM" }],
-      },
-      {
-        name: "Disk",
-        type: "gauge",
-        center: ["80%", "45%"],
-        radius: "50%",
-        min: 0,
-        max: 100,
-        startAngle: 135,
-        endAngle: -125,
-        splitNumber: 10,
-        axisLine: {
-          lineStyle: {
-            color: [
-              [0.2, "#106000"],
-              [0.8, "#026e84"],
-              [1, "#ba0707"],
-            ],
-            width: 2,
-          },
-        },
-        axisTick: {
-          length: 6,
-          lineStyle: {
-            color: "auto",
-          },
-        },
-        axisLabel: {
-          fontSize: 5,
-          color: "#1b1b1b",
-        },
-        splitLine: {
-          length: 8,
-          lineStyle: {
-            width: 1,
-            color: "#fff",
-          },
-        },
-        pointer: {
-          width: 4,
-        },
-        title: {
-          show: true,
-          fontStyle: "italic",
-          fontSize: 13,
-          color: "#fff",
-        },
-        detail: {
-          width: 80,
-          height: 30,
-          offsetCenter: [3, "20%"],
-          formatter: "{value}%",
-          fontSize: 15,
-          color: "#fff",
-        },
-        data: [{ value: 0, name: "Disk" }],
-      },
-    ]
-  }
+  },
+  methods: {
+    updateGauge(data) {
+      if (!data || !data.DiskData) {
+        console.warn("Invalid gauge data:", data)
+        return
+      }
+
+      var vm = this
+      var totalCapacity = 0
+      var availableCapacity = 0
+
+      // 安全地處理 DiskData
+      if (Array.isArray(data.DiskData)) {
+        for (var d = 0; d < data.DiskData.length; ++d) {
+          if (
+            data.DiskData[d] &&
+            typeof data.DiskData[d].Total_space === "number" &&
+            typeof data.DiskData[d].Capacity === "number"
+          ) {
+            totalCapacity += data.DiskData[d].Total_space
+            availableCapacity += data.DiskData[d].Capacity
+          }
+        }
+      }
+
+      if (!isNaN(data.CpuData?.Utilization)) {
+        // With Connection
+        vm.gaugeOption.series.forEach(item => {
+          item.axisLine.lineStyle.color = [
+            [0.2, "#106000"],
+            [0.8, "#026e84"],
+            [1, "#ba0707"],
+          ]
+        })
+        vm.gaugeOption.tooltip.formatter = "{a}<br/>{c}(%)"
+
+        const diskUsagePercent =
+          totalCapacity > 0
+            ? parseInt(
+                ((totalCapacity - availableCapacity) / totalCapacity) * 100
+              )
+            : 0
+
+        vm.gaugeOption.series[0].data[0].value =
+          parseInt(data.CpuData.Utilization) || 0
+        vm.gaugeOption.series[1].data[0].value =
+          parseInt(data.MemoryData?.Utilization) || 0
+        vm.gaugeOption.series[2].data[0].value = !isNaN(diskUsagePercent)
+          ? diskUsagePercent
+          : 0
+      } else {
+        // Without Connection
+        vm.gaugeOption.series.forEach(item => {
+          item.axisLine.lineStyle.color = [
+            [0.2, "grey"],
+            [0.8, "grey"],
+            [1, "grey"],
+          ]
+        })
+        vm.gaugeOption.tooltip.formatter = this.$t
+          ? this.$t("monitor.device-disconnected")
+          : "Device Disconnected"
+
+        const diskUsagePercent =
+          totalCapacity > 0
+            ? parseInt(
+                ((totalCapacity - availableCapacity) / totalCapacity) * 100
+              )
+            : 0
+
+        vm.gaugeOption.series[0].data[0].value = 0
+        vm.gaugeOption.series[1].data[0].value = 0
+        vm.gaugeOption.series[2].data[0].value = !isNaN(diskUsagePercent)
+          ? diskUsagePercent
+          : 0
+      }
+
+      // 強制重新渲染圖表
+      this.$nextTick(() => {
+        if (this.$refs.gaugeChart) {
+          this.$refs.gaugeChart.resize()
+        }
+      })
+    },
+  },
 }
-
-onMounted(() => updateGauge(props.gauge))
-
-watch(() => props.gauge, updateGauge, { deep: true })
 </script>
 
 <style scoped>
-.echarts {
+.chart-container {
   width: 370px;
   height: 200px;
-  margin: auto;
+  margin: 0 auto;
+  position: relative;
 }
+
+a {
+  color: white;
+}
+
 .monitor-gauge {
   background-color: rgba(27, 27, 27, 0);
   float: left;
+  padding-bottom: 20px;
+  text-align: center;
   padding: 10px;
   height: 280px;
-  text-align: center;
 }
+
 .icon-frame {
   text-align: center;
   position: relative;
   top: -50px;
 }
+
+.icon-frame ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .icon-frame ul li {
   display: inline-block;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.IconServer {
+  width: 30px;
+  height: 30px;
+  background-image: url("/img/Monitor/ServerIcon.PNG");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  position: relative;
+  margin: auto;
+  margin-top: 10px;
+}
+
+.IconClient {
+  width: 30px;
+  height: 30px;
+  background-image: url("/img/Monitor/ClientIcon.PNG");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  position: relative;
+  margin: auto;
+  margin-top: 10px;
+}
+
+.IconLicenseY {
+  width: 30px;
+  height: 30px;
+  background-image: url("/img/Monitor/AnsysIcon.PNG");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  position: relative;
   margin: auto;
 }
-.IconServer,
-.IconClient,
-.IconLicenseY,
+
 .IconLicenseN {
   width: 30px;
   height: 30px;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  margin: 10px auto 0;
-}
-.IconServer {
-  background-image: url("/img/Monitor/ServerIcon.PNG");
-}
-.IconClient {
-  background-image: url("/img/Monitor/ClientIcon.PNG");
-}
-.IconLicenseY {
-  background-image: url("/img/Monitor/AnsysIcon.PNG");
+  position: relative;
+  margin: auto;
 }
 </style>
