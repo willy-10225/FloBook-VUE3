@@ -56,7 +56,7 @@
           density="comfortable"
           hide-default-footer
           item-key="no"
-          style="min-width: 100%; overflow-x: auto"
+          style="min-width: 100%"
         >
           <!-- No -->
           <template #item.no="{ item }">
@@ -96,7 +96,12 @@
     </div>
 
     <!-- 自訂 Tooltip（保留你的樣式與排版） -->
-    <div class="tooltip" v-if="tooltip.visible" v-html="tooltip.content"></div>
+    <div
+      class="tooltip"
+      v-if="tooltip.visible"
+      v-html="tooltip.content"
+      :style="{ top: tooltip.top + 'px', left: tooltip.left + 'px' }"
+    ></div>
   </section>
 </template>
 
@@ -161,31 +166,10 @@ const tooltip = reactive({
   left: 0,
   content: "",
 })
-const tooltipStyle = computed(() => ({
-  position: "fixed",
-  top: tooltip.top + "px",
-  left: tooltip.left + "px",
-  display: tooltip.visible ? "block" : "none",
-  padding: "8px 12px",
-  border: "1px solid ",
-  borderRadius: "5px",
-  boxShadow: "0 2px 6px ",
-  zIndex: 9999,
-  pointerEvents: "none",
-  whiteSpace: "pre-line",
-  fontSize: "14px",
-  lineHeight: "1.5",
-}))
+
 
 // IP 區間對應（預設值，會被 API 覆寫）
-let someMapping = ref<Record<string, string>>({
-  "192.168.33.112~192.168.33.116": "server",
-  "192.168.168.112~192.168.168.113": "server",
-  "192.168.11.1~192.168.11.10": "Banqiao Classroom B",
-  "192.168.11.111~192.168.11.130": "Banqiao Classroom A",
-  "192.168.12.": "Taichung Classroom",
-  "192.168.13.": "Tainan Classroom",
-})
+let someMapping = ref<Record<string, string>>({})
 
 /** 依 IP 分群並整理表格資料（保留你的規則與顏色門檻/字串格式） */
 const splitTables = computed<Record<string, TableRow[]>>(() => {
@@ -418,7 +402,7 @@ onMounted(async () => {
   /* 讓容器自適應內容高度，並使用垂直排列 */
   .table-wrapper {
     width: 100%;
-    height: auto; /* 改成自適應高度 */
+    height: 10px; /* 改成自適應高度 */
     display: flex;
     flex-direction: column;
     gap: 10px; /* 可調整間隔 */
@@ -432,27 +416,38 @@ onMounted(async () => {
   }
 }
 
+/* 左圓角 */
+:deep(.v-table__wrapper thead th:first-child) {
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
+}
+
+/* 右圓角 */
+:deep(.v-table__wrapper thead th:last-child) {
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+/* 控制表頭文字高度與 padding */
+:deep(.v-table__wrapper thead th) {
+  height: 28px !important; /* 整行高度 */
+  padding-top: 4px !important; /* 上下 padding 小一點 */
+  padding-bottom: 4px !important;
+  line-height: 1.2 !important; /* 文字行高 */
+  font-size: 14px !important; /* 文字大小 */
+}
+:deep(.v-table__wrapper tbody td) {
+  height: 28px !important; /* 整行高度 */
+  line-height: 1.2 !important; /* 文字行高 */
+  font-size: 14px !important; /* 文字大小 */
+}
+
 :deep(.v-table__wrapper thead) {
   background-color: #666; /* 確保背景顏色 */
-  border-radius: 5px; /* 應用圓角 */
-  overflow: hidden; /* 確保圓角顯示 */
+  height: 10px;
 }
 
-:deep(.v-table__wrapper thead th) {
-  font-weight: bold; /* 不使用 !important */
-  text-align: center; /* 不使用 !important */
-  color: white; /* 不使用 !important */
-}
-
-:deep(.v-table),
-:deep(.v-table th),
-:deep(.v-table tr) {
+:deep(.v-table) {
   background-color: transparent !important;
-}
-
-:deep(.v-table),
-:deep(.v-table th),
-:deep(.v-table td) {
   color: white !important;
 }
 </style>

@@ -68,10 +68,11 @@
   </v-app-bar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import { useRouter, useRoute } from "vue-router"
+import i18n from "@/assets/ts/i18n"
 
 const store = useStore()
 const router = useRouter()
@@ -99,12 +100,12 @@ function logout(isConfirm) {
   logoutAlert.value = false
 }
 
-function changeLang(lang) {
+function changeLang(lang: "zh-tw" | "en-us" | "zh-cn") {
   openLangMenu.value = false
   store.dispatch("changeLanguage", lang)
-  // 假設 i18n 是全域的
-  window.$i18n.locale = lang
-  window.dispatchEvent(new CustomEvent("changeLanguage"))
+
+  // ✅ Vue3 vue-i18n 的正確寫法
+  i18n.global.locale.value = lang
 }
 
 function toggleSideNav() {

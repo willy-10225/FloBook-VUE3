@@ -8,16 +8,16 @@
       <v-data-table
         :headers="headers"
         :items="licenseLogList"
-        :sort-by="sortBy"
-        :sort-desc="sortDesc"
-        @update:sort-by="onSortBy"
-        @update:sort-desc="onSortDesc"
+        v-model:sort-by="sortBy"
         dense
         class="ansys-table"
       >
+        <!-- 功能名稱多行顯示 -->
         <template #item.ModuleName="{ item }">
           <div v-html="item.ModuleName" />
         </template>
+
+        <!-- 使用時間格式化 -->
         <template #item.spentTime="{ item }">
           {{ formatTimeSpent(item.spentTime) }}
         </template>
@@ -29,7 +29,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
-import { apiMonitorList, apiGetLicenseTop100 } from "@/assets/ts/api"
+import { apiGetLicenseTop100 } from "@/assets/ts/api"
 
 // 型別定義
 interface LicenseItem {
@@ -44,15 +44,16 @@ interface LicenseItem {
 
 type SortItem = {
   key: string
-  order?: boolean | "asc" | "desc"
+  order?: "asc" | "desc"
 }
 
 const store = useStore()
 const licenseLogList = ref<LicenseItem[]>([])
-const sortBy = ref<SortItem[]>([{ key: "Rowid", order: "asc" }])
-const sortDesc = ref<boolean[]>([false])
 
-// Vuetify DataTable 欄位定義
+// 排序狀態 (Vuetify3 v-model:sort-by)
+const sortBy = ref<SortItem[]>([{ key: "Rowid", order: "asc" }])
+
+// DataTable 欄位定義
 const headers = [
   { text: "No.", value: "Rowid", sortable: true },
   { text: "使用者", value: "UserName", sortable: true },
@@ -65,7 +66,7 @@ const headers = [
 
 let timerId: number | undefined
 
-// 取得資料並初始化
+// 抓取資料
 async function fetchData() {
   store.dispatch("changeLoadingState", true)
   try {
@@ -86,15 +87,7 @@ async function fetchData() {
   }
 }
 
-// 排序事件處理
-function onSortBy(val: SortItem[]) {
-  sortBy.value = val
-}
-function onSortDesc(val: boolean[]) {
-  sortDesc.value = val
-}
-
-// 格式化使用時間
+// 格式化時間 (ms → h m)
 function formatTimeSpent(ms: number) {
   const h = Math.floor(ms / 3600000)
   const m = Math.floor((ms % 3600000) / 60000)
@@ -103,8 +96,9 @@ function formatTimeSpent(ms: number) {
 
 onMounted(() => {
   fetchData()
-  timerId = window.setInterval(fetchData, 300_000)
+  timerId = window.setInterval(fetchData, 300_000) // 每 5 分鐘刷新
 })
+
 onBeforeUnmount(() => {
   if (timerId) clearInterval(timerId)
 })

@@ -1,7 +1,7 @@
 <template>
   <v-navigation-drawer
     app
-    class="qi-sidenav"
+    class="qi-sidenav fixed-sidenav"
     :model-value="layout.isSidenavShown"
     :width="layout.sidenavWidth"
     :scrim="false"
@@ -69,6 +69,14 @@ const items = reactive([
 }
 .qi-sidenav {
   background-color: #222;
+}
+.fixed-sidenav {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100vh !important; /* 滿版高度 */
+  overflow-y: auto; /* 側邊選單內部可滾動 */
+  z-index: 1000; /* 確保在最上層 */
 }
 .qi-sidenav a {
   width: 100%;
