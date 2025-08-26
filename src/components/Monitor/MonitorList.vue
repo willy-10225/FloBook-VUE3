@@ -167,7 +167,6 @@ const tooltip = reactive({
   content: "",
 })
 
-
 // IP 區間對應（預設值，會被 API 覆寫）
 let someMapping = ref<Record<string, string>>({})
 
@@ -185,7 +184,7 @@ const splitTables = computed<Record<string, TableRow[]>>(() => {
     }
     return 0
   })
-
+  categorizedData["server"] = []
   sortedData.forEach(device => {
     const ip = String(device.Ip)
     const group = getLocation(ip)
@@ -340,10 +339,39 @@ onMounted(async () => {
   }
 })
 </script>
+<style>
+.listtooltip-table {
+  width: 100%;
+  table-layout: fixed; /* 這一行非常關鍵 */
+  border-collapse: collapse;
+  margin: 20px 0px 20px 0px;
+}
 
+.listtooltip-table td {
+  color: white;
+}
+.tooltd1 {
+  padding-left: 30px !important;
+  width: 85px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tooltd2 {
+  width: 50px; /* 冒號欄位寬度固定 */
+  text-align: center;
+}
+
+.tooltd3 {
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
+</style>
 <style scoped>
 .tooltip {
-  max-width: 300px;
+  max-width: 280px;
   position: fixed;
   pointer-events: none;
   background-color: #222a35;
@@ -396,24 +424,6 @@ onMounted(async () => {
   flex-direction: column; /* 垂直排列 */
   gap: 10px; /* 間隔值依需求調整 */
   height: auto !important; /* 移除固定高度 */
-}
-
-@media (max-width: 768px) {
-  /* 讓容器自適應內容高度，並使用垂直排列 */
-  .table-wrapper {
-    width: 100%;
-    height: 10px; /* 改成自適應高度 */
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* 可調整間隔 */
-  }
-
-  /* 調整卡片在手機模式下的高度與間距 */
-  .server-card {
-    height: auto; /* 改成根據內容 */
-    margin-bottom: 10px; /* 確保卡片和表格間有空隙 */
-    flex-shrink: 0;
-  }
 }
 
 /* 左圓角 */

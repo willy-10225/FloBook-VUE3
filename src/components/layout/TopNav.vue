@@ -10,7 +10,19 @@
       <v-btn icon @click="toggleSideNav">
         <v-icon>mdi-menu</v-icon>
       </v-btn>
-      <span class="text-white text-h6 ml-2">{{ routeName }}</span>
+      <span
+        class="text-white text-h6 ml-2"
+        :style="{
+          backgroundColor: 'teal',
+          display: 'block',
+          width: '100%',
+          height: '100%',
+          lineHeight: '64px' /* 或 v-app-bar 的高度 */,
+          textAlign: 'center',
+          padding: '0px 15px 0px 15px',
+        }"
+        >{{ routeName }}</span
+      >
     </template>
 
     <!-- 右邊 -->
@@ -73,6 +85,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import { useRouter, useRoute } from "vue-router"
 import i18n from "@/assets/ts/i18n"
+import { color } from "echarts"
 
 const store = useStore()
 const router = useRouter()
@@ -87,6 +100,20 @@ const userInfo = computed(() => store.getters.userInfo)
 const layout = computed(() => store.getters.layout)
 
 const routeName = computed(() => route.name)
+const isMobile = ref(window.innerWidth < 1024)
+
+function handleResize() {
+  isMobile.value = window.innerWidth < 1024
+}
+
+onMounted(() => {
+  window.addEventListener("resize", handleResize)
+  window.addEventListener("scroll", displayOnScroll)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", handleResize)
+  window.removeEventListener("scroll", displayOnScroll)
+})
 
 const loginState = computed(() =>
   localStorage.getItem("login_token") ? "Logout" : "Login"
@@ -117,14 +144,6 @@ function displayOnScroll() {
   hideTopnav.value = currScrollTop > prevScrollTop
   prevScrollTop = currScrollTop
 }
-
-onMounted(() => {
-  window.addEventListener("scroll", displayOnScroll)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", displayOnScroll)
-})
 </script>
 
 <style scoped>

@@ -41,41 +41,41 @@
 </template>
 
 <script>
-import TreeView from '@/components/common/TreeView.vue'
-import FileTable from '@/components/Track/FileTable.vue'
-import TreeviewConverter from '@/assets/js/treeview_converter'
-import { mapGetters, mapActions } from 'vuex'
+import TreeView from "@/components/common/TreeView.vue"
+import FileTable from "@/components/Track/FileTable.vue"
+import TreeviewConverter from "@/assets/js/treeview_converter"
+import { mapGetters, mapActions } from "vuex"
 import {
   apiUploadJobFile,
   apiUploadJobFinished,
   apiUploadBigFile,
-} from '@/assets/js/api.js'
+} from "@/assets/js/api.js"
 
 var treeItemList = [
   {
-    name: 'My Tree',
+    name: "My Tree",
     children: [
-      { name: 'hello' },
-      { name: 'wat' },
+      { name: "hello" },
+      { name: "wat" },
       {
-        name: 'empty folder',
+        name: "empty folder",
         children: [],
       },
       {
-        name: 'child folder',
+        name: "child folder",
         children: [
           {
-            name: 'child folder',
-            children: [{ name: 'hello.txt' }, { name: 'wat.txt' }],
+            name: "child folder",
+            children: [{ name: "hello.txt" }, { name: "wat.txt" }],
           },
-          { name: 'hello.txt' },
-          { name: 'wat.txt' },
+          { name: "hello.txt" },
+          { name: "wat.txt" },
           {
-            name: 'child folder',
-            children: [{ name: 'hello.txt' }, { name: 'wat.txt' }],
+            name: "child folder",
+            children: [{ name: "hello.txt" }, { name: "wat.txt" }],
           },
           {
-            name: 'empty folder',
+            name: "empty folder",
             children: [],
           },
         ],
@@ -85,7 +85,7 @@ var treeItemList = [
 ]
 const list = [
   {
-    name: 'File1.txt',
+    name: "File1.txt",
     calories: 159,
     fat: 6.0,
     carbs: 24,
@@ -93,7 +93,7 @@ const list = [
     iron: 1,
   },
   {
-    name: 'File2.txt',
+    name: "File2.txt",
     calories: 237,
     fat: 9.0,
     carbs: 37,
@@ -101,7 +101,7 @@ const list = [
     iron: 1,
   },
   {
-    name: 'File3.txt',
+    name: "File3.txt",
     calories: 262,
     fat: 16.0,
     carbs: 23,
@@ -109,7 +109,7 @@ const list = [
     iron: 7,
   },
   {
-    name: 'File4.txt',
+    name: "File4.txt",
     calories: 305,
     fat: 3.7,
     carbs: 67,
@@ -117,7 +117,7 @@ const list = [
     iron: 8,
   },
   {
-    name: 'File5.txt',
+    name: "File5.txt",
     calories: 356,
     fat: 16.0,
     carbs: 49,
@@ -125,7 +125,7 @@ const list = [
     iron: 16,
   },
   {
-    name: 'File6.txt',
+    name: "File6.txt",
     calories: 375,
     fat: 0.0,
     carbs: 94,
@@ -133,7 +133,7 @@ const list = [
     iron: 0,
   },
   {
-    name: 'File7.txt',
+    name: "File7.txt",
     calories: 392,
     fat: 0.2,
     carbs: 98,
@@ -142,7 +142,7 @@ const list = [
   },
 ]
 export default {
-  name: 'Files',
+  name: "Files",
   components: { TreeView, FileTable },
   data() {
     return {
@@ -152,22 +152,22 @@ export default {
       // Upload folder
       cwd: null,
       fs: null,
-      fileTreeArray: ['將檔案拖曳過來'],
+      fileTreeArray: ["將檔案拖曳過來"],
       tempEntry: null,
       directory: list,
       files: [],
     }
   },
   computed: {
-    ...mapGetters(['layout']),
+    ...mapGetters(["layout"]),
     aside() {
       return {
-        width: this.treeviewWidth + 'px',
+        width: this.treeviewWidth + "px",
       }
     },
     resizer() {
       return {
-        left: this.treeviewWidth + 'px',
+        left: this.treeviewWidth + "px",
       }
     },
     contentViewer() {
@@ -184,7 +184,7 @@ export default {
           sidebarWidth -
           this.treeviewWidth -
           resizerWidth +
-          'px',
+          "px",
       }
     },
   },
@@ -194,39 +194,39 @@ export default {
   methods: {
     showIt(e) {
       console.log(e)
-      let rootPathName = e.target.files[0].webkitRelativePath.split('/')[0]
+      let rootPathName = e.target.files[0].webkitRelativePath.split("/")[0]
       // 1024 * 1024 = 1MB
       console.log(rootPathName)
       window.requestFileSystem(
         window.TEMPORARY || 0,
         1024 * 1024,
-        (fs) => {
-          createDirectory(fs.root, 'Document/Embeded/'.split('/'))
+        fs => {
+          createDirectory(fs.root, "Document/Embeded/".split("/"))
           fs.root.getDirectory(
             rootPathName,
             { create: true },
-            (dirEntry) => {
+            dirEntry => {
               var dirReader = dirEntry.createReader()
-              dirReader.readEntries((entries) => {
+              dirReader.readEntries(entries => {
                 for (var i = 0; i < entries.length; i++) {
                   var entry = entries[i]
                   if (entry.isDirectory) {
-                    console.log('Directory: ' + entry.fullPath)
+                    console.log("Directory: " + entry.fullPath)
                   } else if (entry.isFile) {
-                    console.log('File: ' + entry.fullPath)
+                    console.log("File: " + entry.fullPath)
                   }
                 }
               }),
-                (err) => {
+                err => {
                   console.dir(err)
                 }
             },
-            (err) => {
+            err => {
               console.dir(err)
             }
           )
         },
-        (err) => {
+        err => {
           console.log(err)
         }
       )
@@ -241,19 +241,19 @@ export default {
             }
             console.log(dirEntry)
           },
-          (err) => {
+          err => {
             console.log(err)
           }
         )
       }
     },
-    ...mapActions(['changeLoadingState']),
+    ...mapActions(["changeLoadingState"]),
     resizeTreeView(e) {
       const vm = this
       let x = e.x
 
-      window.addEventListener('mousemove', handler1)
-      window.addEventListener('mouseup', handler2)
+      window.addEventListener("mousemove", handler1)
+      window.addEventListener("mouseup", handler2)
 
       function handler1(e) {
         if (e.x != x) {
@@ -271,8 +271,8 @@ export default {
       }
 
       function handler2() {
-        window.removeEventListener('mousemove', handler1)
-        window.removeEventListener('mousemove', handler2)
+        window.removeEventListener("mousemove", handler1)
+        window.removeEventListener("mousemove", handler2)
       }
     },
     handleDragOver(e) {
@@ -292,7 +292,7 @@ export default {
       window.requestFileSystem(
         window.TEMPORARY || 0,
         1024 * 1024,
-        (fileSystem) => {
+        fileSystem => {
           vm.fs = fileSystem
           vm.cwd = vm.fs.root
           vm.clearFileSystem(vm.cwd)
@@ -303,7 +303,7 @@ export default {
     clearFileSystem(dirEntry) {
       const vm = this
       let i = 0
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         vm.readDirectory(dirEntry, function (entries) {
           next()
           function next() {
@@ -337,8 +337,8 @@ export default {
 
       for (let item of items) {
         // Skip this one if we didn't get a file.
-        if (item.kind != 'file') {
-          console.log('Not a file: ', item)
+        if (item.kind != "file") {
+          console.log("Not a file: ", item)
           continue
         }
 
@@ -356,7 +356,7 @@ export default {
           setTimeout(() => {
             vm.treeItemList = []
             const temp = TreeviewConverter.convertTreeView(vm.fileTreeArray)
-            temp.forEach((t) => {
+            temp.forEach(t => {
               vm.treeItemList.push(t)
             })
             vm.changeLoadingState({
@@ -368,7 +368,7 @@ export default {
             console.log(this.files)
           }, 500)
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err)
         })
     },
@@ -396,14 +396,14 @@ export default {
       vm.readDirectory(dirEntry, function (entries) {
         entries.forEach(async function (entry) {
           if (entry.isDirectory) {
-            vm.fileTreeArray.push(entry.fullPath + '/')
+            vm.fileTreeArray.push(entry.fullPath + "/")
             vm.getEntry(entry.fullPath, vm.recursiveOperation)
           } else {
             let file = await vm.getFile(entry)
             let trimFirstSlash = dirEntry.fullPath.slice(1)
-            let firstSlashIndex = trimFirstSlash.indexOf('/')
+            let firstSlashIndex = trimFirstSlash.indexOf("/")
             if (firstSlashIndex < 0) {
-              file.relativePath = ''
+              file.relativePath = ""
             } else {
               file.relativePath = trimFirstSlash.slice(firstSlashIndex)
             }
@@ -435,7 +435,7 @@ export default {
       readEntries()
 
       function readEntries() {
-        dirReader.readEntries((results) => {
+        dirReader.readEntries(results => {
           if (!results.length) {
             callback(entries)
           } else {
@@ -454,7 +454,7 @@ export default {
             isLoading: false,
             isSuccess: false,
             showAction: true,
-            error: 'fileUploadFailError',
+            error: "fileUploadFailError",
           })
           break
         default:
@@ -463,7 +463,7 @@ export default {
             isLoading: false,
             isSuccess: false,
             showAction: true,
-            error: 'fileUploadFailError',
+            error: "fileUploadFailError",
           })
           break
       }
@@ -480,24 +480,24 @@ export default {
     },
     uploadBigFile(fileForm) {
       const formData = new FormData()
-      formData.append('jobId', 12)
-      formData.append('total', 1)
-      formData.append('index', 0)
-      formData.append('path', '')
-      formData.append('fileName', 'CADMEN_service_flow_v1.html')
-      formData.append('file', this.files[0])
+      formData.append("jobId", 12)
+      formData.append("total", 1)
+      formData.append("index", 0)
+      formData.append("path", "")
+      formData.append("fileName", "CADMEN_service_flow_v1.html")
+      formData.append("file", this.files[0])
 
       apiUploadBigFile(formData)
-        .then((res) => {
+        .then(res => {
           console.log(res.data)
 
-          if (res.data == 'wait' && fileForm.index < fileForm.total - 1) {
+          if (res.data == "wait" && fileForm.index < fileForm.total - 1) {
             fileForm.index++
             this.fileProgress.done++
             return this.uploadBigFile.call(this, fileForm)
-          } else if (res.data == 'success') {
+          } else if (res.data == "success") {
             this.fileProgress.done++
-            console.log('success')
+            console.log("success")
             setTimeout(() => {
               if (this.fileProgress.done == this.fileProgress.total) {
                 this.files = []
@@ -508,17 +508,17 @@ export default {
                   isLoading: false,
                   isSuccess: true,
                   showAction: true,
-                  error: '',
+                  error: "",
                 })
                 this.getProjectDetail()
               }
             }, 500)
-          } else if (res.data == 'error') {
+          } else if (res.data == "error") {
             console.log(res.data)
-            throw 'Lose file patch'
+            throw "Lose file patch"
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err)
           this.fileProgress.show = false
           this.changeLoadingState({
@@ -526,7 +526,7 @@ export default {
             isLoading: false,
             isSuccess: false,
             showAction: true,
-            error: 'loseFilePatchError',
+            error: "loseFilePatchError",
           })
         })
     },
@@ -539,17 +539,17 @@ export default {
       let successCount = 0
 
       if (queueSize > 0) uploadNext(requestQueue)
-      else console.log('No File to upload!')
+      else console.log("No File to upload!")
 
       function uploadNext(queue) {
         apiUploadJobFile(queue.shift())
-          .then((res) => {
-            if (res.data != 'error') {
+          .then(res => {
+            if (res.data != "error") {
               successCount++
               if (successCount == queueSize) {
-                apiUploadJobFinished({ jobId: jobId }).then((res) => {
+                apiUploadJobFinished({ jobId: jobId }).then(res => {
                   console.log(res.data)
-                  console.log('Job Upload Finished')
+                  console.log("Job Upload Finished")
                 })
               } else {
                 uploadNext(queue)
@@ -558,7 +558,7 @@ export default {
               console.log(res.data)
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.log(err)
           })
       }
@@ -576,12 +576,12 @@ export default {
           let end = Math.min(fileSize, start + sliceSize)
 
           const formData = new FormData()
-          formData.append('jobId', jobId)
-          formData.append('total', sliceTotal)
-          formData.append('index', sliceIndex)
-          formData.append('path', this.files[fileIndex].relativePath)
-          formData.append('fileName', fileName)
-          formData.append('file', this.files[fileIndex].slice(start, end))
+          formData.append("jobId", jobId)
+          formData.append("total", sliceTotal)
+          formData.append("index", sliceIndex)
+          formData.append("path", this.files[fileIndex].relativePath)
+          formData.append("fileName", fileName)
+          formData.append("file", this.files[fileIndex].slice(start, end))
 
           queue.push(formData)
         }

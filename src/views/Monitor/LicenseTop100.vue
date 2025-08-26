@@ -9,7 +9,7 @@
         :headers="headers"
         :items="licenseLogList"
         v-model:sort-by="sortBy"
-        dense
+        density="compact"
         class="ansys-table"
       >
         <!-- 功能名稱多行顯示 -->
@@ -30,6 +30,7 @@
 import { ref, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import { apiGetLicenseTop100 } from "@/assets/ts/api"
+import type { DataTableHeader } from "vuetify"
 
 // 型別定義
 interface LicenseItem {
@@ -54,14 +55,14 @@ const licenseLogList = ref<LicenseItem[]>([])
 const sortBy = ref<SortItem[]>([{ key: "Rowid", order: "asc" }])
 
 // DataTable 欄位定義
-const headers = [
-  { text: "No.", value: "Rowid", sortable: true },
-  { text: "使用者", value: "UserName", sortable: true },
-  { text: "裝置", value: "Host", sortable: true },
-  { text: "功能", value: "ModuleName", sortable: true },
-  { text: "開始時間", value: "StartTime", sortable: true },
-  { text: "結束時間", value: "EndTime", sortable: true },
-  { text: "使用時間", value: "spentTime", sortable: true },
+const headers: DataTableHeader<LicenseItem>[] = [
+  { title: "No.", key: "Rowid", sortable: true, align: "center" },
+  { title: "User Name", key: "UserName", sortable: true, align: "center" },
+  { title: "Device Name", key: "Host", sortable: true, align: "center" },
+  { title: "Feature Name", key: "ModuleName", sortable: true, align: "center" },
+  { title: "Start Time", key: "StartTime", sortable: true, align: "center" },
+  { title: "End Time", key: "EndTime", sortable: true, align: "center" },
+  { title: "Time Used", key: "spentTime", sortable: true, align: "center" },
 ]
 
 let timerId: number | undefined
@@ -103,12 +104,55 @@ onBeforeUnmount(() => {
   if (timerId) clearInterval(timerId)
 })
 </script>
-
 <style scoped lang="less">
+/* 針對這個 table 的 root class（你有用 class="ansys-table"） */
+.ansys-table {
+  width: 100%;
+
+  /* 資料列交替顏色：命中 Vuetify 產生的 tbody row class */
+  ::v-deep tbody tr:nth-child(odd) {
+    background-color: #1b3a66 !important; /* 深藍 */
+  }
+  ::v-deep tbody tr:nth-child(even) {
+    background-color: #111418 !important; /* 深黑/深灰 (搭配更明顯的條紋) */
+  }
+
+  /* 表頭 (th) */
+  ::v-deep .v-data-table__th {
+    background-color: #0d2d52 !important; /* 深藍表頭 */
+    color: #ffffff !important;
+    font-weight: 700;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+
+  /* 儲存格文字顏色、內距 */
+  ::v-deep tbody td {
+    color: #ffffff !important;
+    padding: 0 8px !important; /* ✅ 上下 0，左右 8px */
+    font-size: 13px;
+    line-height: 1.4; /* ✅ 避免字擠在一起 */
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+  }
+
+  /* 如果想要更窄的字體或小字版可以調整 */
+  ::v-deep .v-data-table__td,
+  ::v-deep .v-data-table__th {
+    font-size: 10px;
+  }
+}
+
+/* 讓 card 背景透明、標題白色 */
+.v-card {
+  background-color: transparent !important;
+}
+.v-card-title {
+  color: #fff !important;
+}
+
+/* 其餘容器 */
 .detail-container {
   padding: 20px;
-}
-.ansys-table {
-  font-size: small;
 }
 </style>

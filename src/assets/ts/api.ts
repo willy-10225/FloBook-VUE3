@@ -363,7 +363,7 @@ export function apiGetHardwareHistory(payload: GetHardwareHistoryPayload) {
  * @param { String } payload.end
  */
 export function apiGetLicenseHistory(payload: {
-  ip: number
+  ip: string
   start: string
   end: string
 }) {

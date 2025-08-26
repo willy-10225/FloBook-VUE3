@@ -5,6 +5,7 @@
     :model-value="layout.isSidenavShown"
     :width="layout.sidenavWidth"
     :scrim="false"
+    :temporary="isMobile"
   >
     <!-- LOGO 區 -->
     <router-link to="/" class="qi-sidenav-head">
@@ -19,12 +20,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from "vue"
+import { computed, reactive, ref, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import SideNavItem from "@/components/layout/SideNavItem.vue"
 
 const store = useStore()
 const layout = computed(() => store.getters.layout)
+const isMobile = ref(window.innerWidth < 1024)
+
+function handleResize() {
+  isMobile.value = window.innerWidth < 1024
+}
 
 const items = reactive([
   {
@@ -60,6 +66,13 @@ const items = reactive([
     ],
   },
 ])
+onMounted(() => {
+  window.addEventListener("resize", handleResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", handleResize)
+})
 </script>
 
 <style scoped>
