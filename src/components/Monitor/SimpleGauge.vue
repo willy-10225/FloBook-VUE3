@@ -34,8 +34,9 @@ const option = computed<EChartsOption>(() => {
   return {
     backgroundColor: "transparent",
     title: {
-      x: "center",
-      y: "center",
+      x: "48%",
+      y: "68%",
+      textAlign: "center",
       text: props.title.text,
       subtext: props.title.subtext,
       textStyle: {
@@ -51,9 +52,11 @@ const option = computed<EChartsOption>(() => {
     },
     series: [
       {
+        name: "",
         type: "pie",
-        center: ["50%", "50%"],
+        center: ["50%", "40%"],
         radius: ["55%", "75%"],
+        avoidLabelOverlap: false,
         startAngle: 225,
         color: [
           {
@@ -66,49 +69,55 @@ const option = computed<EChartsOption>(() => {
               { offset: 0, color: color0 },
               { offset: 1, color: color1 },
             ],
+            globalCoord: false,
           },
           "none",
         ],
-        label: { show: false },
         hoverAnimation: false,
+        legendHoverLink: false,
+        label: { show: false },
         data: [
-          { value: 75, name: "已使用" },
-          { value: 25, name: "空間" },
+          { value: 75, name: "1" },
+          { value: 25, name: "2" },
         ],
       },
       {
+        name: "border",
         type: "pie",
-        center: ["50%", "50%"],
+        center: ["50%", "40%"],
         radius: ["53%", "52%"],
         startAngle: 225,
-        label: { show: false },
         hoverAnimation: false,
+        legendHoverLink: false,
+        label: { show: false },
         data: [
-          { value: 75, name: "內圈" },
-          { value: 25, name: "其他" },
+          { value: 75, name: "1" },
+          { value: 25, name: "2" },
         ],
       },
       {
+        name: "progress",
         type: "pie",
-        center: ["50%", "50%"],
+        center: ["50%", "40%"],
         radius: ["55%", "75.1%"],
         startAngle: 315,
-        clockwise: false,
         color: ["rgba(34,34,34,.9)", "#ff7a00", "transparent"],
+        hoverAnimation: false,
+        legendHoverLink: false,
+        clockwise: false,
         itemStyle: {
           borderColor: "transparent",
           borderWidth: 20,
         },
-        label: {
-          show: false,
-        },
+        z: 10,
+        label: { show: false },
         data: [
           {
             value: ((100 - props.percent) * 270) / 360,
             label: {
-              show: true,
-              position: "center",
               formatter: props.percent + "%",
+              position: "center",
+              show: true,
               fontSize: 40,
               fontWeight: "normal",
               color: "#fff",

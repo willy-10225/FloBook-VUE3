@@ -259,7 +259,6 @@ export default defineComponent({
     )
 
     function moveTooltip(e: MouseEvent, items: MatrixItem, type: string) {
-      
       const margin = 10
       const tooltipWidth = 220
       const tooltipHeight = 160
@@ -323,7 +322,7 @@ export default defineComponent({
         })
       }
 
-      tooltip.x = x - 190
+      tooltip.x = x - 180
       tooltip.y = y - 90
       tooltip.visible = true
     }

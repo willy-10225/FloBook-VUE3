@@ -79,6 +79,7 @@
           ref="userChart"
           class="history-chart"
           :option="userHistoryOption"
+          :style="userChartStyle"
         />
       </v-col>
       <v-col cols="12">
@@ -86,6 +87,7 @@
           ref="licenseChart"
           class="history-chart"
           :option="licenseHistoryOption"
+          :style="licenseChartStyle"
         />
       </v-col>
     </v-row>
@@ -93,205 +95,643 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"
+import { ref, computed, nextTick, watch } from "vue"
 import { useStore } from "vuex"
 import { useI18n } from "vue-i18n"
 import { apiGetLicenseHistory, apiGetgroup } from "@/assets/ts/api"
 import VueECharts from "vue-echarts"
 import Color from "@/assets/ts/color-palette"
 
+interface Props {
+  ip: string
+}
+
+interface LicenseLogItem {
+  Product: string
+  UserName: string
+  StartTime: string
+  EndTime: string
+  Task: number
+}
+
+interface ChartData {
+  legendData: string[]
+  yAxisData: string[]
+  series: any[]
+  grid: {
+    left: string
+    right: string
+    bottom: string
+    containLabel: boolean
+    borderColor: string
+  }
+  max: number | null
+  tooltip: any
+}
+
+interface ChartStyleData {
+  height: number
+}
+
+const props = defineProps<Props>()
 const store = useStore()
 const { t } = useI18n()
-const ip = defineProps({ ip: String })
 
-// reactive state
-const softwarename = ref("ANSYS")
-const isDisplay = ref(false)
 const groupdict = ref<Record<string, string>>({})
+const licenseLogList = ref<LicenseLogItem[]>([])
+const AlllicenseLogList = ref<LicenseLogItem[]>([])
+const softwarename = ref<string>("ANSYS")
+const isDisplay = ref<boolean>(false)
+const startDateByUserPicked = ref<Date>(
+  new Date(new Date().toISOString().split("T")[0] + " 00:00:00")
+)
+const endDateByUserPicked = ref<Date>(new Date())
+const numericalAlert = ref<boolean>(false)
+const emptyAlert = ref<boolean>(false)
+const groupname = ref<string>("ALL")
 const grouplist = ref<string[]>([])
-const groupname = ref("ALL")
 
-const startDateByUserPicked = ref(new Date())
-const endDateByUserPicked = ref(new Date())
-const numericalAlert = ref(false)
-const emptyAlert = ref(false)
+const userChart = ref<any>(null)
+const licenseChart = ref<any>(null)
 
-const licenseLogList = ref<any[]>([])
-const AlllicenseLogList = ref<any[]>([])
-
-// ====== Chart base option ======
 const barChartOption = {
-  title: [{ left: "center", textStyle: { color: "white", fontSize: 28 } }],
-  legend: { bottom: "0%", textStyle: { color: "#fff" } },
+  title: [
+    {
+      left: "center",
+      textStyle: {
+        color: "white",
+        fontSize: 28,
+      },
+    },
+    {
+      text: "累積時數比重",
+      left: "822",
+      y: "50",
+      textStyle: {
+        color: "white",
+      },
+    },
+  ],
+  legend: {
+    bottom: "0%",
+    textStyle: { color: "#fff" },
+  },
   xAxis: {
     type: "value",
-    axisLabel: { color: "#fff" },
-    splitLine: { lineStyle: { color: "#888" } },
+    name: "Hours",
+    axisLabel: {
+      color: "#fff",
+    },
+    nameTextStyle: {
+      color: "#fff",
+    },
+    splitLine: {
+      lineStyle: {
+        color: "#888",
+      },
+    },
   },
-  yAxis: { type: "category", axisLabel: { color: "#fff" } },
+  yAxis: {
+    type: "category",
+    axisLabel: {
+      color: "#fff",
+      interval: 0,
+    },
+    nameTextStyle: {
+      color: "#fff",
+    },
+  },
   series: [],
   color: Color,
 }
 
-// ====== Reactive chart data ======
-const userHistoryData = ref({
-  legendData: [] as string[],
-  yAxisData: [] as string[],
-  series: [] as any[],
-})
-const licenseHistoryData = ref({
-  legendData: [] as string[],
-  yAxisData: [] as string[],
-  series: [] as any[],
+const userHistoryData = ref<ChartData>({
+  legendData: [],
+  yAxisData: [],
+  series: [],
+  grid: {
+    left: "3%",
+    right: "5%",
+    bottom: "25px",
+    containLabel: true,
+    borderColor: "#333",
+  },
+  max: null,
+  tooltip: {
+    trigger: "axis",
+    axisPointer: {
+      type: "shadow",
+    },
+    formatter: (params: any) => {
+      if (Array.isArray(params)) {
+        let temp = params.filter((item: any) => item.data > 0)
+        if (temp.length > 0) {
+          let first = temp.shift()
+          let result = `User: ${first.name}<br>`
+          result += `${first.seriesName}: ${first.data}<hr><div style="text-align:left">`
+          for (let item of temp) {
+            result += `${item.marker} ${item.seriesName}: ${item.data}<br>`
+          }
+          result += "</div>"
+          return result
+        } else {
+          return ""
+        }
+      }
+    },
+  },
 })
 
-const userHistoryOption = computed(() => ({
-  ...barChartOption,
-  yAxis: {
-    ...barChartOption.yAxis,
-    data: userHistoryData.value.yAxisData,
-    name: "Users",
+const licenseHistoryData = ref<ChartData>({
+  legendData: [],
+  yAxisData: [],
+  series: [],
+  grid: {
+    left: "3%",
+    right: "7%",
+    bottom: "25px",
+    containLabel: true,
+    borderColor: "#333",
   },
-  legend: { ...barChartOption.legend, data: userHistoryData.value.legendData },
-  series: userHistoryData.value.series,
-  title: [{ ...barChartOption.title[0], text: t("monitor.user-license") }],
+  max: null,
+  tooltip: {
+    trigger: "axis",
+    axisPointer: {
+      type: "shadow",
+    },
+    formatter: (params: any) => {
+      if (Array.isArray(params)) {
+        let temp = params.filter((item: any) => item.data > 0)
+        if (temp.length > 0) {
+          let first = temp.shift()
+          let result = `Feature: ${first.name}<br>`
+          result += `${first.seriesName}: ${first.data}<hr><div style="text-align:left">`
+          for (let item of temp) {
+            result += `${item.marker} ${item.seriesName}: ${item.data}<br>`
+          }
+          result += "</div>"
+          return result
+        } else {
+          return ""
+        }
+      }
+    },
+  },
+})
+
+const userChartStyleData = ref<ChartStyleData>({
+  height: 650,
+})
+
+const licenseChartStyleData = ref<ChartStyleData>({
+  height: 650,
+})
+
+const userHistoryOption = computed(() => {
+  let option = JSON.parse(JSON.stringify(barChartOption))
+  option.legend.data = userHistoryData.value.legendData
+  option.yAxis.data = userHistoryData.value.yAxisData
+  option.series = userHistoryData.value.series
+  option.yAxis.name = "Users"
+  option.title[0].text = t("monitor.user-license")
+  option.title[1].text = t("monitor.time-percentage")
+  option.title[1].left =
+    option.title[1].text == "Percentage of time usage" ? "680" : "745"
+  option.grid = userHistoryData.value.grid
+  option.tooltip = userHistoryData.value.tooltip
+  return option
+})
+
+const licenseHistoryOption = computed(() => {
+  let option = JSON.parse(JSON.stringify(barChartOption))
+  option.legend.data = licenseHistoryData.value.legendData
+  option.yAxis.data = licenseHistoryData.value.yAxisData
+  option.yAxis.name = "Licenses"
+  option.series = licenseHistoryData.value.series
+  option.title[0].text = t("monitor.license-user")
+  option.title[1].text = t("monitor.time-percentage")
+  option.title[1].left =
+    option.title[1].text == "Percentage of time usage" ? "680" : "745"
+  option.grid = licenseHistoryData.value.grid
+  option.tooltip = licenseHistoryData.value.tooltip
+  return option
+})
+
+const userChartStyle = computed(() => ({
+  height: userChartStyleData.value.height + "px",
 }))
 
-const licenseHistoryOption = computed(() => ({
-  ...barChartOption,
-  yAxis: {
-    ...barChartOption.yAxis,
-    data: licenseHistoryData.value.yAxisData,
-    name: "Licenses",
-  },
-  legend: {
-    ...barChartOption.legend,
-    data: licenseHistoryData.value.legendData,
-  },
-  series: licenseHistoryData.value.series,
-  title: [{ ...barChartOption.title[0], text: t("monitor.license-user") }],
+const licenseChartStyle = computed(() => ({
+  height: licenseChartStyleData.value.height + "px",
 }))
 
-// ===== Methods =====
-function validateInput() {
-  apiGetgroup().then(res => {
+const layout = computed(() => store.getters.layout)
+
+watch(
+  layout,
+  () => {
+    if (isDisplay.value) detectRWD()
+  },
+  { deep: true }
+)
+
+const changeLoadingState = (state: boolean) => {
+  store.dispatch("changeLoadingState", state)
+}
+
+const validateInput = () => {
+  apiGetgroup().then((res: any) => {
     groupdict.value = res.data
     grouplist.value = [...new Set(Object.values(groupdict.value))]
     grouplist.value.push("ALL")
     groupname.value = "ALL"
   })
 
-  if (!startDateByUserPicked.value || !endDateByUserPicked.value) {
+  if (
+    startDateByUserPicked.value !== undefined &&
+    endDateByUserPicked.value !== undefined
+  ) {
+    if (startDateByUserPicked.value <= endDateByUserPicked.value) {
+      getLicenseHistory(
+        props.ip,
+        startDateByUserPicked.value,
+        endDateByUserPicked.value
+      )
+      isDisplay.value = true
+      emptyAlert.value = false
+      numericalAlert.value = false
+    } else {
+      emptyAlert.value = false
+      numericalAlert.value = true
+    }
+  } else {
     emptyAlert.value = true
-    return
   }
-
-  if (startDateByUserPicked.value > endDateByUserPicked.value) {
-    numericalAlert.value = true
-    return
-  }
-  const formatDate = (d: Date) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
-      .getDate()
-      .toString()
-      .padStart(2, "0")}`
-
-  getLicenseHistory(
-    ip.ip!,
-    startDateByUserPicked.value,
-    endDateByUserPicked.value
-  )
 }
-function formatDate(date: Date, type: "start" | "end"): string {
-  const yyyy = date.getFullYear()
-  const mm = String(date.getMonth() + 1).padStart(2, "0") // 月份從 0 開始
-  const dd = String(date.getDate()).padStart(2, "0")
-  const hh = String(date.getHours()).padStart(2, "0")
-  const mi = String(date.getMinutes()).padStart(2, "0")
-  const ss = String(date.getSeconds()).padStart(2, "0")
-  if (type == "start") {
-    return `${yyyy}/${mm}/${dd} 00:00:00`
-  }
-  return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`
-}
-function getLicenseHistory(ip: string, startDate: Date, endDate: Date) {
+
+const getLicenseHistory = (ip: string, startDate: Date, endDate: Date) => {
   const payload = {
-    ip: ip,
-    start: formatDate(startDate, "start"),
-    end: formatDate(endDate, "end"),
+    Ip: ip,
+    Start: startDate.toISOString(),
+    End: endDate.toISOString(),
   }
-  store.dispatch("changeLoadingState", true)
+  changeLoadingState(true)
 
   apiGetLicenseHistory(payload)
-    .then(res => {
-      console.log("getLicenseHistory payload", res.data)
+    .then((res: any) => {
       AlllicenseLogList.value = res.data
-      licenseLogList.value = filterByGroup(AlllicenseLogList.value)
-      showHistoryChart(licenseLogList.value)
-      isDisplay.value = true
-      store.dispatch("changeLoadingState", false)
+      console.log("AlllicenseLogList", AlllicenseLogList.value)
+
+      licenseLogList.value = resetalmTooltipData(AlllicenseLogList.value)
+      console.log("licenseLogList", licenseLogList.value)
+      showHistoryChart(userHistoryData.value, "Product", "UserName")
+      showHistoryChart(licenseHistoryData.value, "UserName", "Product")
+      changeLoadingState(false)
     })
-    .catch(err => {
+    .catch((err: any) => {
       console.log(err)
-      store.dispatch("changeLoadingState", false)
     })
 }
 
-function filterByGroup(data: any[]) {
-  if (groupname.value === "ALL") return data
-  const users = Object.entries(groupdict.value)
-    .filter(([k, v]) => v === groupname.value)
-    .map(([k]) => k)
-  return data.filter(item => users.includes(item.UserName))
-}
+const showHistoryChart = (
+  data: ChartData,
+  legendKey: keyof LicenseLogItem,
+  yAxisKey: keyof LicenseLogItem
+) => {
+  data.legendData = [
+    ...new Set(
+      licenseLogList.value.map(
+        (item: LicenseLogItem) => item[legendKey] as string
+      )
+    ),
+  ]
+  console.log("licenseLogList", licenseLogList.value)
+  data.yAxisData = [
+    ...new Set(
+      licenseLogList.value.map(
+        (item: LicenseLogItem) => item[yAxisKey] as string
+      )
+    ),
+  ]
+  increaseChartHeight(yAxisKey, data.yAxisData, data.legendData)
+  data.series = []
+  showBarChart()
+  let sums = getSums(data)
+  showPieChart(data)
+  showTotalValue(yAxisKey)
 
-function changelicense() {
-  licenseLogList.value = filterByGroup(AlllicenseLogList.value)
-  showHistoryChart(licenseLogList.value)
-}
-
-function showHistoryChart(data: any[]) {
-  // User chart
-  const userGroup: Record<string, number> = {}
-  data.forEach(item => {
-    const hours = Number(item.Hours) || 0
-    userGroup[item.UserName] = (userGroup[item.UserName] || 0) + hours
-  })
-  console.log("userGroup", userGroup)
-  userHistoryData.value = {
-    legendData: Object.keys(userGroup),
-    yAxisData: Object.keys(userGroup),
-    series: [
-      {
-        name: t("monitor.user-license"),
+  function showBarChart() {
+    for (let legend of data.legendData) {
+      let filter = licenseLogList.value.filter(
+        (item: LicenseLogItem) => item[legendKey] == legend
+      )
+      let seriesData = new Array(data.yAxisData.length).fill(0)
+      for (let i = 0; i < data.yAxisData.length; i++) {
+        for (let item of filter) {
+          if (item[yAxisKey] == data.yAxisData[i]) {
+            if (yAxisKey == "UserName") {
+              seriesData[i] += getDuration(item.StartTime, item.EndTime, 1)
+              seriesData[i] = parseFloat(seriesData[i].toFixed(1))
+            } else if (yAxisKey == "Product") {
+              seriesData[i] += getDuration(
+                item.StartTime,
+                item.EndTime,
+                item.Task
+              )
+              seriesData[i] = parseFloat(seriesData[i].toFixed(1))
+            }
+          } else seriesData[i] += 0
+        }
+      }
+      data.series.push({
+        name: legend,
         type: "bar",
-        data: Object.values(userGroup),
-      },
-    ],
+        stack: "total",
+        data: seriesData,
+        barWidth: 30,
+        barCategoryGap: "10%",
+      })
+    }
   }
 
-  // License chart
-  const licenseGroup: Record<string, number> = {}
-  data.forEach(item => {
-    const hours = Number(item.Hours) || 0
-    licenseGroup[item.License] = (licenseGroup[item.License] || 0) + hours
-  })
-
-  licenseHistoryData.value = {
-    legendData: Object.keys(licenseGroup),
-    yAxisData: Object.keys(licenseGroup),
-    series: [
-      {
-        name: t("monitor.license-user"),
-        type: "bar",
-        data: Object.values(licenseGroup),
+  function showTotalValue(type: keyof LicenseLogItem) {
+    let deviceLicenses = JSON.parse(
+      sessionStorage.getItem("deviceIpList") || "[]"
+    ).find((item: any) => item.ip == props.ip)?.licenses
+    data.series.unshift({
+      name: "TOTAL",
+      type: "bar",
+      barGap: "-100%",
+      label: {
+        normal: {
+          show: true,
+          position: "right",
+          color: "white",
+          formatter: (params: any) => {
+            let productTask: number, totalTime: number, usageRate: string
+            switch (type) {
+              case "Product":
+                try {
+                  productTask =
+                    deviceLicenses?.find(
+                      (item: any) => item.Feature == params.name
+                    )?.Issued || 1
+                } catch {
+                  productTask = 1
+                }
+                totalTime =
+                  getDuration(
+                    startDateByUserPicked.value.toISOString(),
+                    endDateByUserPicked.value.toISOString(),
+                    1
+                  ) * productTask
+                usageRate = ((params.value / totalTime) * 100).toFixed(1)
+                return `${params.value}/${totalTime}\n(${usageRate}%)`
+              case "UserName":
+                return `${params.value}`
+              default:
+                return `${params.value}`
+            }
+          },
+        },
       },
-    ],
+      itemStyle: {
+        color: "transparent",
+      },
+      data: sums.map((s: any) => s.xSum),
+    })
+  }
+}
+
+const getSums = (data: ChartData) => {
+  let sums: any[] = []
+  sortBy_yAxis(data)
+  return sums
+
+  function sortBy_yAxis(data: ChartData) {
+    sums = new Array(data.yAxisData.length).fill(0)
+    for (let y = 0; y < data.yAxisData.length; y++) {
+      sums[y] = {
+        index: y,
+        xSum: sumArray(data.series.map((s: any) => s.data[y])),
+        name: data.yAxisData[y],
+      }
+    }
+
+    sums.sort((a: any, b: any) => b.xSum - a.xSum)
+    let order = sums.map((s: any) => s.index)
+
+    for (let l = 0; l < data.series.length; l++) {
+      let temp1 = Object.assign([], data.series[l].data)
+      data.series[l].data = order.map((o: number) => temp1[o])
+      data.yAxisData = sums.map((s: any) => s.name)
+    }
+  }
+}
+
+const getDuration = (startTime: string, endTime: string, task: number) => {
+  const MS_PER_HOUR = 60 * 60 * 1000
+  let start: Date, end: Date, pickedStart: Date, pickedEnd: Date
+
+  pickedStart = new Date(startDateByUserPicked.value)
+
+  if (!isToday(endDateByUserPicked.value)) {
+    const endDateStr =
+      endDateByUserPicked.value.toISOString().split("T")[0] + " 23:59:59"
+    pickedEnd = new Date(endDateStr)
+  } else {
+    pickedEnd = new Date(endDateByUserPicked.value)
+  }
+
+  if (startTime && endTime) {
+    start = new Date(startTime)
+    end = new Date(endTime)
+  } else {
+    start = new Date(startTime)
+    end = new Date()
+  }
+
+  start = start < pickedStart ? pickedStart : start
+  end = end > pickedEnd ? pickedEnd : end
+
+  let duration = ((end.getTime() - start.getTime()) / MS_PER_HOUR) * task
+  if (duration < 0.1) duration = 0.1
+  return parseFloat(duration.toFixed(1))
+}
+
+const isToday = (date: Date) => {
+  const today = new Date()
+  return date.toDateString() === today.toDateString()
+}
+
+const sumArray = (array: number[]) => {
+  let xSum = 0
+  if (Array.isArray(array)) {
+    for (let item of array) xSum += item
+  }
+  return parseFloat(xSum.toFixed(1))
+}
+
+const showPieChart = (data: ChartData) => {
+  let pieData = data.series.map((s: any) => ({
+    value: sumArray(s.data),
+    name: s.name,
+  }))
+
+  data.series.push({
+    name: "累積時數",
+    type: "pie",
+    radius: ["60", "100"],
+    center: ["800", "190"],
+    avoidLabelOverlap: false,
+    tooltip: {
+      trigger: "item",
+    },
+    label: {
+      normal: {
+        show: false,
+        position: "center",
+        formatter: "{d}%",
+      },
+      emphasis: {
+        show: true,
+        textStyle: {
+          fontSize: "28",
+          fontWeight: "bold",
+        },
+      },
+    },
+    labelLine: {
+      normal: {
+        show: false,
+      },
+    },
+    data: pieData,
+  })
+}
+
+const increaseChartHeight = (
+  type: keyof LicenseLogItem,
+  yAxisData: string[],
+  legendData: string[]
+) => {
+  const original = 650
+  const threshold = 8
+  const barWidth = 40
+  const legendHeight = 25
+
+  if (type == "UserName") {
+    if (yAxisData.length > threshold) {
+      let overflow = yAxisData.length - threshold
+      let heightIncrease = overflow * barWidth
+      userChartStyleData.value.height = original + heightIncrease
+    } else {
+      userChartStyleData.value.height = original
+    }
+
+    if (legendData.length > threshold) {
+      let newBottom = Math.ceil(legendData.length / threshold) * legendHeight
+      userHistoryData.value.grid.bottom = newBottom + "px"
+    } else {
+      userHistoryData.value.grid.bottom = legendHeight + "px"
+    }
+  } else if (type == "Product") {
+    if (yAxisData.length > threshold) {
+      let overflow = yAxisData.length - threshold
+      let heightIncrease = overflow * barWidth
+      licenseChartStyleData.value.height = original + heightIncrease
+    } else {
+      licenseChartStyleData.value.height = original
+    }
+
+    if (legendData.length > threshold) {
+      let newBottom = Math.ceil(legendData.length / threshold) * legendHeight
+      licenseHistoryData.value.grid.bottom = newBottom + "px"
+    } else {
+      licenseHistoryData.value.grid.bottom = legendHeight + "px"
+    }
+  }
+
+  nextTick(() => {
+    detectRWD()
+  })
+}
+
+const detectRWD = () => {
+  if (userChart.value) userChart.value.resize()
+  if (licenseChart.value) licenseChart.value.resize()
+}
+
+const settime = (text: string, licenseLogList: LicenseLogItem[]) => {
+  const end = new Date()
+  let mstime = 0
+  let totaltime = "0"
+  if (licenseLogList.length != 0) {
+    for (const key of licenseLogList) {
+      mstime += end.getTime() - Date.parse(key.StartTime)
+    }
+    const time = mstime / 1000
+    const day = Math.floor(time / 60 / 60 / 24)
+    const hour = Math.floor(time / 60 / 60) % 24
+    const month = Math.floor(time / 60) % 60
+    const second = Math.floor(time) % 60
+    totaltime = day + "Day " + hour + ":" + month + ":" + second
+  }
+  const obj = document.getElementById(text)
+  if (obj != null) {
+    obj.innerText = totaltime
+  }
+}
+
+const resetalmTooltipData = (almTooltipData: LicenseLogItem[]) => {
+  if (almTooltipData !== undefined && groupname.value !== "ALL") {
+    const newlist: LicenseLogItem[] = []
+    const selectlist: string[] = []
+    for (const [k, v] of Object.entries(groupdict.value)) {
+      if (v === groupname.value) {
+        selectlist.push(k)
+      }
+    }
+    for (const key of almTooltipData) {
+      if (selectlist.includes(key.UserName)) {
+        newlist.push(key)
+      }
+    }
+    return newlist
+  } else {
+    return almTooltipData
+  }
+}
+
+const changelicense = () => {
+  licenseLogList.value = resetalmTooltipData(AlllicenseLogList.value)
+  settime("totaltimelabel", licenseLogList.value)
+  showHistoryChart(userHistoryData.value, "Product", "UserName")
+  showHistoryChart(licenseHistoryData.value, "UserName", "Product")
+}
+
+const groupprintdict = (key: string) => {
+  if (key in groupdict.value) {
+    return groupdict.value[key]
+  } else {
+    return ""
   }
 }
 </script>
 
 <style scoped>
+.group-selector {
+  width: 100px;
+  margin: 0;
+  padding: 20% 0%;
+  min-height: unset;
+  text-align: center;
+}
+
+h2 {
+  margin: 0px;
+}
+
 .history-container {
   padding: 20px 30px 30px 30px;
   margin-bottom: 60px;
@@ -299,20 +739,18 @@ function showHistoryChart(data: any[]) {
   border-radius: 10px;
   background-color: #666;
 }
+
 .ansyshistitle {
   color: white;
   font-size: x-large;
   font-weight: bolder;
   margin-bottom: 20px;
 }
-.group-selector {
-  width: 100px;
-  text-align: center;
-}
+
 .history-chart {
   display: block;
   width: 100%;
-  height: 650px;
+  /* height: 1200px; */
   margin: 20px auto;
 }
 </style>

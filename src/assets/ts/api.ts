@@ -363,9 +363,9 @@ export function apiGetHardwareHistory(payload: GetHardwareHistoryPayload) {
  * @param { String } payload.end
  */
 export function apiGetLicenseHistory(payload: {
-  ip: string
-  start: string
-  end: string
+  Ip: string
+  Start: string
+  End: string
 }) {
   return flobookApi.post("/GetLicenseHistory", payload)
 }

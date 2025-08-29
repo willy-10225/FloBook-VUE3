@@ -14,7 +14,7 @@ import {
 } from "echarts/components"
 import { CanvasRenderer } from "echarts/renderers"
 import { LineChart, BarChart, PieChart } from "echarts/charts"
-
+import "echarts"
 import "vuetify/styles"
 import { createVuetify } from "vuetify"
 import { aliases, mdi } from "vuetify/iconsets/mdi"
