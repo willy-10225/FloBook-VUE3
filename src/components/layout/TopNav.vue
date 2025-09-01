@@ -27,7 +27,7 @@
 
     <!-- 右邊 -->
     <template #append>
-      <v-btn variant="text" class="qi-topnav-item" to="/profile">
+      <v-btn variant="text" class="qi-topnav-item" to="../Account/Profile">
         <v-icon start>mdi-account-circle</v-icon>
         {{ userInfo.displayName }}
       </v-btn>

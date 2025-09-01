@@ -1,165 +1,373 @@
 <template>
-  <v-container class="pa-4" fluid>
-    <v-card elevation="10" class="pa-6 mb-6">
-      <v-card-title>
-        <span class="text-h5">{{ t("account.personal") }}</span>
-        <div class="ml-auto d-flex align-center">
-          <v-btn
-            color="primary"
-            variant="tonal"
-            @click="isModifyingPassword = true"
-            class="mr-2"
-          >
-            {{ t("account.modify-password") }}
-          </v-btn>
-          <v-btn
-            v-if="!isEditing"
-            color="teal"
-            @click="beginEditing"
-            class="mr-2"
-          >
-            {{ t("common.edit") }}
-          </v-btn>
-          <v-btn
-            v-if="isEditing"
-            color="grey"
-            @click="cancelEditing"
-            class="mr-2"
-          >
-            {{ t("common.cancel") }}
-          </v-btn>
-          <v-btn v-if="isEditing" color="primary" @click="confirmEditing">
-            {{ t("common.confirm") }}
-          </v-btn>
-        </div>
-      </v-card-title>
-
-      <v-card-text>
-        <v-form ref="formRef" v-model="valid">
-          <v-row v-if="isEditing">
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.account"
-                :label="t('account.account')"
-                :disabled="true"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.displayName"
-                :label="t('account.displayName')"
-                :rules="displayNameRules"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.email"
-                :label="t('account.email')"
-                :rules="emailRules"
-              />
-            </v-col>
-          </v-row>
-
-          <div v-else>
-            <v-table>
-              <tbody>
-                <tr>
-                  <td>
-                    <strong>{{ t("account.account") }}</strong>
-                  </td>
-                  <td>{{ form.account }}</td>
-                </tr>
-                <tr>
-                  <td>
-                    <strong>{{ t("account.displayName") }}</strong>
-                  </td>
-                  <td>{{ form.displayName }}</td>
-                </tr>
-                <tr>
-                  <td>
-                    <strong>{{ t("account.email") }}</strong>
-                  </td>
-                  <td>{{ form.email }}</td>
-                </tr>
-              </tbody>
-            </v-table>
+  <section class="profile">
+    <header v-if="versionOption.beta">
+      <img class="avatar" :src="avatar.img" />
+    </header>
+    <section class="radar-section" v-if="versionOption.beta">
+      <div class="radar-block">
+        <single-radar></single-radar>
+      </div>
+    </section>
+    <section class="information">
+      <v-card class="module-card" elevation="10">
+        <v-card-title>
+          {{ $t("account.personal") }}
+          <div class="button-wrapper">
+            <v-btn
+              class="modify-password"
+              color="primary"
+              @click="isModifyingPassword = true"
+            >
+              {{ $t("account.modify-password") }}
+            </v-btn>
+            <v-btn color="teal" v-if="!isEditing" @click="beginEditing">
+              {{ $t("common.edit") }}
+            </v-btn>
+            <v-btn color="grey" v-if="isEditing" @click="cancelEditing">
+              {{ $t("common.cancel") }}
+            </v-btn>
+            <v-btn color="primary" v-if="isEditing" @click="confirmEditing">
+              {{ $t("common.confirm") }}
+            </v-btn>
           </div>
-        </v-form>
-      </v-card-text>
-    </v-card>
-  </v-container>
+        </v-card-title>
+
+        <v-card-text>
+          <div v-if="isEditing">
+            <v-form ref="infoForm" v-model="isFormValid">
+              <v-text-field
+                v-model="info.account"
+                :label="$t('account.account')"
+                :rules="necessaryRules"
+                disabled
+                variant="outlined"
+                density="comfortable"
+              />
+              <v-text-field
+                v-model="info.displayName"
+                :label="$t('account.displayName')"
+                :rules="displayNameRules"
+                variant="outlined"
+                density="comfortable"
+                autofocus
+              />
+              <v-text-field
+                v-model="info.email"
+                :label="$t('account.email')"
+                :rules="emailRules"
+                type="email"
+                variant="outlined"
+                density="comfortable"
+              />
+            </v-form>
+          </div>
+
+          <div v-if="!isEditing" class="module-card-list">
+            <table class="info-table">
+              <tr>
+                <td class="label-td">{{ $t("account.account") }}</td>
+                <td class="value-td">{{ info.account }}</td>
+              </tr>
+              <tr>
+                <td class="label-td">{{ $t("account.displayName") }}</td>
+                <td class="value-td">{{ info.displayName }}</td>
+              </tr>
+              <tr>
+                <td class="label-td">{{ $t("account.email") }}</td>
+                <td class="value-td">{{ info.email }}</td>
+              </tr>
+            </table>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="module-card" elevation="5">
+        <v-card-title>{{ $t("setting.group-management") }}</v-card-title>
+        <v-card-text>
+          <section class="group-card-wrapper">
+            <group-card
+              v-for="(group, index) in groups"
+              :key="'group' + index"
+              :group="group"
+              :index="index"
+              @pleaseUpdateGroupCard="getGroupCardData"
+            />
+          </section>
+        </v-card-text>
+      </v-card>
+
+      <!-- Password Modification Dialog -->
+      <v-dialog v-model="isModifyingPassword" max-width="500px" persistent>
+        <v-card>
+          <v-card-title>{{ $t("account.modify-password") }}</v-card-title>
+          <v-card-text>
+            <v-form ref="passwordForm" v-model="isPasswordFormValid">
+              <v-text-field
+                v-model="info.oldPassword"
+                :label="$t('account.old-password')"
+                :rules="passwordRules"
+                :type="visibility.old ? 'text' : 'password'"
+                :append-inner-icon="visibility.old ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="visibility.old = !visibility.old"
+                variant="outlined"
+                density="comfortable"
+                autofocus
+              />
+              <v-text-field
+                v-model="info.newPassword"
+                :label="$t('account.new-password')"
+                :rules="passwordRules"
+                :type="visibility.new ? 'text' : 'password'"
+                :append-inner-icon="visibility.new ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="visibility.new = !visibility.new"
+                variant="outlined"
+                density="comfortable"
+              />
+              <v-text-field
+                v-model="info.confirmPassword"
+                :label="$t('account.passwordConfirm')"
+                :rules="confirmPasswordRules"
+                :type="visibility.con ? 'text' : 'password'"
+                :append-inner-icon="visibility.con ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="visibility.con = !visibility.con"
+                variant="outlined"
+                density="comfortable"
+              />
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn color="grey" variant="text" @click="modifyPassword(false)">
+              {{ $t("common.cancel") }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              @click="modifyPassword(true)"
+              :disabled="!isPasswordFormValid"
+            >
+              {{ $t("common.confirm") }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </section>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
 import { useI18n } from "vue-i18n"
 import { useStore } from "vuex"
 import { useRouter } from "vue-router"
+import SingleRadar from "@/components/Track/SingleRadar.vue"
+import GroupCard from "@/components/Account/GroupCard.vue"
 import {
   apiModifyProfile,
   apiModifyPassword,
   apiGetAllGroups,
 } from "@/assets/ts/api"
 
+// Types
+interface UserInfo {
+  displayName: string
+  account: string
+  email: string
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+  isAdmin: boolean
+  userId?: string | number
+}
+
+interface Group {
+  [key: string]: any
+}
+
+type ValidationResult = string | boolean
+type ValidationRule = (value: any) => ValidationResult
+
+// Composables
 const { t } = useI18n()
 const store = useStore()
 const router = useRouter()
 
-const formRef = ref()
-const valid = ref(false)
-const isEditing = ref(false)
-const isModifyingPassword = ref(false)
+// Reactive data
+const avatar = ref({
+  img: "/img/Account/default-user.png",
+})
 
-const form = reactive({
+const info = ref<UserInfo>({
   displayName: "",
   account: "",
   email: "",
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+  isAdmin: false,
 })
 
+const infoSnapshot = ref<UserInfo>({} as UserInfo)
+const isEditing = ref(false)
+const isModifyingPassword = ref(false)
+const isFormValid = ref(false)
+const isPasswordFormValid = ref(false)
+
+const visibility = ref({
+  old: false,
+  new: false,
+  con: false,
+})
+
+const groups = ref<Group[]>([])
+
+// Form refs
+const infoForm = ref()
+const passwordForm = ref()
+
+// Computed properties
 const userInfo = computed(() => store.getters.userInfo)
+const versionOption = computed(() => store.getters.versionOption)
 
-onMounted(() => {
-  form.displayName = userInfo.value.displayName || ""
-  form.account = userInfo.value.account || ""
-  form.email = userInfo.value.email || ""
-})
+const necessaryRules = computed((): ValidationRule[] => [
+  (val: any) => {
+    if (Array.isArray(val)) {
+      return !!val.length || t("validate.required")
+    }
+    return !!val || t("validate.required")
+  },
+])
 
-const beginEditing = () => {
+const displayNameRules = computed((): ValidationRule[] => [
+  (val: string) => !!val || t("validate.required"),
+  (val: string) =>
+    /^([\u4E00-\u9FFF]|\w|\s|[[\]])+$/.test(val) ||
+    t("validate.wrongNameFormat"),
+])
+
+const emailRules = computed((): ValidationRule[] => [
+  (val: string) => !!val || t("validate.required"),
+  (val: string) =>
+    /^[A-Za-z]\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/.test(
+      val
+    ) || t("validate.wrongMailFormat"),
+])
+
+const passwordRules = computed((): ValidationRule[] => [
+  (val: string) => !!val || t("validate.required"),
+  (val: string) =>
+    (val.length >= 4 && val.length <= 32) || t("validate.wrongPasswordFormat"),
+])
+
+const confirmPasswordRules = computed((): ValidationRule[] => [
+  (val: string) => !!val || t("validate.required"),
+  (val: string) =>
+    val === info.value.newPassword || t("validate.differentPassword"),
+])
+
+// Methods
+const getUserInformation = (): void => {
+  info.value.displayName = userInfo.value.displayName || ""
+  info.value.account = userInfo.value.account || ""
+  info.value.email = userInfo.value.email || ""
+  info.value.isAdmin = userInfo.value.isAdmin || false
+}
+
+const beginEditing = (): void => {
+  infoSnapshot.value = { ...info.value }
   isEditing.value = true
 }
-const cancelEditing = () => {
-  form.displayName = userInfo.value.displayName
-  form.email = userInfo.value.email
+
+const cancelEditing = (): void => {
+  info.value = { ...infoSnapshot.value }
   isEditing.value = false
 }
-const confirmEditing = async () => {
-  const payload = {
-    userId: userInfo.value.userId,
-    displayName: form.displayName,
-    email: form.email,
-  }
-  const res = await apiModifyProfile(payload)
-  if (res.data === "success") {
-    store.dispatch("setUserInfo", {
-      displayName: form.displayName,
-      email: form.email,
-    })
-    isEditing.value = false
+
+const confirmEditing = async (): Promise<void> => {
+  const isValid = await infoForm.value?.validate()
+
+  if (isValid?.valid) {
+    const payload = {
+      userId: userInfo.value.userId,
+      displayName: info.value.displayName,
+      email: info.value.email,
+    }
+
+    try {
+      const res = await apiModifyProfile(payload)
+      if (res.data === "success") {
+        store.dispatch("setUserInfo", {
+          displayName: info.value.displayName,
+          email: info.value.email,
+        })
+      }
+      isEditing.value = false
+    } catch (error) {
+      console.error("Failed to modify profile:", error)
+    }
   }
 }
 
-const displayNameRules = [
-  (v: string) => !!v || t("validate.required"),
-  (v: string) =>
-    /^([\u4E00-\u9FFF]|\w|\s|[[\]])+$/.test(v) || t("validate.wrongNameFormat"),
-]
-const emailRules = [
-  (v: string) => !!v || t("validate.required"),
-  (v: string) =>
-    /^[A-Za-z]\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/.test(
-      v
-    ) || t("validate.wrongMailFormat"),
-]
+const modifyPassword = async (isConfirmed: boolean): Promise<void> => {
+  if (isConfirmed) {
+    const validation = await passwordForm.value?.validate()
+
+    if (validation?.valid) {
+      const payload = {
+        userId: parseInt(userInfo.value.userId as string),
+        oldPassword: info.value.oldPassword,
+        newPassword: info.value.newPassword,
+      }
+
+      try {
+        const res = await apiModifyPassword(payload)
+        if (res.data !== "Reject") {
+          store.dispatch("changeLoadingState", {
+            showDialog: true,
+            isLoading: false,
+            isSuccess: true,
+            showAction: true,
+            message: t("account.modifyPasswordSuccess"),
+          })
+          isModifyingPassword.value = false
+          store.dispatch("removeUserInfo")
+          router.push({ name: "Login" })
+        } else {
+          store.dispatch("changeLoadingState", {
+            showDialog: true,
+            isLoading: false,
+            isSuccess: false,
+            showAction: true,
+            message: t("account.modifyPasswordFail"),
+          })
+        }
+      } catch (error) {
+        console.error("Failed to modify password:", error)
+      }
+    }
+  } else {
+    isModifyingPassword.value = false
+    // Clear password fields
+    info.value.oldPassword = ""
+    info.value.newPassword = ""
+    info.value.confirmPassword = ""
+  }
+}
+
+const getGroupCardData = async (): Promise<void> => {
+  try {
+    const res = await apiGetAllGroups({ userId: userInfo.value.userId })
+    groups.value = res.data
+  } catch (err) {
+    console.error("Failed to get group data:", err)
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  getUserInformation()
+  getGroupCardData()
+})
 </script>
 
 <style scoped>
@@ -168,7 +376,7 @@ const emailRules = [
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 20px;
-  color: #fff; /* 根據你 UI 主題可改成黑或白 */
+  color: #fff;
 }
 
 .info-table td {
@@ -196,6 +404,7 @@ const emailRules = [
   margin-right: 20px;
   margin-top: 20px;
 }
+
 .profile {
   position: relative;
   height: auto;
@@ -203,17 +412,20 @@ const emailRules = [
   flex-wrap: wrap;
   margin-bottom: 64px;
 }
+
 .profile > :nth-child(1) {
   height: 250px;
   width: 100%;
   margin-bottom: 20px;
 }
+
 header {
   position: relative;
   background-image: url("/img/Account/default-header.svg");
   background-repeat: no-repeat;
   background-size: cover;
 }
+
 .avatar {
   position: absolute;
   left: 50%;
@@ -224,19 +436,24 @@ header {
   border: 3px #2d303a solid;
   cursor: pointer;
   user-select: none;
+  transform: translateX(-50%);
 }
+
 .avatar:hover {
   filter: brightness(110%);
 }
+
 .button-wrapper {
   display: inline-block;
   position: absolute;
   bottom: 0;
   right: 0;
 }
-.button-wrapper button {
+
+.button-wrapper .v-btn {
   margin: 10px;
 }
+
 .radar-section {
   flex: 1 2;
   flex-direction: column;
@@ -244,11 +461,14 @@ header {
   display: flex;
   align-items: center;
 }
+
 .radar-block {
   width: 100%;
   height: 400px;
 }
+
 .module-card {
+  background: #424242;
   max-width: 900px;
   padding: 30px;
   border-radius: 10px;
@@ -256,8 +476,9 @@ header {
   margin-bottom: 30px;
   overflow: hidden;
 }
-.module-card input,
-.module-card textarea {
+
+.module-card :deep(.v-input input),
+.module-card :deep(.v-input textarea) {
   border-radius: 6px;
   padding: 10px;
   min-width: 59%;
@@ -267,16 +488,20 @@ header {
   border: 3px solid #d5d7de;
   border-radius: 3px;
 }
+
 .module-card > div {
   margin: 0 0 10px 0;
 }
-.module-card > h3 {
+
+.module-card :deep(.v-card-title) {
+  color: #fff;
   text-align: left;
   border-bottom: 2px solid gray;
   padding-bottom: 10px;
   margin-bottom: 20px;
   position: relative;
 }
+
 .module-card label {
   padding: 20px 10px;
   width: 40%;
@@ -284,20 +509,27 @@ header {
   text-align: right;
   line-height: 100%;
 }
+
 .module-card-list {
   text-align: left;
   letter-spacing: 2px;
-  margin: 0; /* 移除多餘 margin */
-  padding: 0; /* 移除多餘 padding */
-  line-height: 1.2; /* 調小行高 */
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  font-family: sans-serif, Arial, "Microsoft JhengHei", "STHeiti";
 }
+
 label[for] {
   cursor: pointer;
 }
-.modify-password > :first-child {
+
+.modify-password :deep(.v-btn__content) {
   text-transform: none !important;
 }
-pre {
-  font-family: sans-serif, Arial, "Microsoft JhengHei", "STHeiti";
+
+.group-card-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 </style>
