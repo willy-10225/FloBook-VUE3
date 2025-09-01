@@ -104,11 +104,9 @@ export default {
               },
             },
             axisLabel: {
-              textStyle: {
-                fontWeight: "normal",
-                color: "#fff",
-                fontSize: 9,
-              },
+              fontWeight: "normal",
+              color: "#fff",
+              fontSize: 9,
             },
             axisTick: {
               length: 9,
@@ -127,21 +125,17 @@ export default {
               width: 5,
             },
             title: {
-              textStyle: {
-                fontWeight: "normal",
-                fontSize: 25,
-                fontStyle: "italic",
-                color: "#fff",
-              },
+              fontWeight: "normal",
+              fontSize: 25,
+              fontStyle: "italic",
+              color: "#fff",
             },
             detail: {
               offsetCenter: [0, "50%"],
               formatter: "{value}%",
-              textStyle: {
-                fontWeight: "normal",
-                fontSize: 25,
-                color: "#fff",
-              },
+              fontWeight: "normal",
+              fontSize: 25,
+              color: "#fff",
             },
             data: [{ value: 0, name: "CPU" }],
           },
@@ -166,11 +160,9 @@ export default {
               },
             },
             axisLabel: {
-              textStyle: {
-                fontWeight: "normal",
-                color: "#1b1b1b",
-                fontSize: 8,
-              },
+              fontWeight: "normal",
+              color: "#1b1b1b",
+              fontSize: 8,
             },
             axisTick: {
               length: 6,
@@ -190,23 +182,19 @@ export default {
             },
             title: {
               offsetCenter: [0, "-30%"],
-              textStyle: {
-                fontWeight: "normal",
-                fontStyle: "italic",
-                fontSize: 15,
-                color: "#fff",
-              },
+              fontWeight: "normal",
+              fontStyle: "italic",
+              fontSize: 15,
+              color: "#fff",
             },
             detail: {
               width: 80,
               height: 30,
               offsetCenter: [10, "20%"],
               formatter: "{value}%",
-              textStyle: {
-                fontWeight: "normal",
-                color: "#fff",
-                fontSize: 20,
-              },
+              fontWeight: "normal",
+              color: "#fff",
+              fontSize: 20,
             },
             data: [{ value: 0, name: "RAM" }],
           },
@@ -237,11 +225,9 @@ export default {
               },
             },
             axisLabel: {
-              textStyle: {
-                fontWeight: "normal",
-                color: "#1b1b1b",
-                fontSize: 5,
-              },
+              fontWeight: "normal",
+              color: "#1b1b1b",
+              fontSize: 5,
             },
             splitLine: {
               length: 8,
@@ -255,23 +241,19 @@ export default {
             },
             title: {
               show: true,
-              textStyle: {
-                fontWeight: "normal",
-                fontStyle: "italic",
-                fontSize: 13,
-                color: "#fff",
-              },
+              fontWeight: "normal",
+              fontStyle: "italic",
+              fontSize: 13,
+              color: "#fff",
             },
             detail: {
               width: 80,
               height: 30,
               offsetCenter: [3, "20%"],
               formatter: "{value}%",
-              textStyle: {
-                fontWeight: "normal",
-                color: "#fff",
-                fontSize: 15,
-              },
+              fontWeight: "normal",
+              color: "#fff",
+              fontSize: 15,
             },
             data: [{ value: 0, name: "Disk" }],
           },

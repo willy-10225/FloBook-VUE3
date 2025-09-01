@@ -157,24 +157,29 @@ const licenseChart = ref<any>(null)
 const barChartOption = {
   title: [
     {
+      // 主標題
+      text: "",
       left: "center",
       textStyle: {
-        color: "white",
+        color: "#fff",
         fontSize: 28,
       },
     },
     {
+      // 副標題
       text: "累積時數比重",
-      left: "822",
-      y: "50",
+      left: 822,
+      top: 50,
       textStyle: {
-        color: "white",
+        color: "#fff",
       },
     },
   ],
   legend: {
     bottom: "0%",
-    textStyle: { color: "#fff" },
+    textStyle: {
+      color: "#fff",
+    },
   },
   xAxis: {
     type: "value",
@@ -202,7 +207,7 @@ const barChartOption = {
     },
   },
   series: [],
-  color: Color,
+  color: Color, // 這裡 Color 必須是一個顏色陣列，確保已定義
 }
 
 const userHistoryData = ref<ChartData>({
@@ -380,10 +385,8 @@ const getLicenseHistory = (ip: string, startDate: Date, endDate: Date) => {
   apiGetLicenseHistory(payload)
     .then((res: any) => {
       AlllicenseLogList.value = res.data
-      console.log("AlllicenseLogList", AlllicenseLogList.value)
 
       licenseLogList.value = resetalmTooltipData(AlllicenseLogList.value)
-      console.log("licenseLogList", licenseLogList.value)
       showHistoryChart(userHistoryData.value, "Product", "UserName")
       showHistoryChart(licenseHistoryData.value, "UserName", "Product")
       changeLoadingState(false)
@@ -405,7 +408,6 @@ const showHistoryChart = (
       )
     ),
   ]
-  console.log("licenseLogList", licenseLogList.value)
   data.yAxisData = [
     ...new Set(
       licenseLogList.value.map(
@@ -463,36 +465,34 @@ const showHistoryChart = (
       type: "bar",
       barGap: "-100%",
       label: {
-        normal: {
-          show: true,
-          position: "right",
-          color: "white",
-          formatter: (params: any) => {
-            let productTask: number, totalTime: number, usageRate: string
-            switch (type) {
-              case "Product":
-                try {
-                  productTask =
-                    deviceLicenses?.find(
-                      (item: any) => item.Feature == params.name
-                    )?.Issued || 1
-                } catch {
-                  productTask = 1
-                }
-                totalTime =
-                  getDuration(
-                    startDateByUserPicked.value.toISOString(),
-                    endDateByUserPicked.value.toISOString(),
-                    1
-                  ) * productTask
-                usageRate = ((params.value / totalTime) * 100).toFixed(1)
-                return `${params.value}/${totalTime}\n(${usageRate}%)`
-              case "UserName":
-                return `${params.value}`
-              default:
-                return `${params.value}`
-            }
-          },
+        show: true,
+        position: "right",
+        color: "white",
+        formatter: (params: any) => {
+          let productTask: number, totalTime: number, usageRate: string
+          switch (type) {
+            case "Product":
+              try {
+                productTask =
+                  deviceLicenses?.find(
+                    (item: any) => item.Feature == params.name
+                  )?.Issued || 1
+              } catch {
+                productTask = 1
+              }
+              totalTime =
+                getDuration(
+                  startDateByUserPicked.value.toISOString(),
+                  endDateByUserPicked.value.toISOString(),
+                  1
+                ) * productTask
+              usageRate = ((params.value / totalTime) * 100).toFixed(1)
+              return `${params.value}/${totalTime}\n(${usageRate}%)`
+            case "UserName":
+              return `${params.value}`
+            default:
+              return `${params.value}`
+          }
         },
       },
       itemStyle: {
@@ -588,23 +588,19 @@ const showPieChart = (data: ChartData) => {
       trigger: "item",
     },
     label: {
-      normal: {
-        show: false,
-        position: "center",
-        formatter: "{d}%",
-      },
-      emphasis: {
+      show: false,
+      position: "center",
+      formatter: "{d}%",
+    },
+    emphasis: {
+      label: {
         show: true,
-        textStyle: {
-          fontSize: "28",
-          fontWeight: "bold",
-        },
+        fontSize: 28,
+        fontWeight: "bold",
       },
     },
     labelLine: {
-      normal: {
-        show: false,
-      },
+      show: false,
     },
     data: pieData,
   })

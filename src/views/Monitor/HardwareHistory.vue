@@ -1,5 +1,5 @@
 <template>
-  <v-container class="history-container">
+  <v-container class="history-container" style="width: 70%">
     <v-row class="bg-grey-darken-2">
       <v-col cols="12" lg="12" sm="12">
         <div class="ansyshistitle">
@@ -20,22 +20,26 @@
         </div>
       </v-col>
       <v-col cols="12" lg="3" sm="6">
+        <h4 class="mb-2 text-left">{{ $t("monitor.start-date") }}</h4>
         <el-date-picker
           v-model="startDate"
-          type="datetime"
+          type="date"
           :placeholder="$t('monitor.start-date')"
           @change="alertFn"
+          style="width: 100%"
         ></el-date-picker>
       </v-col>
       <v-col cols="12" lg="3" sm="6">
+        <h4 class="mb-2 text-left">{{ $t("monitor.end-date") }}</h4>
         <el-date-picker
           v-model="endDate"
-          type="datetime"
+          type="date"
           :placeholder="$t('monitor.end-date')"
           @change="alertFn"
+          style="width: 100%"
         ></el-date-picker>
       </v-col>
-      <v-col cols="12" lg="1" sm="6" v-if="time">
+      <v-col cols="12" lg="2" sm="6" v-if="time">
         <v-select
           v-model="time_interval"
           :label="$t('monitor.time-interval')"
@@ -50,7 +54,7 @@
           @update:model-value="get_data()"
         ></v-select>
       </v-col>
-      <v-col cols="12" lg="3" sm="6">
+      <v-col cols="12" lg="2" sm="6">
         <br />
         <v-btn
           :disabled="disableSearch"
@@ -99,18 +103,19 @@
       :percent="gaugeData.maxRam"
       :title="{ text: $t('monitor.maximun-utilization'), subtext: '(RAM)' }"
     ></SimpleGauge>
-    <v-chart
+    <VueECharts
       ref="hwHistoryChart"
       class="history-chart"
       v-if="isDisplay"
       :options="hwHistoryOption"
-    ></v-chart>
+    ></VueECharts>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import {
   ref,
+  nextTick,
   computed,
   watch,
   onMounted,
@@ -328,6 +333,16 @@ const alertFn = () => {
   }
   time_interval.value = timelist.value[0]
 }
+const formatDateTime = (date: Date): string => {
+  const pad = (n: number) => (n < 10 ? "0" + n : n)
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hours = pad(date.getHours())
+  const minutes = pad(date.getMinutes())
+  const seconds = pad(date.getSeconds())
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
+}
 
 const submit = () => {
   if (startDate.value !== undefined && endDate.value !== undefined) {
@@ -361,7 +376,6 @@ const getHardwareUserList = () => {
     End: endDate.value.toISOString(),
   })
     .then((res: any) => {
-      console.log("apiGetHardwareUserListByIp", res)
       const newHardwareUserList = res.data
 
       if (!newHardwareUserList.includes(userName.value)) {
@@ -392,9 +406,6 @@ const getHardwareHistory = async (
       showDialog: true,
       isTimerNeeded: false,
     })
-    let pickedStart = startDate.toISOString().split("T")[0] + " 00:00:00"
-    const pickedStartDate = new Date(pickedStart)
-
     const isToday = endDate.toDateString() === new Date().toDateString()
     const pickedEnd = !isToday
       ? new Date(endDate.toISOString().split("T")[0] + " 23:59:59")
@@ -403,15 +414,13 @@ const getHardwareHistory = async (
     const payload = {
       ip: ip,
       user: userName,
-      start: pickedStartDate.toISOString(),
-      end: pickedEnd.toISOString(),
+      start: formatDateTime(startDate),
+      end: formatDateTime(pickedEnd),
       time_interval: time_interval,
     }
 
     getHardwareUserList()
     const res = await apiGetHardwareHistory(payload)
-    console.log(res)
-
     showChart(res.data)
     getGaugeData(res.data)
   } catch (err) {
@@ -421,28 +430,34 @@ const getHardwareHistory = async (
   }
 }
 
-const showChart = (data: HardwareData[]) => {
+const showChart = async (data: HardwareData[]) => {
   isDisplay.value = true
+  await nextTick()
+  // 更新圖表配置
   hwHistoryOption.value.title.text =
     instance?.appContext.config.globalProperties.$t(
       "monitor.utilization-duration",
       { userName: userName.value }
     )
-  ;(hwHistoryOption.value.xAxis[0] as any).data = data.map(
-    item => item.listtime
-  )
-  ;(hwHistoryOption.value.series[0] as any).data = data.map(item =>
+  hwHistoryOption.value.xAxis[0].data = data.map(item => item.listtime)
+  // CPU K 線圖
+  hwHistoryOption.value.series[0].data = data.map(item =>
     item.cpulist.map(j => Math.round(j * 10) / 10)
   )
-  ;(hwHistoryOption.value.series[1] as any).data = data.map(item =>
+  // RAM K 線圖
+  hwHistoryOption.value.series[1].data = data.map(item =>
     item.ramlist.map(j => Math.round(j * 10) / 10)
   )
-  ;(hwHistoryOption.value.series[2] as any).data = data.map(
-    item => item.ramlist[1]
-  )
-  ;(hwHistoryOption.value.series[3] as any).data = data.map(
-    item => item.cpulist[1]
-  )
+  // CPU line
+  hwHistoryOption.value.series[2].data = data.map(item => item.ramlist[1])
+  // RAM line
+  hwHistoryOption.value.series[3].data = data.map(item => item.cpulist[1])
+
+  await nextTick() // 確保 ECharts option 完全更新
+  if (hwHistoryChart.value) {
+    hwHistoryChart.value.setOption(hwHistoryOption.value, true) // 強制重新渲染
+    hwHistoryChart.value.resize()
+  }
 }
 
 const getGaugeData = (data: HardwareData[]) => {
@@ -538,7 +553,6 @@ h2 {
   display: block;
   width: 95%;
   height: 650px;
-  margin-right: auto;
-  margin-left: auto;
+  margin: 0 auto;
 }
 </style>

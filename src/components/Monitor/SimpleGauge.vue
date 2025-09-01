@@ -73,7 +73,9 @@ const option = computed<EChartsOption>(() => {
           },
           "none",
         ],
-        hoverAnimation: false,
+        emphasis: {
+          scale: false, // hover 時放大縮小
+        },
         legendHoverLink: false,
         label: { show: false },
         data: [
@@ -87,7 +89,9 @@ const option = computed<EChartsOption>(() => {
         center: ["50%", "40%"],
         radius: ["53%", "52%"],
         startAngle: 225,
-        hoverAnimation: false,
+        emphasis: {
+          scale: false, // hover 時放大縮小
+        },
         legendHoverLink: false,
         label: { show: false },
         data: [
@@ -102,7 +106,9 @@ const option = computed<EChartsOption>(() => {
         radius: ["55%", "75.1%"],
         startAngle: 315,
         color: ["rgba(34,34,34,.9)", "#ff7a00", "transparent"],
-        hoverAnimation: false,
+        emphasis: {
+          scale: false, // hover 時放大縮小
+        },
         legendHoverLink: false,
         clockwise: false,
         itemStyle: {

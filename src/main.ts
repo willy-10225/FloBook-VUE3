@@ -23,6 +23,7 @@ import * as directives from "vuetify/directives"
 import "@mdi/font/css/materialdesignicons.css"
 import * as echarts from "echarts/core"
 import VueShortkey from "vue3-shortkey"
+import VueECharts from "vue-echarts"
 
 echarts.use([
   CanvasRenderer,
@@ -54,7 +55,8 @@ app.use(VueShortkey)
 app.use(store)
 app.use(router)
 app.use(i18n)
-
+// ⬅️ 註冊 VueECharts 成全域元件
+app.component("VueECharts", VueECharts)
 // 全局自定義指令註冊
 Object.entries(directive).forEach(([name, fn]) => {
   app.directive(name, fn)
