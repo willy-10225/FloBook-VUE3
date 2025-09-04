@@ -1,12 +1,11 @@
 <template>
   <v-card class="group-card" elevation="5">
     <!-- Header -->
-    <v-card-title class="group-card-head">
-      <RedDot
-        :show="showBrief && Number(notificationCount) > 0"
-        :count="notificationCount"
-      />
-    </v-card-title>
+    <RedDot
+      :show="showBrief && Number(notificationCount) > 0"
+      :count="notificationCount"
+      class="red-dot-position"
+    />
 
     <!-- Body -->
     <v-card-text class="group-card-body">
@@ -32,38 +31,54 @@
       </div>
 
       <!-- 編輯表單 -->
-      <div v-if="showDetail || isCreating">
-        <v-form ref="groupFormRef" v-if="showDetail">
+      <div v-if="showDetail || isCreating" class="form-wrapper-dark">
+        <v-form ref="groupFormRef" v-if="showDetail" class="detail-form">
           <v-text-field
             v-model="group.name"
             :label="$t('setting.group') + ':'"
             :rules="necessaryRules"
             disabled
+            variant="outlined"
+            class="dark-input mb-4"
+            density="comfortable"
           ></v-text-field>
 
-          <v-row>
-            <v-col cols="8">
+          <v-row no-gutters class="align-center">
+            <v-col cols="8" class="pr-3">
               <v-select
                 v-model="newMember"
                 :items="memberOptions"
                 item-title="display_name"
                 item-value="id"
                 :label="$t('setting.invite-member') + ':'"
+                variant="outlined"
+                class="dark-input"
+                density="comfortable"
+                clearable
               ></v-select>
             </v-col>
             <v-col cols="4">
-              <v-btn color="primary" @click="inviteNewMember(newMember)">
+              <v-btn
+                color="primary"
+                class="dark-btn"
+                size="large"
+                block
+                @click="inviteNewMember(newMember)"
+              >
                 {{ $t("common.submit") }}
               </v-btn>
             </v-col>
           </v-row>
         </v-form>
 
-        <v-form ref="newGroup" v-if="isCreating">
+        <v-form ref="newGroup" v-if="isCreating" class="create-form">
           <v-text-field
             v-model="groupForm.name"
             :label="$t('setting.group') + ':'"
             :rules="necessaryRules"
+            variant="outlined"
+            class="dark-input mb-4"
+            density="comfortable"
           ></v-text-field>
 
           <v-select
@@ -74,6 +89,10 @@
             multiple
             chips
             :label="$t('setting.member') + ':'"
+            variant="outlined"
+            class="dark-input"
+            density="comfortable"
+            clearable
           ></v-select>
         </v-form>
       </div>
@@ -83,7 +102,7 @@
         v-if="showDetail"
         :headers="groupsHead"
         :items="memberObjects"
-        class="setting-member-table"
+        class="setting-member-table dark-table"
         height="500"
         item-key="id"
         show-expand
@@ -149,10 +168,16 @@
         v-if="!isCreating && showBrief"
         style="background-color: teal; color: white"
         @click="beginManagement"
+        size="large"
       >
         {{ $t("common.manage") }}
       </v-btn>
-      <v-btn v-if="showApplyButton" color="primary" @click="applyGroup">
+      <v-btn
+        v-if="showApplyButton"
+        color="primary"
+        @click="applyGroup"
+        size="large"
+      >
         {{ $t("setting.group-apply") }}
       </v-btn>
 
@@ -216,6 +241,7 @@ interface GroupForm {
 }
 
 const props = defineProps<{ group: Group }>()
+
 const emit = defineEmits<{
   (e: "pleaseUpdateGroupCard"): void
   (e: "pleaseCancelCreating"): void
@@ -234,11 +260,31 @@ const isEditing = ref(false)
 
 const userInfo = computed(() => store.getters.userInfo)
 
-const inByGroup = computed(() => props.group.inByGroup?.split(",") ?? [])
-const inByUser = computed(() => props.group.inByUser?.split(",") ?? [])
-const leaveByGroup = computed(() => props.group.leaveByGroup?.split(",") ?? [])
-const leaveByUser = computed(() => props.group.leaveByUser?.split(",") ?? [])
-const members = computed(() => props.group.members?.split(",") ?? [])
+const inByGroup = computed(() =>
+  props.group.inByGroup
+    ? props.group.inByGroup.split(",").filter(s => s !== "")
+    : []
+)
+const inByUser = computed(() =>
+  props.group.inByUser
+    ? props.group.inByUser.split(",").filter(s => s !== "")
+    : []
+)
+const leaveByGroup = computed(() =>
+  props.group.leaveByGroup
+    ? props.group.leaveByGroup.split(",").filter(s => s !== "")
+    : []
+)
+const leaveByUser = computed(() =>
+  props.group.leaveByUser
+    ? props.group.leaveByUser.split(",").filter(s => s !== "")
+    : []
+)
+const members = computed(() =>
+  props.group.members
+    ? props.group.members.split(",").filter(s => s !== "")
+    : []
+)
 const memberNames = computed(
   () => props.group.members?.replace(/,/g, ", ") ?? ""
 )
@@ -251,9 +297,11 @@ const isInGroup = computed(
     userInfo.value.name === "Administrator" ||
     memberNames.value.includes(userInfo.value.displayName)
 )
+
 const notificationCount = computed(() =>
   String(inByUser.value.length + leaveByUser.value.length)
 )
+
 const showApplyButton = computed(
   () =>
     !isInGroup.value &&
@@ -402,31 +450,162 @@ function createGroup() {
 </script>
 
 <style scoped>
+/* 表單包裝器 */
+.form-wrapper-dark {
+  background: #444;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+/* 表單內部結構 */
+.detail-form,
+.create-form {
+  position: relative;
+  z-index: 2;
+}
+
+/* 深色輸入框樣式 */
+.dark-input :deep(.v-field) {
+  background: #333 !important;
+  border-radius: 10px !important;
+  position: relative;
+  z-index: 3;
+}
+
+.dark-input :deep(.v-field--variant-outlined .v-field__outline) {
+  color: #666 !important;
+}
+
+.dark-input
+  :deep(.v-field--variant-outlined.v-field--focused .v-field__outline) {
+  color: #1976d2 !important;
+}
+
+.dark-input :deep(.v-field__input),
+.dark-input :deep(.v-field__input input) {
+  color: #eee !important;
+}
+
+.dark-input :deep(.v-label) {
+  color: #ccc !important;
+}
+
+.dark-input :deep(.v-field--focused .v-label) {
+  color: #1976d2 !important;
+}
+
+.dark-input :deep(.v-field:hover .v-field__outline) {
+  color: #888 !important;
+}
+
+/* Select 下拉選單樣式 */
+.dark-input :deep(.v-select__selection) {
+  color: #eee !important;
+}
+
+.dark-input :deep(.v-chip) {
+  background: #555 !important;
+  color: #eee !important;
+}
+
+/* 修復 Select 的下拉箭頭 */
+.dark-input :deep(.v-field__append-inner .v-icon) {
+  color: #ccc !important;
+}
+
+/* 按鈕樣式 */
+.dark-btn {
+  background: linear-gradient(135deg, #00897b, #00695c) !important;
+  color: white !important;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  height: 48px !important;
+  min-width: 100px;
+}
+
+.dark-btn:hover {
+  background: linear-gradient(135deg, #00695c, #004d40) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 表格暗色系 */
+.dark-table {
+  background: #2c2c2c !important;
+  color: #eee !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+/* 表格表頭 */
+.dark-table :deep(.v-data-table-header th) {
+  background: #1e1e1e !important;
+  color: #bbb !important;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* 表格列 */
+.dark-table :deep(.v-data-table__tbody tr) {
+  background: #2c2c2c;
+}
+
+.dark-table :deep(.v-data-table__tbody tr:hover) {
+  background: #3a3a3a !important;
+  transition: background 0.2s ease;
+}
+
+/* 表格單元格 */
+.dark-table :deep(td) {
+  border-bottom: 1px solid #444 !important;
+  color: #eee !important;
+}
+
+/* 紅點位置 */
+.red-dot-position {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+}
+
+/* 主卡片 */
 .group-card {
+  overflow: visible;
+  z-index: 1;
   background: #777;
   padding: 10px 0 20px 0;
   margin: 10px 2px 10px 2px;
   border-radius: 10px;
   width: 100%;
-}
-.group-card-head {
   position: relative;
-  height: 30px;
-  right: 20px;
 }
+
 .group-card-body {
   color: #ffffff;
   margin: 0 20px 20px 20px;
+  position: relative;
 }
+
 .group-info {
   border-spacing: 10px;
+  font-size: 20px;
 }
+
 .group-info tr {
   text-align: left;
 }
+
 .group-info tr td:first-child {
   width: 120px;
 }
+
 .group-applying {
   display: inline-block;
   background: #999;
@@ -436,29 +615,41 @@ function createGroup() {
   line-height: 40px;
   padding: 0 10px 0 10px;
 }
+
 .group-card-footer {
   position: relative;
+  justify-content: center !important;
 }
-.group-leave {
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  right: 20px;
+
+/* 響應式間距調整 */
+@media (max-width: 600px) {
+  .form-wrapper-dark {
+    padding: 16px;
+  }
+
+  .dark-btn {
+    height: 40px !important;
+    font-size: 0.875rem;
+  }
 }
-.group-delete {
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  left: 20px;
+
+/* 動作按鈕組 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
 }
-.form-wrapper {
-  padding: 0 10px 25px 10px;
+
+.action-buttons .v-btn {
+  min-width: 70px;
+  font-size: 0.75rem;
 }
-.approve-button {
-  margin: 5px 0;
-}
-.setting-member-table td {
-  word-break: break-word;
-  cursor: pointer;
+
+@media (min-width: 768px) {
+  .action-buttons {
+    flex-direction: row;
+    gap: 8px;
+  }
 }
 </style>
