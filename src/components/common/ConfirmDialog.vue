@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="open" persistent max-width="600">
     <v-card class="confirm-dialog">
-      <v-card-title class="text-h6 text-white bg-primary">
+      <v-card-title class="text-h6 text-white">
         {{ title }}
       </v-card-title>
 

@@ -97,60 +97,58 @@
       </v-card>
 
       <!-- Password Modification Dialog -->
-      <v-dialog v-model="isModifyingPassword" max-width="500px" persistent>
-        <v-card>
-          <v-card-title>{{ $t("account.modify-password") }}</v-card-title>
-          <v-card-text>
-            <v-form ref="passwordForm" v-model="isPasswordFormValid">
-              <v-text-field
-                v-model="info.oldPassword"
-                :label="$t('account.old-password')"
-                :rules="passwordRules"
-                :type="visibility.old ? 'text' : 'password'"
-                :append-inner-icon="visibility.old ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="visibility.old = !visibility.old"
-                variant="outlined"
-                density="comfortable"
-                autofocus
-              />
-              <v-text-field
-                v-model="info.newPassword"
-                :label="$t('account.new-password')"
-                :rules="passwordRules"
-                :type="visibility.new ? 'text' : 'password'"
-                :append-inner-icon="visibility.new ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="visibility.new = !visibility.new"
-                variant="outlined"
-                density="comfortable"
-              />
-              <v-text-field
-                v-model="info.confirmPassword"
-                :label="$t('account.passwordConfirm')"
-                :rules="confirmPasswordRules"
-                :type="visibility.con ? 'text' : 'password'"
-                :append-inner-icon="visibility.con ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="visibility.con = !visibility.con"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn color="grey" variant="text" @click="modifyPassword(false)">
-              {{ $t("common.cancel") }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="elevated"
-              @click="modifyPassword(true)"
-              :disabled="!isPasswordFormValid"
-            >
-              {{ $t("common.confirm") }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <ConfirmDialog
+        :title="$t('account.modify-password')"
+        :openAlert="isModifyingPassword"
+        :safeOption="$t('common.cancel')"
+        :dangerOption="$t('common.confirm')"
+        confirmColor="primary"
+        @closeConfirmDialog="modifyPassword"
+      >
+        <template #body>
+          <v-form ref="passwordForm" v-model="isFormValid" lazy-validation>
+            <!-- 舊密碼 -->
+            <v-text-field
+              v-model="info.oldPassword"
+              :label="$t('account.old-password')"
+              :type="visibility.old ? 'text' : 'password'"
+              :append-inner-icon="visibility.old ? 'mdi-eye-off' : 'mdi-eye'"
+              :rules="passwordRules"
+              variant="outlined"
+              density="comfortable"
+              class="mb-4"
+              autofocus
+              @click:append-inner="visibility.old = !visibility.old"
+            />
+
+            <!-- 新密碼 -->
+            <v-text-field
+              v-model="info.newPassword"
+              :label="$t('account.new-password')"
+              :type="visibility.new ? 'text' : 'password'"
+              :append-inner-icon="visibility.new ? 'mdi-eye-off' : 'mdi-eye'"
+              :rules="passwordRules"
+              variant="outlined"
+              density="comfortable"
+              class="mb-4"
+              @click:append-inner="visibility.new = !visibility.new"
+            />
+
+            <!-- 確認密碼 -->
+            <v-text-field
+              v-model="info.confirmPassword"
+              :label="$t('account.passwordConfirm')"
+              :type="visibility.con ? 'text' : 'password'"
+              :append-inner-icon="visibility.con ? 'mdi-eye-off' : 'mdi-eye'"
+              :rules="confirmPasswordRules"
+              variant="outlined"
+              density="comfortable"
+              class="mb-4"
+              @click:append-inner="visibility.con = !visibility.con"
+            />
+          </v-form>
+        </template>
+      </ConfirmDialog>
     </section>
   </section>
 </template>
@@ -162,6 +160,7 @@ import { useStore } from "vuex"
 import { useRouter } from "vue-router"
 import SingleRadar from "@/components/Track/SingleRadar.vue"
 import GroupCard from "@/components/Account/GroupCard.vue"
+import ConfirmDialog from "@/components/common/ConfirmDialog.vue"
 import {
   apiModifyProfile,
   apiModifyPassword,
