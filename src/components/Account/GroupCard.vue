@@ -340,7 +340,6 @@ import {
   apiDeleteGroup,
 } from "@/assets/ts/api"
 import { shallowRef } from "vue"
-import { drySort } from "@/assets/ts/dry"
 // Types
 interface Member {
   id: number
