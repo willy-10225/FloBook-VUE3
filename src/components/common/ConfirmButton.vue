@@ -4,7 +4,7 @@
       @click="isOpened = true"
       :color="color"
       :size="small ? 'small' : undefined"
-      :variant="fab ? 'tonal' : 'elevated'"
+      :variant="fab ? 'flat' : 'text'"
       :icon="icon"
     >
       <slot></slot>
@@ -26,6 +26,15 @@
 import { ref, computed } from "vue"
 import ConfirmDialog from "./ConfirmDialog.vue"
 
+const props = withDefaults(defineProps<Props>(), {
+  message: "",
+  danger: false,
+  small: false,
+  fab: false,
+  icon: false,
+  transferData: undefined,
+})
+
 // Props 定义
 interface Props {
   message?: string
@@ -35,15 +44,6 @@ interface Props {
   icon?: boolean | string
   transferData?: Record<string, any>
 }
-
-const props = withDefaults(defineProps<Props>(), {
-  message: "",
-  danger: false,
-  small: false,
-  fab: false,
-  icon: false,
-  transferData: undefined,
-})
 
 // Emits 定义
 interface Emits {
@@ -62,7 +62,7 @@ const consideringTime = computed(() => {
 })
 
 const color = computed(() => {
-  return props.danger ? "error" : "primary"
+  return props.danger ? "red" : "primary"
 })
 
 // 方法

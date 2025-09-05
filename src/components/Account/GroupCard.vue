@@ -1,17 +1,15 @@
 <template>
   <v-card class="group-card" elevation="5">
-    <!-- Header -->
-    <RedDot
-      :show="showBrief && Number(notificationCount) > 0"
+    <red-dot
+      :show="showBrief && notificationCount > 0"
       :count="notificationCount"
       class="red-dot-position"
     />
 
-    <!-- Body -->
     <v-card-text class="group-card-body">
-      <!-- 簡略資訊 -->
+      <!-- Brief Info Display -->
       <div v-if="!isEditing && !isCreating">
-        <v-simple-table class="group-info">
+        <v-table class="group-info">
           <tbody>
             <tr>
               <td>{{ $t("setting.group") }}:</td>
@@ -22,48 +20,39 @@
               <td>{{ memberNames }}</td>
             </tr>
           </tbody>
-        </v-simple-table>
+        </v-table>
       </div>
 
-      <!-- 申請中 / 離開中 -->
+      <!-- Leaving Request Display -->
       <div v-if="showLeavingByGroup" class="group-applying">
         {{ $t("setting.group-ask-leaving") }}
       </div>
 
-      <!-- 編輯表單 -->
-      <div v-if="showDetail || isCreating" class="form-wrapper-dark">
-        <v-form ref="groupFormRef" v-if="showDetail" class="detail-form">
+      <!-- Detail Form -->
+      <div class="form-wrapper">
+        <v-form v-if="showDetail" ref="detailForm">
           <v-text-field
-            v-model="group.name"
-            :label="$t('setting.group') + ':'"
-            :rules="necessaryRules"
+            v-model="name"
+            :label="$t('setting.group')"
             disabled
             variant="outlined"
-            class="dark-input mb-4"
-            density="comfortable"
-          ></v-text-field>
+            class="dark-text-field"
+          />
 
-          <v-row no-gutters class="align-center">
-            <v-col cols="8" class="pr-3">
+          <v-row>
+            <v-col cols="8">
               <v-select
-                v-model="newMember"
-                :items="memberOptions"
-                item-title="display_name"
-                item-value="id"
-                :label="$t('setting.invite-member') + ':'"
-                variant="outlined"
-                class="dark-input"
-                density="comfortable"
-                clearable
-              ></v-select>
+                v-model="selectedMemberName"
+                :label="$t('setting.invite-member')"
+                :items="memberOptions.map(m => m.display_name)"
+                variant="underlined"
+              />
             </v-col>
             <v-col cols="4">
               <v-btn
                 color="primary"
-                class="dark-btn"
-                size="large"
-                block
-                @click="inviteNewMember(newMember)"
+                @click="inviteNewMember(getSelectedMember())"
+                :disabled="!selectedMemberName"
               >
                 {{ $t("common.submit") }}
               </v-btn>
@@ -71,157 +60,301 @@
           </v-row>
         </v-form>
 
-        <v-form ref="newGroup" v-if="isCreating" class="create-form">
+        <!-- Create Group Form -->
+        <v-form v-if="isCreating" ref="newGroupForm">
           <v-text-field
             v-model="groupForm.name"
-            :label="$t('setting.group') + ':'"
-            :rules="necessaryRules"
+            :label="$t('setting.group')"
+            :rules="[rules.required]"
             variant="outlined"
-            class="dark-input mb-4"
-            density="comfortable"
-          ></v-text-field>
-
+            class="dark-text-field"
+          />
           <v-select
-            v-model="groupForm.initialMembers"
-            :items="memberOptions"
-            item-title="display_name"
-            item-value="id"
-            multiple
-            chips
-            :label="$t('setting.member') + ':'"
-            variant="outlined"
-            class="dark-input"
-            density="comfortable"
-            clearable
-          ></v-select>
+            :label="$t('setting.member')"
+            :items="memberOptions.map(m => m.display_name)"
+            variant="underlined"
+          />
         </v-form>
       </div>
 
-      <!-- 成員表格 -->
+      <!-- Members Data Table -->
       <v-data-table
         v-if="showDetail"
-        :headers="groupsHead"
+        :headers="groupsHeaders"
         :items="memberObjects"
-        class="setting-member-table dark-table"
+        :sort-by="sortBy"
+        class="setting-member-table"
+        density="compact"
         height="500"
-        item-key="id"
-        show-expand
-        :sort-by.sync="sort.sortBy"
+        theme="dark"
+        hide-default-footer
       >
-        <template v-slot:item.data-table-expand="{ item }">
-          <ul style="margin-left: 60px">
-            <li>email: {{ item.email }}</li>
-            <li>admin: {{ item.admin ? "Yes" : "No" }}</li>
-          </ul>
+        <template v-slot:item.id="{ item }">
+          <div class="text-center">
+            <span
+              v-if="
+                inByUser.includes(item.display_name) ||
+                leaveByUser.includes(item.display_name)
+              "
+              class="text-error"
+            >
+              new
+            </span>
+            {{ item.id }}
+          </div>
         </template>
 
-        <template #item.id="{ item }">
-          <span
-            style="color: #f44336"
-            v-if="
-              inByUser.includes(item.display_name) ||
-              leaveByUser.includes(item.display_name)
-            "
-            >new</span
+        <template v-slot:item.display_name="{ item }">
+          <div class="text-center">{{ item.display_name }}</div>
+        </template>
+
+        <template v-slot:item.status="{ item }">
+          <div class="text-center" :style="item.statusStyle">
+            {{ $t(item.status) }}
+          </div>
+        </template>
+
+        <template v-slot:item.actions="{ item }">
+          <div class="text-center">
+            <v-btn
+              v-if="
+                inByGroup.includes(item.display_name) ||
+                leaveByGroup.includes(item.display_name)
+              "
+              icon="mdi-cancel"
+              variant="text"
+              @click="kickMember(item)"
+              ><i class="material-icons">cancel</i>
+            </v-btn>
+            <confirm-button
+              v-else-if="
+                !inByUser.includes(item.display_name) &&
+                !leaveByUser.includes(item.display_name)
+              "
+              class="approve-button"
+              icon="mdi-trash"
+              smalls
+              danger
+              :message="$t('setting.confirm-kick')"
+              @confirm="kickMember(item)"
+              ><i class="material-icons">delete</i>
+            </confirm-button>
+          </div>
+        </template>
+
+        <template v-slot:item.apply="{ item }">
+          <div v-if="inByUser.includes(item.display_name)" class="text-center">
+            <confirm-button
+              class="approve-button"
+              danger
+              small
+              fab
+              :message="$t('setting.confirm-deny')"
+              @confirm="approveApply(item.display_name, false)"
+            >
+              {{ $t("setting.deny") }}
+            </confirm-button>
+            <confirm-button
+              class="approve-button"
+              small
+              fab
+              :message="$t('setting.confirm-approve')"
+              @confirm="approveApply(item.display_name, true)"
+            >
+              {{ $t("setting.approve") }}
+            </confirm-button>
+          </div>
+        </template>
+
+        <template v-slot:item.leave="{ item }">
+          <div
+            v-if="leaveByUser.includes(item.display_name)"
+            class="text-center"
           >
-          {{ item.id }}
+            <confirm-button
+              class="approve-button"
+              danger
+              fab
+              small
+              :message="$t('setting.confirm-deny')"
+              @confirm="approveApply(item.display_name, true)"
+            >
+              {{ $t("setting.deny") }}
+            </confirm-button>
+            <confirm-button
+              class="approve-button"
+              fab
+              small
+              :message="$t('setting.confirm-approve')"
+              @confirm="approveApply(item.display_name, false)"
+            >
+              {{ $t("setting.approve") }}
+            </confirm-button>
+          </div>
         </template>
 
-        <template #item.display_name="{ item }">
-          {{ item.display_name }}
-        </template>
-
-        <template #item.status="{ item }">
-          <span :style="item.statusStyle">{{ $t(item.status ?? "") }}</span>
-        </template>
-
-        <template #item.action="{ item }">
-          <v-btn
-            v-if="
-              inByGroup.includes(item.display_name) ||
-              leaveByGroup.includes(item.display_name)
-            "
-            icon
-            color="#666"
-            @click="kickMember(item)"
-          >
-            <v-icon>mdi-cancel</v-icon>
-          </v-btn>
-
-          <v-btn v-else icon color="error" @click="kickMember(item)">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
+        <template v-slot:expanded-row="{ item }">
+          <tr>
+            <td colspan="6" class="pa-4">
+              <ul>
+                <li>email: {{ item.email }}</li>
+                <li>admin: {{ item.admin ? "Yes" : "No" }}</li>
+              </ul>
+            </td>
+          </tr>
         </template>
       </v-data-table>
     </v-card-text>
-    <v-divider
-      style="
-        width: 95%;
-        margin: auto;
-        margin-bottom: 10px;
-        background-color: #888;
-      "
-    ></v-divider>
-    <!-- Footer -->
-    <v-card-actions class="group-card-footer">
-      <v-btn
-        v-if="!isCreating && showBrief"
-        style="background-color: teal; color: white"
-        @click="beginManagement"
-        size="large"
-      >
-        {{ $t("common.manage") }}
-      </v-btn>
-      <v-btn
-        v-if="showApplyButton"
-        color="primary"
-        @click="applyGroup"
-        size="large"
-      >
-        {{ $t("setting.group-apply") }}
-      </v-btn>
 
-      <v-btn v-if="isCreating" @click="$emit('pleaseCancelCreating')">{{
-        $t("common.cancel")
-      }}</v-btn>
-      <v-btn v-if="isCreating" color="primary" @click="createGroup">{{
-        $t("common.confirm")
-      }}</v-btn>
+    <v-divider class="mx-4 mb-2" />
+
+    <v-card-actions class="group-card-footer">
+      <div v-if="!isCreating" class="w-100">
+        <v-row justify="center">
+          <v-btn
+            v-if="showBrief"
+            color="teal"
+            base-color="teal"
+            class="custom-btn"
+            @click="beginManagement"
+          >
+            {{ $t("common.manage") }}
+          </v-btn>
+        </v-row>
+
+        <v-btn
+          v-if="showApplyButton"
+          color="primary"
+          variant="flat"
+          @click="applyGroup"
+        >
+          {{ $t("setting.group-apply") }}
+        </v-btn>
+
+        <div v-if="!isInGroup && isInPendingByUser" class="group-applying">
+          {{ $t("setting.group-applying") }}
+        </div>
+
+        <div v-if="showLeavingByGroup" class="d-flex ga-2 justify-center">
+          <v-btn
+            color="primary"
+            variant="flat"
+            @click="confirmLeaveByGroup(false)"
+          >
+            {{ $t("setting.deny") }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            @click="confirmLeaveByGroup(true)"
+          >
+            {{ $t("common.confirm") }}
+          </v-btn>
+        </div>
+
+        <div v-if="showInvitingByGroup" class="d-flex ga-2 justify-center">
+          <v-btn color="error" @click="denyInviting">
+            {{ $t("setting.deny") }}
+          </v-btn>
+          <v-btn color="primary" @click="applyGroup">
+            {{ $t("common.agree") }}
+          </v-btn>
+        </div>
+
+        <div v-if="showDetail" class="d-flex justify-space-between w-100">
+          <confirm-button
+            v-if="showDeleteButton"
+            icon="mdi-delete"
+            class="group-delete"
+            variant="text"
+            small
+            fab
+            danger
+            :message="$t('setting.confirm-delete-group')"
+            @confirm="deleteGroup()"
+          >
+            <i class="material-icons">delete</i>
+          </confirm-button>
+
+          <v-row justify="center" class="gap-4">
+            <v-col cols="auto">
+              <v-btn @click="isEditing = false" class="group-cancel">
+                {{ $t("common.cancel") }}
+              </v-btn>
+            </v-col>
+
+            <v-col cols="auto">
+              <confirm-button
+                color="error"
+                danger
+                fab
+                class="group-leave"
+                :message="$t('setting.confirm-leave')"
+                @confirm="sendLeavingRequest()"
+              >
+                {{ $t("setting.group-leave") }}
+              </confirm-button>
+            </v-col>
+          </v-row>
+        </div>
+
+        <div v-if="showLeavingApplying" class="group-applying">
+          {{ $t("setting.group-leaving") }}
+        </div>
+      </div>
+
+      <div v-if="isCreating" class="d-flex ga-2 w-100">
+        <v-btn @click="$emit('pleaseCancelCreating')">
+          {{ $t("common.cancel") }}
+        </v-btn>
+        <v-btn color="primary" @click="createGroup">
+          {{ $t("common.confirm") }}
+        </v-btn>
+      </div>
     </v-card-actions>
 
-    <!-- 確認對話框 -->
-    <ConfirmDialog
+    <confirm-dialog
       :title="$t('error.groupSettingNotAllowedError')"
-      :openAlert="showWrongManipulation"
-      :safeOption="$t('common.cancel')"
-      :dangerOption="$t('common.confirm')"
-      @closeConfirmDialog="$emit('pleaseUpdateGroupCard')"
+      :open-alert="showWrongManipulation"
+      :safe-option="$t('common.cancel')"
+      :danger-option="$t('common.confirm')"
+      :sec="0"
+      confirm-color="primary"
+      @close-confirm-dialog="$emit('pleaseUpdateGroupCard')"
     />
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from "vue"
-import { useStore } from "vuex"
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue"
+import ConfirmButton from "@/components/common/ConfirmButton.vue"
 import RedDot from "@/components/common/RedDot.vue"
+import { ref, computed, watch, onMounted } from "vue"
+import { useStore } from "vuex"
+import { useI18n } from "vue-i18n"
+import { useRoute } from "vue-router"
 import {
   apiGetAllMembers,
   apiSetGroupMember,
   apiCreateGroup,
+  apiDeleteGroup,
 } from "@/assets/ts/api"
-
-interface MemberOption {
+import { shallowRef } from "vue"
+import { drySort } from "@/assets/ts/dry"
+// Types
+interface Member {
   id: number
   display_name: string
-  email?: string
-  admin?: boolean
-  status?: string
-  statusStyle?: Record<string, string>
+  email: string
+  admin: boolean
+  status: string
+  statusStyle?: {
+    color: string
+  }
 }
 
 interface Group {
-  id?: number
+  id: number
   name?: string
   members?: string
   inByGroup?: string
@@ -240,66 +373,128 @@ interface GroupForm {
   initialMembers: number[]
 }
 
-const props = defineProps<{ group: Group }>()
+interface UserInfo {
+  userId: string
+  displayName: string
+  name: string
+  isAdmin: boolean
+}
 
+// Props
+interface Props {
+  group: Group
+}
+
+const props = defineProps<Props>()
+
+// Emits
 const emit = defineEmits<{
-  (e: "pleaseUpdateGroupCard"): void
-  (e: "pleaseCancelCreating"): void
+  pleaseUpdateGroupCard: []
+  pleaseCancelCreating: []
 }>()
 
+// Composables
 const store = useStore()
+const { t } = useI18n()
+const route = useRoute()
 
-const memberOptions = ref<MemberOption[]>([])
-const memberObjects = ref<MemberOption[]>([])
-const newMember = ref<MemberOption | null>(null)
-const sort = reactive<{ sortBy: { key: string; order: "asc" | "desc" }[] }>({
-  sortBy: [{ key: "id", order: "asc" }],
-})
-const groupForm = reactive<GroupForm>({ name: "", initialMembers: [] })
+const selectedMember = ref<Member | null>(null)
+const selectedMemberName = ref<string>("")
+// Refs
+const memberOptions = ref<Member[]>([])
 const isEditing = ref(false)
+const memberObjects = ref<Member[]>([])
+const newMember = ref<Member | null>(null)
 
-const userInfo = computed(() => store.getters.userInfo)
+const select = shallowRef({ state: "Florida", abbr: "FL" })
+const sortBy = ref<Array<{ key: string; order?: "asc" | "desc" }>>([
+  { key: "id", order: "asc" },
+])
+const detailForm = ref()
+const newGroupForm = ref()
+
+const groupForm = ref<GroupForm>({
+  name: "",
+  initialMembers: [],
+})
+
+// Computed
+const userInfo = computed((): UserInfo => store.getters.userInfo)
+console.log("userInfo", userInfo)
+const id = computed(() => props.group.id ?? null)
+
+const name = computed({
+  get: () => props.group.name ?? "",
+  set: (val: string) => {
+    if (props.group.name !== undefined) {
+      props.group.name = val
+    }
+  },
+})
+const getSelectedMember = (): Member | null => {
+  if (!selectedMemberName.value) return null
+  return (
+    memberOptions.value.find(
+      m => m.display_name === selectedMemberName.value
+    ) || null
+  )
+}
 
 const inByGroup = computed(() =>
-  props.group.inByGroup
-    ? props.group.inByGroup.split(",").filter(s => s !== "")
-    : []
+  props.group.inByGroup ? props.group.inByGroup.split(",") : []
 )
+
 const inByUser = computed(() =>
-  props.group.inByUser
-    ? props.group.inByUser.split(",").filter(s => s !== "")
-    : []
+  props.group.inByUser ? props.group.inByUser.split(",") : []
 )
+
+const isInPendingByGroup = computed(
+  () => props.group.isInPendingByGroup ?? false
+)
+
+const isInPendingByUser = computed(() => props.group.isInPendingByUser ?? false)
+
+const isLeavePendingByGroup = computed(
+  () => props.group.isLeavePendingByGroup ?? false
+)
+
+const isLeavePendingByUser = computed(
+  () => props.group.isLeavePendingByUser ?? false
+)
+
 const leaveByGroup = computed(() =>
-  props.group.leaveByGroup
-    ? props.group.leaveByGroup.split(",").filter(s => s !== "")
-    : []
+  props.group.leaveByGroup ? props.group.leaveByGroup.split(",") : []
 )
+
 const leaveByUser = computed(() =>
-  props.group.leaveByUser
-    ? props.group.leaveByUser.split(",").filter(s => s !== "")
-    : []
+  props.group.leaveByUser ? props.group.leaveByUser.split(",") : []
 )
+
 const members = computed(() =>
-  props.group.members
-    ? props.group.members.split(",").filter(s => s !== "")
-    : []
+  props.group.members ? props.group.members.split(",") : []
 )
-const memberNames = computed(
-  () => props.group.members?.replace(/,/g, ", ") ?? ""
+
+const memberNames = computed(() =>
+  props.group.members ? props.group.members.replace(/,/g, ", ") : ""
 )
+
 const isCreating = computed({
   get: () => props.group.isCreating ?? false,
-  set: (val: boolean) => (props.group.isCreating = val),
+  set: (val: boolean) => {
+    if (props.group.isCreating !== undefined) {
+      props.group.isCreating = val
+    }
+  },
 })
+
 const isInGroup = computed(
   () =>
     userInfo.value.name === "Administrator" ||
     memberNames.value.includes(userInfo.value.displayName)
 )
 
-const notificationCount = computed(() =>
-  String(inByUser.value.length + leaveByUser.value.length)
+const notificationCount = computed(
+  () => inByUser.value.length + leaveByUser.value.length
 )
 
 const showApplyButton = computed(
@@ -307,54 +502,112 @@ const showApplyButton = computed(
     !isInGroup.value &&
     !isEditing.value &&
     !isCreating.value &&
-    !props.group.isInPendingByUser &&
-    !props.group.isInPendingByGroup &&
-    !props.group.isLeavePendingByGroup
+    !isInPendingByUser.value &&
+    !isInPendingByGroup.value &&
+    !isLeavePendingByGroup.value
 )
+
+const showInvitingByGroup = computed(
+  () =>
+    !isInGroup.value &&
+    !isEditing.value &&
+    !isCreating.value &&
+    !isInPendingByUser.value &&
+    isInPendingByGroup.value &&
+    !isLeavePendingByGroup.value
+)
+
 const showBrief = computed(
   () =>
     isInGroup.value &&
     !isEditing.value &&
-    !props.group.isLeavePendingByUser &&
-    !props.group.isLeavePendingByGroup
+    !isLeavePendingByUser.value &&
+    !isLeavePendingByGroup.value
 )
+
 const showDetail = computed(
   () =>
     isInGroup.value &&
     isEditing.value &&
-    !props.group.isLeavePendingByUser &&
-    !props.group.isLeavePendingByGroup
+    !isLeavePendingByUser.value &&
+    !isLeavePendingByGroup.value
 )
+
+const showLeavingApplying = computed(
+  () => isInGroup.value && !isEditing.value && isLeavePendingByUser.value
+)
+
+const showLeavingByGroup = computed(() => {
+  console.log("isInGroup", isInGroup)
+  console.log("isEditing", isEditing)
+  console.log("isLeavePendingByGroup", isLeavePendingByGroup)
+  return isInGroup.value && !isEditing.value && isLeavePendingByGroup.value
+})
+
 const showWrongManipulation = computed(
   () => !isInGroup.value && isEditing.value
 )
-const showLeavingByGroup = computed(
-  () => leaveByGroup.value.length > 0 && inByGroup.value.length === 0
-)
 
-const groupsHead = [
-  { title: "ID", key: "id", sortable: true },
-  { title: "Name", key: "display_name", sortable: true },
-  { title: "Status", key: "status" },
-  { title: "Action", key: "action" },
-]
-const necessaryRules = [(v: any) => !!v || "Required"]
+const showDeleteButton = computed(() => route.name === "Setting")
 
-onMounted(() => {
-  initMemberOptions().then(() => {
-    initMemberObjects(props.group)
-  })
-})
-
-watch(
-  () => props.group,
-  newVal => {
-    initMemberObjects(newVal)
+const groupsHeaders = computed(() => [
+  {
+    title: t("account.id"),
+    key: "id",
+    width: 80,
+    align: "center" as const,
+    sortable: true,
   },
-  { deep: true }
-)
+  {
+    title: t("account.displayName"),
+    key: "display_name",
+    width: 200,
+    align: "center" as const,
+    sortable: true,
+  },
+  {
+    title: t("common.status"),
+    key: "status",
+    width: 136,
+    align: "center" as const,
+    sortable: true,
+  },
+  {
+    title: t("setting.group-kick"),
+    key: "actions",
+    width: 100,
+    align: "center" as const,
+    sortable: false,
+  },
+  {
+    title: t("setting.group-applying"),
+    key: "apply",
+    width: 130,
+    align: "center" as const,
+    sortable: false,
+  },
+  {
+    title: t("setting.group-leaving"),
+    key: "leave",
+    width: 130,
+    align: "center" as const,
+    sortable: false,
+  },
+])
 
-async function initMemberOptions() {
+// Validation rules
+const rules = {
+  required: (value: string) => !!value || t("validate.required"),
+  requiredArray: (array: any[]) =>
+    (Array.isArray(array) ? !!array.length : true) || t("validate.required"),
+}
+
+// Methods
+const changeLoadingState = (state: any) => {
+  store.dispatch("changeLoadingState", state)
+}
+
+const initMemberOptions = async (): Promise<void> => {
   try {
     const res = await apiGetAllMembers()
     memberOptions.value = res.data
@@ -363,239 +616,376 @@ async function initMemberOptions() {
   }
 }
 
-function initMemberObjects(group: Group) {
-  const memberHere = [...members.value, ...inByGroup.value, ...inByUser.value]
-  const results = memberOptions.value.filter(m =>
+const initMemberObjects = (group: Group) => {
+  let memberHere = group.members ? group.members.split(",") : []
+  memberHere = memberHere.concat(inByGroup.value)
+  memberHere = memberHere.concat(inByUser.value)
+
+  let results = memberOptions.value.filter(m =>
     memberHere.includes(m.display_name)
   )
+
   results.forEach(m => {
-    if (leaveByGroup.value.includes(m.display_name)) {
-      m.status = "setting.group-asked-leaving"
-      m.statusStyle = { color: "#f44336" }
-    } else if (leaveByUser.value.includes(m.display_name)) {
-      m.status = "setting.group-leaving"
-      m.statusStyle = { color: "#f44336" }
-    } else if (inByGroup.value.includes(m.display_name)) {
-      m.status = "setting.group-inviting"
-      m.statusStyle = { color: "#5daeff" }
-    } else if (inByUser.value.includes(m.display_name)) {
-      m.status = "setting.group-applying"
-      m.statusStyle = { color: "#5daeff" }
-    } else {
-      m.status = ""
-      m.statusStyle = { color: "#5daeff" }
+    switch (true) {
+      case leaveByGroup.value.includes(m.display_name):
+        m.status = "setting.group-asked-leaving"
+        m.statusStyle = { color: "#f44336" }
+        break
+      case leaveByUser.value.includes(m.display_name):
+        m.status = "setting.group-leaving"
+        m.statusStyle = { color: "#f44336" }
+        break
+      case inByGroup.value.includes(m.display_name):
+        m.status = "setting.group-inviting"
+        m.statusStyle = { color: "#5daeff" }
+        break
+      case inByUser.value.includes(m.display_name):
+        m.status = "setting.group-applying"
+        m.statusStyle = { color: "#5daeff" }
+        break
+      default:
+        m.status = ""
+        m.statusStyle = { color: "#5daeff" }
     }
   })
+
+  // Sort priority: inByGroup, leaveByGroup, inByUser, leaveByUser
+  const sortPriority = (member: Member): number => {
+    if (inByUser.value.includes(member.display_name)) return 0
+    if (leaveByUser.value.includes(member.display_name)) return 1
+    if (inByGroup.value.includes(member.display_name)) return 2
+    if (leaveByGroup.value.includes(member.display_name)) return 3
+    return 4
+  }
+
+  results.sort((a, b) => sortPriority(a) - sortPriority(b))
   memberObjects.value = results
 }
 
-function requestSetGroupMember(payload: any) {
-  apiSetGroupMember(payload)
-    .then(res => {
-      if (res.data === "success") {
-        emit("pleaseUpdateGroupCard")
-      }
-    })
-    .catch(err => console.error(err))
-}
-
-function inviteNewMember(newMember: MemberOption | null) {
-  if (!newMember) return
-  const exists = memberObjects.value.find(m => m.id === newMember?.id)
-  if (!exists) {
-    requestSetGroupMember({
-      groupNum: props.group.id,
-      userId: newMember.id,
-      isIn: true,
-    })
-    newMember = null
-  } else {
-    console.warn("Already in group")
+const requestSetGroupMember = async (payload: any) => {
+  try {
+    const res = await apiSetGroupMember(payload)
+    if (res.data === "success") {
+      emit("pleaseUpdateGroupCard")
+      changeLoadingState({
+        showDialog: true,
+        isLoading: false,
+        isSuccess: true,
+        showAction: true,
+      })
+    } else {
+      changeLoadingState({
+        showDialog: true,
+        isLoading: false,
+        isSuccess: false,
+        showAction: true,
+        error: "groupSettingError",
+      })
+    }
+  } catch (err) {
+    console.error(err)
   }
 }
 
-function kickMember(member: MemberOption) {
-  if (!props.group.id || !member.id) return
-  requestSetGroupMember({
+const applyGroup = () => {
+  const payload = {
     groupNum: props.group.id,
-    userId: member.id,
-    isIn: false,
-  })
+    userId: parseInt(userInfo.value.userId),
+    isIn: true,
+    isUser: true,
+    isAdmin: userInfo.value.isAdmin,
+  }
+  requestSetGroupMember(payload)
 }
 
-function beginManagement() {
-  memberObjects.value = [...memberObjects.value]
+const denyInviting = () => {
+  const payload = {
+    groupNum: props.group.id,
+    userId: parseInt(userInfo.value.userId),
+    isIn: false,
+    isUser: true,
+    isAdmin: userInfo.value.isAdmin,
+  }
+  requestSetGroupMember(payload)
+}
+
+const beginManagement = () => {
   isEditing.value = true
 }
 
-function applyGroup() {
-  if (!props.group.id || !userInfo.value.userId) return
-  requestSetGroupMember({
-    groupNum: props.group.id,
-    userId: userInfo.value.userId,
-    isIn: true,
-  })
+const createGroup = async () => {
+  const { valid } = await newGroupForm.value.validate()
+  if (valid) {
+    const payload = {
+      name: groupForm.value.name,
+      originalMembers: groupForm.value.initialMembers,
+    }
+
+    try {
+      const res = await apiCreateGroup(payload)
+      if (res.data) {
+        emit("pleaseUpdateGroupCard")
+        changeLoadingState({
+          showDialog: true,
+          isLoading: false,
+          isSuccess: true,
+          showAction: true,
+        })
+      } else {
+        changeLoadingState({
+          showDialog: true,
+          isLoading: false,
+          isSuccess: false,
+          showAction: true,
+          error: "groupSettingError",
+        })
+      }
+    } catch (err) {
+      console.error(err)
+    }
+
+    isCreating.value = false
+  }
 }
 
-function createGroup() {
-  if (!groupForm.name) return
-  apiCreateGroup({
-    name: groupForm.name,
-    originalMembers: groupForm.initialMembers,
-  }).then(() => {
-    emit("pleaseUpdateGroupCard")
-    isCreating.value = false
-  })
+const inviteNewMember = (member: Member | null) => {
+  if (!member) return
+
+  if (!memberObjects.value.find(m => m.id === member.id)) {
+    const payload = {
+      groupNum: props.group.id,
+      userId: member.id,
+      isIn: true,
+      isUser: false,
+      isAdmin: userInfo.value.isAdmin,
+    }
+
+    requestSetGroupMember(payload)
+    newMember.value = null
+  } else {
+    changeLoadingState({
+      showDialog: true,
+      isLoading: false,
+      isSuccess: false,
+      showAction: true,
+      error: "alreadyInGroup",
+    })
+  }
 }
+
+const kickMember = (member: Member) => {
+  if (member.id === parseInt(userInfo.value.userId)) {
+    changeLoadingState({
+      showDialog: true,
+      isLoading: false,
+      isSuccess: false,
+      showAction: true,
+      error: "groupSettingNotAllowedError",
+    })
+  } else if (inByGroup.value.includes(member.display_name)) {
+    const payload = {
+      groupNum: props.group.id,
+      userId: member.id,
+      isIn: false,
+      isUser: true,
+      isAdmin: userInfo.value.isAdmin,
+    }
+    requestSetGroupMember(payload)
+  } else if (leaveByGroup.value.includes(member.display_name)) {
+    const payload = {
+      groupNum: props.group.id,
+      userId: member.id,
+      isIn: true,
+      isUser: true,
+      isAdmin: userInfo.value.isAdmin,
+    }
+    requestSetGroupMember(payload)
+  } else {
+    const payload = {
+      groupNum: props.group.id,
+      userId: member.id,
+      isIn: false,
+      isUser: false,
+      isAdmin: userInfo.value.isAdmin,
+    }
+    requestSetGroupMember(payload)
+  }
+}
+
+const deleteGroup = async () => {
+  const payload = { id: props.group.id }
+  try {
+    const res = await apiDeleteGroup(payload)
+    if (res.data === "success") {
+      emit("pleaseUpdateGroupCard")
+      changeLoadingState({
+        showDialog: true,
+        isLoading: false,
+        isSuccess: true,
+        showAction: true,
+      })
+    } else {
+      changeLoadingState({
+        showDialog: true,
+        isLoading: false,
+        isSuccess: false,
+        showAction: true,
+        error: "groupSettingError",
+      })
+    }
+  } catch (err) {
+    console.error(err)
+  }
+  isEditing.value = false
+}
+
+const sendLeavingRequest = () => {
+  const payload = {
+    groupNum: props.group.id,
+    userId: parseInt(userInfo.value.userId),
+    isIn: false,
+    isUser: true,
+    isAdmin: userInfo.value.isAdmin,
+  }
+
+  if (
+    members.value.length -
+      leaveByGroup.value.length -
+      leaveByUser.value.length >
+    1
+  ) {
+    requestSetGroupMember(payload)
+    isEditing.value = false
+  } else {
+    changeLoadingState({
+      showDialog: true,
+      isLoading: false,
+      isSuccess: false,
+      showAction: true,
+      error: "groupSettingNotAllowedError",
+    })
+  }
+}
+
+const confirmLeaveByGroup = (wantToLeave: boolean) => {
+  const payload = {
+    groupNum: props.group.id,
+    userId: parseInt(userInfo.value.userId),
+    isIn: !wantToLeave,
+    isUser: true,
+    isAdmin: userInfo.value.isAdmin,
+  }
+  requestSetGroupMember(payload)
+}
+
+const approveApply = (name: string, isApproved: boolean) => {
+  const member = memberOptions.value.find(u => u.display_name === name)
+  if (!member) return
+
+  const payload = {
+    groupNum: props.group.id,
+    userId: member.id,
+    isIn: isApproved,
+    isUser: false,
+    isAdmin: userInfo.value.isAdmin,
+  }
+  requestSetGroupMember(payload)
+}
+
+// Watchers
+watch(
+  () => props.group,
+  value => {
+    initMemberObjects(value)
+  },
+  { deep: true }
+)
+
+// Lifecycle
+onMounted(async () => {
+  await initMemberOptions()
+  initMemberObjects(props.group)
+})
 </script>
 
 <style scoped>
-/* 表單包裝器 */
-.form-wrapper-dark {
-  background: #444;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 1;
-}
-
-/* 表單內部結構 */
-.detail-form,
-.create-form {
-  position: relative;
-  z-index: 2;
-}
-
-/* 深色輸入框樣式 */
-.dark-input :deep(.v-field) {
-  background: #333 !important;
-  border-radius: 10px !important;
-  position: relative;
-  z-index: 3;
-}
-
-.dark-input :deep(.v-field--variant-outlined .v-field__outline) {
-  color: #666 !important;
-}
-
-.dark-input
-  :deep(.v-field--variant-outlined.v-field--focused .v-field__outline) {
-  color: #1976d2 !important;
-}
-
-.dark-input :deep(.v-field__input),
-.dark-input :deep(.v-field__input input) {
-  color: #eee !important;
-}
-
-.dark-input :deep(.v-label) {
-  color: #ccc !important;
-}
-
-.dark-input :deep(.v-field--focused .v-label) {
-  color: #1976d2 !important;
-}
-
-.dark-input :deep(.v-field:hover .v-field__outline) {
-  color: #888 !important;
-}
-
-/* Select 下拉選單樣式 */
-.dark-input :deep(.v-select__selection) {
-  color: #eee !important;
-}
-
-.dark-input :deep(.v-chip) {
-  background: #555 !important;
-  color: #eee !important;
-}
-
-/* 修復 Select 的下拉箭頭 */
-.dark-input :deep(.v-field__append-inner .v-icon) {
-  color: #ccc !important;
-}
-
-/* 按鈕樣式 */
-.dark-btn {
-  background: linear-gradient(135deg, #00897b, #00695c) !important;
-  color: white !important;
-  border-radius: 8px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-  height: 48px !important;
-  min-width: 100px;
-}
-
-.dark-btn:hover {
-  background: linear-gradient(135deg, #00695c, #004d40) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* 表格暗色系 */
-.dark-table {
-  background: #2c2c2c !important;
-  color: #eee !important;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 1;
-}
-
-/* 表格表頭 */
-.dark-table :deep(.v-data-table-header th) {
-  background: #1e1e1e !important;
-  color: #bbb !important;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-/* 表格列 */
-.dark-table :deep(.v-data-table__tbody tr) {
-  background: #2c2c2c;
-}
-
-.dark-table :deep(.v-data-table__tbody tr:hover) {
-  background: #3a3a3a !important;
-  transition: background 0.2s ease;
-}
-
-/* 表格單元格 */
-.dark-table :deep(td) {
-  border-bottom: 1px solid #444 !important;
-  color: #eee !important;
-}
-
-/* 紅點位置 */
 .red-dot-position {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 100;
 }
+/* 針對 v-select 的 input 背景 */
+::v-deep(.v-field__input input) {
+  background-color: transparent !important; /* 背景透明 */
+  color: white !important; /* 文字白色 */
+  border: none !important; /* 去掉邊框 */
+}
 
-/* 主卡片 */
+/* optional: 去掉整個 v-input__control 背景 */
+::v-deep(.v-input__control) {
+  background-color: transparent !important;
+}
+
+/* label 白色 */
+::v-deep(.v-field-label) {
+  color: white !important;
+}
+
+.group-cancel {
+  background-color: black !important;
+  color: white !important;
+  width: 88px;
+}
+.group-leave {
+  position: absolute;
+  display: inline-block;
+  right: 20px;
+  width: 88px;
+}
+.group-delete {
+  position: absolute;
+  display: inline-block;
+  left: 20px;
+}
+.custom-btn {
+  width: 88px; /* 自訂寬度 */
+  height: 36px; /* 自訂高度 */
+  color: white !important; /* 文字白色 */
+  font-weight: bold; /* 粗體（可選） */
+  display: flex;
+  align-items: center; /* 垂直置中 */
+  justify-content: center; /* 水平置中 */
+  background-color: #009688;
+}
 .group-card {
-  overflow: visible;
-  z-index: 1;
   background: #777;
-  padding: 10px 0 20px 0;
-  margin: 10px 2px 10px 2px;
-  border-radius: 10px;
   width: 100%;
+  border-radius: 10px;
+  margin: 10px 2px;
+  overflow: visible; /*加入後能使red-dot不被覆蓋*/
+}
+
+.group-card-head {
   position: relative;
+  height: 30px;
+  right: 20px;
 }
 
 .group-card-body {
-  color: #ffffff;
   margin: 0 20px 20px 20px;
-  position: relative;
 }
 
 .group-info {
   border-spacing: 10px;
-  font-size: 20px;
+  background-color: transparent !important; /* 透明背景 */
+  color: white;
+  font-size: 18px;
+}
+.group-info table,
+.group-info th,
+.group-info td {
+  border: none !important;
 }
 
 .group-info tr {
@@ -607,49 +997,25 @@ function createGroup() {
 }
 
 .group-applying {
+  color: white;
   display: inline-block;
   background: #999;
   height: 40px;
   border-radius: 10px;
-  font-stretch: 100%;
   line-height: 40px;
-  padding: 0 10px 0 10px;
+  padding: 0 10px;
 }
 
-.group-card-footer {
-  position: relative;
-  justify-content: center !important;
+.form-wrapper {
+  padding: 0 10px 25px 10px;
 }
 
-/* 響應式間距調整 */
-@media (max-width: 600px) {
-  .form-wrapper-dark {
-    padding: 16px;
-  }
-
-  .dark-btn {
-    height: 40px !important;
-    font-size: 0.875rem;
-  }
+.approve-button {
+  margin: 5px 0;
 }
 
-/* 動作按鈕組 */
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-}
-
-.action-buttons .v-btn {
-  min-width: 70px;
-  font-size: 0.75rem;
-}
-
-@media (min-width: 768px) {
-  .action-buttons {
-    flex-direction: row;
-    gap: 8px;
-  }
+.setting-member-table :deep(td) {
+  word-break: break-word;
+  cursor: pointer;
 }
 </style>

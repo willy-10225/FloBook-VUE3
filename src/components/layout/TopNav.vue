@@ -40,7 +40,7 @@
         v-if="userInfo.isAdmin"
         variant="text"
         class="qi-topnav-item"
-        to="/setting"
+        to="../Account/setting"
       >
         <v-icon>mdi-cog</v-icon>
       </v-btn>
