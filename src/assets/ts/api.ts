@@ -43,21 +43,27 @@ interface AddListPayload {
 export function apiAddList(payload: AddListPayload) {
   return flobookApi.post("/AddList", payload)
 }
-interface DeleteGroupPayload {
-  id: number
+interface DeleteListPayload {
+  ip: string
 }
-export function apiDeleteList(ip: DeleteGroupPayload) {
-  return flobookApi.post("/DeleteList", ip)
+export function apiDeleteList(payload: DeleteListPayload) {
+  return flobookApi.post("/DeleteList", payload)
 }
 
 export function apiGetList() {
-  return flobookApi
-    .get("/GetList") // 會被 proxy 成 http://61.219.187.38:100/api/GetList
-    .then(response => response.data)
-    .catch(error => {
-      console.error("Error fetching data:", error)
-      throw error
-    })
+  return flobookApi.get("/GetList")
+}
+
+export function apiAddmonitorList(payload: AddListPayload) {
+  return flobookApi.post("/AddList", payload)
+}
+
+export function apiDeleteMonitorList(payload: DeleteListPayload) {
+  return flobookApi.post("/DeleteList", payload)
+}
+
+export function apiGetMonitorList() {
+  return flobookApi.get("/GetList")
 }
 /**
  * AdminConfig
@@ -81,7 +87,7 @@ export function apiSetAdmin(payload: SetAdminPayload) {
 }
 
 interface GetAllGroupsPayload {
-  userId: string
+  userId: number
 }
 export function apiGetAllGroups(payload: GetAllGroupsPayload) {
   return flobookApi.post("/GetAllGroups", payload)
@@ -119,14 +125,6 @@ interface IsAccountNameUsablePayload {
 export function apiIsAccountNameUsable(payload: IsAccountNameUsablePayload) {
   return flobookApi.post("/IsAccountNameUsable", payload)
 }
-/**
- * CreateAccount
- * @param { Object } payload
- * @param { String } payload.account
- * @param { String } payload.password
- * @param { String } payload.displayName
- * @param { String } payload.email
- */
 interface CreateAccountPayload {
   account: String
   password: String
@@ -136,12 +134,6 @@ interface CreateAccountPayload {
 export function apiCreateAccount(payload: CreateAccountPayload) {
   return flobookApi.post("/CreateAccount", payload)
 }
-/**
- * ApproveAccount
- * @param { Object } payload
- * @param { Number } payload.id
- * @param { Boolean } payload.approved
- */
 interface ApproveAccountPayload {
   id: Number
   approved: Boolean
@@ -161,25 +153,12 @@ export function apiModifyProfile(payload: ModifyProfilePayload) {
 
 interface ModifyPasswordPayload {
   userId: Number
-  oldPassword: String
-  newPassword: String
+  oldPassword?: String
+  newPassword?: String
 }
 export function apiModifyPassword(payload: ModifyPasswordPayload) {
   return flobookApi.post("/ModifyPassword", payload)
 }
-/**
- * ModifyProjectPermission
- * @param { Object } payload
- * @param { String } payload.Status
- * @param { Boolean } payload.ReadExcutor
- * @param { Boolean } payload.WriteExcutor
- * @param { Boolean } payload.ReadManager
- * @param { Boolean } payload.WriteManager
- * @param { Boolean } payload.ReadTeam
- * @param { Boolean } payload.WriteTeam
- * @param { Boolean } payload.ReadGroup
- * @param { Boolean } payload.WriteGroup
- */
 interface ModifyProjectPermissionPayload {
   Status: String
   ReadExcutor: Boolean
@@ -196,9 +175,7 @@ export function apiModifyProjectPermission(
 ) {
   return flobookApi.post("/ModifyProjectPermission", payload)
 }
-/**
- * AddProjectInit
- */
+
 export function apiAddProjectInit() {
   return flobookApi.get("/AddProjectInit")
 }
@@ -264,15 +241,6 @@ export function apiModifyProject(payload: ModifyProjectPayload) {
   return flobookApi.post("/ModifyProject", payload)
 }
 
-/**
- * ModifyCheckPoint
- * @param { Object } payload
- * @param { String } payload.userName
- * @param { Number } payload.projectId
- * @param { Object[] } payload.checkPoints
- * @param { String } payload.checkPoints[].checkPointName
- * @param { Boolean } payload.checkPoints[].isDone
- */
 interface CheckPoint {
   checkPointName: string
   isDone: boolean
@@ -327,11 +295,7 @@ export interface IpPayload {
 export function apiMonitorDetail(payload: IpPayload) {
   return flobookApi.post("/MonitorDetail", payload)
 }
-/**
- * GetLicensesListByIp
- * @param { Object } payload
- * @param { String } payload.ip
- */
+
 export function apiGetLicensesListByIp(payload: IpPayload) {
   return flobookApi.post("/GetLicensesListByIp", payload)
 }
@@ -355,13 +319,7 @@ export interface GetHardwareHistoryPayload {
 export function apiGetHardwareHistory(payload: GetHardwareHistoryPayload) {
   return flobookApi.post("/GetHardwareHistory", payload, { timeout: 1800000 })
 }
-/**
- * GetLicenseHistory
- * @param { Object } payload
- * @param { Number } payload.ip
- * @param { String } payload.start
- * @param { String } payload.end
- */
+
 export function apiGetLicenseHistory(payload: {
   Ip: string
   Start: string
@@ -375,10 +333,7 @@ export function apiGetLicenseHistory(payload: {
 export function apiGetUnnormalUseData() {
   return flobookApi.get("/GetUnnormalUseData")
 }
-/**
- * SendEmailUnnormalUse
- * @param { Object } payload
- */
+
 export function apiSendEmailUnnormalUse(payload: any) {
   return flobookApi.post("/SendEmailUnnormalUse", payload)
 }
@@ -414,10 +369,7 @@ export interface SetSolveConfigPayload {
 export function apiSetSolveConfig(payload: SetSolveConfigPayload) {
   return flobookApi.post("/SetSolveConfig", payload)
 }
-/**
- * GetAllJobs
- * @param { Number } count
- */
+
 export function apiGetAllJobs(count?: number) {
   return count === undefined
     ? flobookApi.get("/GetAllJobs")
@@ -429,18 +381,7 @@ export function apiGetAllJobs(count?: number) {
 export function apiInitialJobSubmission() {
   return flobookApi.get("/InitialJobSubmission")
 }
-/**
- * AddJob
- * @param { Object } payload
- * @param { String } payload.name
- * @param { String } payload.version
- * @param { Number } payload.cpuNum
- * @param { Number } payload.gpuNum
- * @param { String } payload.type
- * @param { String } payload.licenses
- * @param { String } payload.user
- * @param { String } payload.inputFile
- */
+
 export function apiAddJob(payload: {
   name: string
   version: string
@@ -465,23 +406,14 @@ export interface UploadJobFilePayload {
 export function apiUploadJobFile(payload: FormData) {
   return flobookApi.post("/UploadJobFile", payload)
 }
-/**
- * UploadJobFinished
- * @param { Object } payload
- * @param { Number } paylaod.jobId
- */
+
 export interface UploadJobFinishedPayload {
   jobId: number
 }
 export function apiUploadJobFinished(payload: UploadJobFinishedPayload) {
   return flobookApi.post("/UploadJobFinished", payload)
 }
-/**
- * ModifyJobPriority
- * @param { Object } payload
- * @param { Number } payload.jobId
- * @param { String } payload.type {"up", "down", "star"}
- */
+
 export interface ModifyJobPriorityPayload {
   jobId: number
   type: "up" | "down" | "star"
@@ -489,39 +421,19 @@ export interface ModifyJobPriorityPayload {
 export function apiModifyJobPriority(payload: ModifyJobPriorityPayload) {
   return flobookApi.post("/ModifyJobPriority", payload)
 }
-/**
- * TerminateJob
- * @param { Object } payload
- * @param { Number } payload.jobId
- */
+
 export interface JobIdPayload {
   jobId: number
 }
 export function apiTerminateJob(payload: JobIdPayload) {
   return flobookApi.post("/TerminateJob", payload)
 }
-/**
- * DownloadJob
- * @param { Object } payload
- * @param { Number } payload.jobId
- */
+
 export function apiDownloadJob(payload: JobIdPayload) {
   return flobookApi.post("/DownloadJob", payload)
 }
 //#endregion
 
-/**
- * TerminateLicense
- * @param { Object } payload
- * @param { String } payload.Ip
- * @param { String } payload.Host
- * @param { String } payload.UserName
- * @param { String } payload.Product
- * @param { String } payload.StartTime
- * @param { String } payload.EndTime
- * @param { Number } payload.Task
- * @param { Number } payload.Handle
- */
 export interface TerminateLicensePayload {
   Ip: string
   Host: string
@@ -538,6 +450,12 @@ export function apiTerminateLicense(payload: TerminateLicensePayload) {
 }
 
 export default {
+  apiAddList,
+  apiDeleteList,
+  apiGetList,
+  apiAddmonitorList,
+  apiGetMonitorList,
+  apiDeleteMonitorList,
   apiGetFloBookLicense,
   apiLogin,
   apiAdminConfig,

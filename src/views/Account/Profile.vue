@@ -64,18 +64,20 @@
 
           <div v-if="!isEditing" class="module-card-list">
             <table class="info-table">
-              <tr>
-                <td class="label-td">{{ $t("account.account") }}</td>
-                <td class="value-td">{{ info.account }}</td>
-              </tr>
-              <tr>
-                <td class="label-td">{{ $t("account.displayName") }}</td>
-                <td class="value-td">{{ info.displayName }}</td>
-              </tr>
-              <tr>
-                <td class="label-td">{{ $t("account.email") }}</td>
-                <td class="value-td">{{ info.email }}</td>
-              </tr>
+              <tbody>
+                <tr>
+                  <td class="label-td">{{ $t("account.account") }}</td>
+                  <td class="value-td">{{ info.account }}</td>
+                </tr>
+                <tr>
+                  <td class="label-td">{{ $t("account.displayName") }}</td>
+                  <td class="value-td">{{ info.displayName }}</td>
+                </tr>
+                <tr>
+                  <td class="label-td">{{ $t("account.email") }}</td>
+                  <td class="value-td">{{ info.email }}</td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </v-card-text>
@@ -179,8 +181,20 @@ interface UserInfo {
   userId?: string | number
 }
 
-interface Group {
-  [key: string]: any
+export interface Group {
+  id: number
+  name: string
+  members?: string
+
+  inByGroup?: string
+  leaveByGroup?: string
+  inByUser?: string
+  leaveByUser?: string
+
+  isInPendingByUser?: boolean
+  isLeavePendingByUser?: boolean
+  isInPendingByGroup?: boolean
+  isLeavePendingByGroup?: boolean
 }
 
 type ValidationResult = string | boolean
@@ -218,7 +232,7 @@ const visibility = ref({
   con: false,
 })
 
-const groups = ref<Group[]>([])
+const groups = ref<Group[]>()
 
 // Form refs
 const infoForm = ref()
