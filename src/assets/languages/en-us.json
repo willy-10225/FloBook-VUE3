@@ -1,12 +1,12 @@
 {
   "lang": {
-    "languages": "語言",
+    "languages": "Languages",
     "en-us": "English",
-    "zh-tw": "繁體中文",
-    "zh-cn": "简体中文"
+    "zh-cn": "简体中文",
+    "zh-tw": "繁體中文"
   },
   "common": {
-    "cae-support": "Cadmen CAE Support:",
+    "cae-support": "Cadmen CAE Support: <br> cae-support@cadmen.com",
     "fail": "Fail",
     "success": "Success",
     "wait": "Please wait...",
@@ -55,6 +55,13 @@
     "loginAgainError": "[error code: 11] \nPlease log in again"
   },
   "setting": {
+    "IpErrorMessage": "Please enter the correct IPv4 / IPv6 / CIDR format",
+    "linedialogoperate": "Please scan with your phone's LINE to join",
+    "linedialogtitle": "Scan the QR Code to join the LINE group",
+    "linebutton": "Join LINE group",
+    "InputBoxip": "Please enter IP (IPv4 / IPv6 / CIDR)",
+    "InputBoxname": "Enter IP name",
+    "monitoring": "Monitoring IP",
     "admin-setting": "Admin Setting",
     "administrators": "Administrators",
     "confirm-modify": "Are you sure to modify administrators?",
@@ -165,6 +172,7 @@
     "no-file": "Please select a file"
   },
   "monitor": {
+    "notificationerror": "Lost IP",
     "time-interval": "Period",
     "group": "Group",
     "group-totaltime": "Total Usage Time",

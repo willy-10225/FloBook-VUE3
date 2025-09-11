@@ -38,7 +38,6 @@ export function apiLogin(payload: LoginPayload) {
 }
 interface AddListPayload {
   ip: string
-  name: string
 }
 export function apiAddList(payload: AddListPayload) {
   return flobookApi.post("/AddList", payload)
@@ -55,15 +54,15 @@ export function apiGetList() {
 }
 
 export function apiAddmonitorList(payload: AddListPayload) {
-  return flobookApi.post("/AddList", payload)
+  return flobookApi.post("/AddMonitorList", payload)
 }
 
 export function apiDeleteMonitorList(payload: DeleteListPayload) {
-  return flobookApi.post("/DeleteList", payload)
+  return flobookApi.post("/DeleteMonitorList", payload)
 }
 
 export function apiGetMonitorList() {
-  return flobookApi.get("/GetList")
+  return flobookApi.get("/GetMonitorList")
 }
 /**
  * AdminConfig

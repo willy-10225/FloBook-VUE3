@@ -36,7 +36,6 @@
             :label="$t('setting.group')"
             disabled
             variant="outlined"
-            class="dark-text-field"
           />
 
           <v-row>
@@ -70,9 +69,14 @@
             class="dark-text-field"
           />
           <v-select
+            v-model="selectedMembers"
             :label="$t('setting.member')"
-            :items="memberOptions.map(m => m.display_name)"
+            :items="memberOptions"
+            item-title="display_name"
+            item-value="id"
             variant="underlined"
+            chips
+            multiple
           />
         </v-form>
       </div>
@@ -303,11 +307,23 @@
         </div>
       </div>
 
-      <div v-if="isCreating" class="d-flex ga-2 w-100">
-        <v-btn @click="$emit('pleaseCancelCreating')">
+      <div v-if="isCreating" class="d-flex justify-center ga-2 w-100">
+        <v-btn
+          variant="flat"
+          color="grey-darken-3"
+          height="36"
+          min-width="88"
+          @click="$emit('pleaseCancelCreating')"
+        >
           {{ $t("common.cancel") }}
         </v-btn>
-        <v-btn color="primary" @click="createGroup">
+        <v-btn
+          variant="flat"
+          color="primary"
+          height="36"
+          min-width="88"
+          @click="createGroup"
+        >
           {{ $t("common.confirm") }}
         </v-btn>
       </div>
@@ -396,8 +412,7 @@ const emit = defineEmits<{
 const store = useStore()
 const { t } = useI18n()
 const route = useRoute()
-
-const selectedMember = ref<Member | null>(null)
+const selectedMembers = ref<number[]>([])
 const selectedMemberName = ref<string>("")
 // Refs
 const memberOptions = ref<Member[]>([])
@@ -405,7 +420,7 @@ const isEditing = ref(false)
 const memberObjects = ref<Member[]>([])
 const newMember = ref<Member | null>(null)
 
-const select = shallowRef({ state: "Florida", abbr: "FL" })
+
 const sortBy = ref<Array<{ key: string; order?: "asc" | "desc" }>>([
   { key: "id", order: "asc" },
 ])
@@ -717,9 +732,8 @@ const createGroup = async () => {
   if (valid) {
     const payload = {
       name: groupForm.value.name,
-      originalMembers: groupForm.value.initialMembers,
+      originalMembers: [...selectedMembers.value],
     }
-
     try {
       const res = await apiCreateGroup(payload)
       if (res.data) {

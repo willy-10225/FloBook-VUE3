@@ -46,6 +46,10 @@ const vuetify = createVuetify({
       mdi,
     },
   },
+  theme: {
+    defaultTheme: "dark",
+    //
+  },
 })
 
 const app = createApp(App)

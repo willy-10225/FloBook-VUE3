@@ -1,6 +1,11 @@
 <template>
   <v-container fluid class="pa-0">
-    <v-tabs v-model="activeTab" color="yellow" slider-color="yellow">
+    <v-tabs
+      v-model="activeTab"
+      slider-color="yellow"
+      bg-color="grey-darken-3"
+      fixed-tabs
+    >
       <v-tab class="setting-tab">{{ $t("setting.account-list") }}</v-tab>
       <v-tab class="setting-tab">{{ $t("setting.account-approval") }}</v-tab>
       <v-tab class="setting-tab">{{ $t("setting.admin-setting") }}</v-tab>
@@ -12,14 +17,16 @@
 
     <v-tab-item v-if="activeTab === 0">
       <v-card class="setting-function-card" elevation="5">
-        <h2 class="text-white">{{ $t("setting.account-list") }}</h2>
+        <h2 class="text-white my-5">{{ $t("setting.account-list") }}</h2>
         <v-data-table
+          striped="even"
           class="setting-member-table"
           :headers="membersHead"
           :items="members"
           :sort-by="[{ key: 'id', order: 'asc' }]"
           height="500"
           theme="dark"
+          hide-default-footer
         >
           <template #item.id="{ item }">
             <div class="text-center">{{ item.id }}</div>
@@ -76,7 +83,7 @@
 
     <v-tab-item v-if="activeTab === 1">
       <v-card class="setting-function-card" elevation="5">
-        <h2 class="text-white">{{ $t("setting.account-approval") }}</h2>
+        <h2 class="text-white my-5">{{ $t("setting.account-approval") }}</h2>
         <v-table class="setting-account-table">
           <thead>
             <tr>
@@ -126,10 +133,12 @@
     <v-tab-item v-if="activeTab === 2">
       <v-card class="setting-function-card" elevation="5">
         <section>
-          <h2 class="text-white">{{ $t("setting.admin-setting") }}</h2>
-          <span class="text-white">{{ $t("setting.administrators") }}:</span>
+          <h2 class="text-white my-5">{{ $t("setting.admin-setting") }}</h2>
+          <span class="text-white my-5"
+            >{{ $t("setting.administrators") }}:</span
+          >
           <div
-            class="text-white"
+            class="text-white my-5"
             style="display: inline-block; width: 80%"
             v-if="isAdminEditing"
           >
@@ -146,7 +155,7 @@
             />
           </div>
           <span
-            class="text-white"
+            class="text-white my-5"
             v-else
             style="display: inline-block; width: 80%; text-align: left"
           >
@@ -181,7 +190,7 @@
 
     <v-tab-item v-if="activeTab === 3">
       <v-card class="setting-function-card" elevation="5">
-        <h2 class="text-white">{{ $t("setting.group-management") }}</h2>
+        <h2 class="text-white my-5">{{ $t("setting.group-management") }}</h2>
         <section class="group-card-wrapper">
           <group-card
             v-for="(group, index) in groups"
@@ -199,7 +208,7 @@
 
     <v-tab-item v-if="activeTab === 4">
       <v-card class="setting-function-card" elevation="5">
-        <h2 class="text-white">{{ $t("setting.permission-setting") }}</h2>
+        <h2 class="text-white my-5">{{ $t("setting.permission-setting") }}</h2>
         <permission-card
           v-for="(item, index) in permissionConfigs"
           :key="'config' + index"
@@ -216,12 +225,12 @@
           <v-card-text>
             <v-text-field
               v-model="listtablenewItem.ip"
-              :placeholder="$t('setting.InputBoxip')"
+              :label="$t('setting.InputBoxip')"
               variant="outlined"
             />
             <v-text-field
               v-model="listtablenewItem.name"
-              :placeholder="$t('setting.InputBoxname')"
+              :label="$t('setting.InputBoxname')"
               variant="outlined"
             />
           </v-card-text>
@@ -230,7 +239,13 @@
             <v-btn @click="showInputBox = false">
               {{ $t("common.cancel") }}
             </v-btn>
-            <v-btn color="primary" @click="addItem">
+            <v-btn
+              :disabled="
+                listtablenewItem.ip.trim() !== '' &&
+                listtablenewItem.name.trim() !== ''
+              "
+              @click="addItem"
+            >
               {{ $t("common.confirm") }}
             </v-btn>
           </v-card-actions>
@@ -238,13 +253,14 @@
       </v-overlay>
 
       <v-card class="setting-function-card" elevation="5">
-        <h2 class="text-white">{{ $t("setting.list-setting") }}</h2>
+        <h2 class="text-white my-5">{{ $t("setting.list-setting") }}</h2>
         <v-data-table
           class="setting-member-table"
           :headers="listHead"
           :items="listtableData"
           height="500"
           theme="dark"
+          hide-default-footer
         >
           <template #item.ip="{ item }">
             <div class="text-center">{{ item.ip }}</div>
@@ -280,7 +296,7 @@
             <v-text-field
               v-model="addmonitorItem.ip"
               @input="validateIP"
-              :placeholder="$t('setting.InputBoxip')"
+              :label="$t('setting.InputBoxip')"
               variant="outlined"
               :error-messages="ipError"
             />
@@ -290,7 +306,7 @@
             <v-btn @click="monitorshowInputBox = false">
               {{ $t("common.cancel") }}
             </v-btn>
-            <v-btn color="primary" @click="addmonitor" :disabled="!!ipError">
+            <v-btn @click="addmonitor" :disabled="!!ipError">
               {{ $t("common.confirm") }}
             </v-btn>
           </v-card-actions>
@@ -298,13 +314,14 @@
       </v-overlay>
 
       <v-card class="setting-function-card" elevation="5">
-        <h2 class="text-white">{{ $t("setting.list-setting") }}</h2>
+        <h2 class="text-white my-5">{{ $t("setting.list-setting") }}</h2>
         <v-data-table
           class="setting-member-table"
           :headers="monitorlistHead"
           :items="monitorlisttableData"
           height="500"
           theme="dark"
+          hide-default-footer
         >
           <template #item.ip="{ item }">
             <div class="text-center">{{ item.ip }}</div>
@@ -337,10 +354,14 @@
 
         <!-- QR Code 彈窗 -->
         <v-dialog v-model="showLineQR" width="360">
-          <v-card>
-            <v-card-title>{{ $t("setting.linedialogtitle") }}</v-card-title>
+          <v-card :title="$t('setting.linedialogtitle')">
             <v-card-text class="text-center pa-4">
-              <v-img src="img/LINEGroup/73234.jpg" width="250" height="250" />
+              <v-img
+                src="/img/LINEGroup/73234.jpg"
+                width="250"
+                height="250"
+                class="mx-auto"
+              />
               <p class="mt-2 text-grey">
                 {{ $t("setting.linedialogoperate") }}
               </p>
@@ -395,7 +416,6 @@ interface ListItem {
 
 interface MonitorItem {
   ip: string
-  name: string
 }
 
 interface UserInfo {
@@ -443,7 +463,7 @@ const listtableData = ref<ListItem[]>([])
 
 // Monitor related
 const monitorshowInputBox = ref(false)
-const addmonitorItem = ref<MonitorItem>({ ip: "", name: "" })
+const addmonitorItem = ref<MonitorItem>({ ip: "" })
 const monitorlisttableData = ref<MonitorItem[]>([])
 const ipError = ref("")
 const showLineQR = ref(false)
@@ -639,6 +659,7 @@ const getListData = () => {
 const getmonitorListData = () => {
   API.apiGetMonitorList()
     .then(res => {
+      console.log("apiGetMonitorList", res.data)
       monitorlisttableData.value = res.data || []
     })
     .catch(error => {
@@ -777,6 +798,7 @@ const modifyAdmin = (isConfirmed: boolean) => {
 }
 
 const createGroupCard = () => {
+  console.log("createGroupCard")
   groups.value.push({
     id: groups.value.length + 1,
     name: "",
@@ -921,6 +943,25 @@ onMounted(() => {
 </script>
 
 <style>
+/* 針對特定表格 */
+.setting-account-table {
+  background-color: transparent !important; /* 無背景 */
+  color: white !important; /* 白字 */
+}
+
+/* 表頭文字置中 */
+.setting-account-table th div {
+  text-align: center !important;
+  color: white !important;
+}
+
+/* 表格格子文字置中 */
+.setting-account-table td {
+  text-align: center !important;
+  color: white !important;
+  background-color: transparent !important;
+  border-color: rgba(255, 255, 255, 0.3);
+}
 .setting-add-item-button {
   cursor: pointer;
   padding: 10px;
@@ -943,23 +984,6 @@ onMounted(() => {
   border-radius: 8px; /* 圆角效果 */
   width: 300px; /* 固定宽度 */
   color: white; /* 字体颜色设为白色 */
-}
-
-.input-box input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #555; /* 深灰色边框 */
-  border-radius: 4px;
-  box-sizing: border-box;
-  font-size: 14px;
-  background-color: #444; /* 深灰色背景 */
-  color: white; /* 字体颜色白色 */
-}
-
-.input-box input:focus {
-  border-color: #007bff; /* 聚焦时的边框颜色变为蓝色 */
-  outline: none;
 }
 
 .input-box button {
@@ -1032,8 +1056,9 @@ onMounted(() => {
 }
 .setting-account-table th,
 .setting-account-table td {
+  text-align: center !important; /* 水平置中 */
+  font-size: 20px;
   border: solid 1px gray;
-  padding: 10px;
 }
 .setting-member-table table {
   font-size: 14px;

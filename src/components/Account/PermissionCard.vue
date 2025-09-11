@@ -3,7 +3,7 @@
     <v-card-text class="group-card-body">
       <!-- Display Mode -->
       <div v-if="!isEditing">
-        <v-table class="permission-info dark-table">
+        <v-table class="permission-info no-color-table">
           <tbody>
             <tr>
               <td>{{ $t("setting.status") }}:</td>
@@ -87,28 +87,28 @@
                 <v-switch
                   v-model="config.ReadExcutor"
                   :label="$t('setting.permission-executor')"
-                  color="secondary"
+                  color="primary"
                   class="permission-switch"
                 />
 
                 <v-switch
                   v-model="config.ReadGroup"
                   :label="$t('setting.permission-group')"
-                  color="secondary"
+                  color="primary"
                   class="permission-switch"
                 />
 
                 <v-switch
                   v-model="config.ReadManager"
                   :label="$t('setting.permission-manager')"
-                  color="secondary"
+                  color="primary"
                   class="permission-switch"
                 />
 
                 <v-switch
                   v-model="config.ReadTeam"
                   :label="$t('setting.permission-team')"
-                  color="secondary"
+                  color="primary"
                   class="permission-switch"
                 />
               </div>
@@ -120,17 +120,37 @@
 
     <v-divider class="mx-4 mb-2" />
 
-    <v-card-actions class="group-card-footer">
-      <v-btn v-if="!isEditing" color="teal" @click="isEditing = true">
+    <v-card-actions class="justify-center">
+      <v-btn
+        v-if="!isEditing"
+        variant="flat"
+        color="teal"
+        @click="isEditing = true"
+        height="36"
+        min-width="88"
+      >
         {{ $t("common.modify") }}
       </v-btn>
 
-      <div v-if="isEditing" class="d-flex gap-2">
-        <v-btn @click="isEditing = false">
+      <div v-if="isEditing" class="d-flex">
+        <v-btn
+          variant="flat"
+          color="grey-darken-3"
+          class="mr-4"
+          height="36"
+          min-width="88"
+          @click="isEditing = false"
+        >
           {{ $t("common.cancel") }}
         </v-btn>
 
-        <v-btn color="primary" @click="confirmModifyPermission">
+        <v-btn
+          variant="flat"
+          color="primary"
+          height="36"
+          min-width="88"
+          @click="confirmModifyPermission"
+        >
           {{ $t("common.confirm") }}
         </v-btn>
       </div>
@@ -260,6 +280,19 @@ const modifyPermissionSetting = async (isConfirmed: boolean) => {
 </script>
 
 <style scoped>
+.no-color-table {
+  background-color: transparent !important;
+  color: white !important; /* 全表格字體白色 */
+  border-collapse: collapse; /* 消除多餘邊框間距 */
+  font-size: 18px; /* 整個表格字體放大 */
+}
+
+.no-color-table th,
+.no-color-table td {
+  background-color: transparent !important;
+  color: inherit !important;
+  border: none !important; /* 移除格線 */
+}
 .group-card {
   background: #777;
   border-radius: 10px;

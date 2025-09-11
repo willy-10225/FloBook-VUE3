@@ -14,12 +14,21 @@
       <v-card-actions>
         <v-spacer></v-spacer>
 
-        <v-btn color="grey" @click="emitConfirm(false)">
+        <v-btn
+          color="grey"
+          variant="elevated"
+          height="36"
+          min-width="88"
+          @click="emitConfirm(false)"
+        >
           {{ safeOption }}
         </v-btn>
 
         <v-btn
+          variant="elevated"
           :color="confirmColor"
+          height="36"
+          min-width="88"
           :disabled="disableConfirm"
           @click="emitConfirm(true)"
         >

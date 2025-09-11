@@ -1,12 +1,12 @@
 {
   "lang": {
-    "languages": "語言",
+    "languages": "语言",
     "en-us": "English",
-    "zh-tw": "繁體中文",
-    "zh-cn": "简体中文"
+    "zh-cn": "简体中文",
+    "zh-tw": "繁體中文"
   },
   "common": {
-    "cae-support": "虎门科技CAE对外技术支援团队: ",
+    "cae-support": "虎门科技CAE对外技术支援团队: <br> cae-support@cadmen.com",
     "fail": "失败",
     "success": "成功",
     "wait": "请稍后...",
@@ -55,6 +55,13 @@
     "loginAgainError": "[error code: 11] \n请重新登陆"
   },
   "setting": {
+    "IpErrorMessage": "请输入正确的 IPv4 / IPv6 / CIDR 格式",
+    "linedialogoperate": "请用手机 LINE 扫描加入",
+    "linedialogtitle": "扫描 QR Code 加入 LINE 群组",
+    "linebutton": "加入 LINE 群組",
+    "InputBoxip": "请输入 IP（IPv4 / IPv6 / CIDR）",
+    "InputBoxname": "输入 IP 名子",
+    "monitoring": "监控 IP",
     "admin-setting": "管理员设定",
     "administrators": "管理员",
     "confirm-modify": "确定要更改管理员吗?",
@@ -165,6 +172,7 @@
     "no-file": "请选择档案"
   },
   "monitor": {
+    "notificationerror": "失联的IP",
     "time-interval": "时间段",
     "group": "分组",
     "group-totaltime": "总时间",
