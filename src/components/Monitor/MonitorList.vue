@@ -53,7 +53,6 @@
           :headers="headers"
           :items="rows"
           class="big-table-text"
-          density="comfortable"
           hide-default-footer
           item-key="no"
           style="min-width: 100%"
@@ -323,10 +322,9 @@ function hideTooltip() {
 onMounted(async () => {
   try {
     const res = await apiGetList()
-    const list: Array<{ ip: string; name: string }> = Array.isArray(res)
-      ? res
-      : Array.isArray((res as any)?.data)
-      ? (res as any).data
+    console.log()
+    const list: Array<{ ip: string; name: string }> = Array.isArray(res.data)
+      ? res.data
       : []
     if (list.length) {
       someMapping.value = Object.fromEntries(
@@ -449,6 +447,10 @@ onMounted(async () => {
   height: 28px !important; /* 整行高度 */
   line-height: 1.2 !important; /* 文字行高 */
   font-size: 14px !important; /* 文字大小 */
+}
+:deep(.v-table__wrapper th),
+:deep(.v-table__wrapper td) {
+  border: none !important; /* 去除表線 */
 }
 
 :deep(.v-table__wrapper thead) {

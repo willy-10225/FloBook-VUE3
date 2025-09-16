@@ -17,49 +17,47 @@
     </v-tabs>
 
     <!-- 添加key來強制重新渲染，防止組件狀態衝突 -->
-    <v-window v-model="tabNo" :key="`window-${windowKey}`">
-      <v-window-item :value="0" :key="`item-0-${windowKey}`">
+    <v-window v-model="tabNo">
+      <v-window-item :value="0">
         <MonitorMatrix2
-          v-if="!isUnmounting && tabNo === 0"
+          v-show="!isUnmounting && tabNo === 0"
           :rawData="filteredData"
           :rawLicensesList="rawLicensesList"
         />
       </v-window-item>
 
-      <v-window-item :value="1" :key="`item-1-${windowKey}`">
+      <v-window-item :value="1">
         <MonitorMatrix
-          v-if="!isUnmounting && tabNo === 1"
+          v-show="!isUnmounting && tabNo === 1"
           :rawData="filteredData"
           :rawLicensesList="rawLicensesList"
         />
       </v-window-item>
 
-      <v-window-item :value="2" :key="`item-2-${windowKey}`">
-        <div v-if="!isUnmounting && tabNo === 2" class="gauge-container">
+      <v-window-item :value="2">
+        <div v-show="!isUnmounting && tabNo === 2" class="gauge-container">
           <MonitorGauge
             v-for="(item, index) in rawData"
-            :key="`mg-${item.Ip}-${index}-${windowKey}`"
             :gauge="item"
             :i="index"
           />
         </div>
       </v-window-item>
 
-      <v-window-item :value="3" :key="`item-3-${windowKey}`">
+      <v-window-item :value="3">
         <MonitorList
-          v-if="!isUnmounting && tabNo === 3"
+          v-show="!isUnmounting && tabNo === 3"
           :rawData="filteredData"
         />
       </v-window-item>
     </v-window>
 
-    <v-dialog v-model="dialog" width="360">
+    <v-dialog v-model="dialog" width="360" :attach="false">
       <v-card>
         <v-card-title>{{ $t("monitor.Filter") }}</v-card-title>
         <v-card-text>
           <div
             v-for="(cond, index) in conditions"
-            :key="index"
             class="d-flex align-center mb-3"
           >
             <v-select

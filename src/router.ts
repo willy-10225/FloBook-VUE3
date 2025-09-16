@@ -60,7 +60,7 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: "Monitor/UnnormalUseList/:ip?",
-        name: "OverAllowedList",
+        name: "Over Allowed List",
         props: true,
         component: () => import("@/views/Monitor/UnnormalUseList.vue"),
       },

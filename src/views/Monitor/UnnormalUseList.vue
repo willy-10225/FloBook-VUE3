@@ -1,22 +1,32 @@
 <template>
   <v-container>
     <v-card>
-      <v-card-title>{{ t("monitor.unnormaluse-list") }}</v-card-title>
-      <v-card-text>
-        <div style="font-size: 8px">CPU ≥4 RAM ≥0.3</div>
+      <v-card-title class="text-start">
+        {{ t("monitor.unnormaluse-list") }}
+      </v-card-title>
+      <v-card-text class="text-start">
+        <div style="font-size: 8px">
+          {{ t("monitor.over-allowed-value-cpu") }} 4<br />
+          {{ t("monitor.over-allowed-value-ram") }} 0.3
+        </div>
         <v-data-table
+          class="custom-header"
           :headers="headers"
           :items="licenseLogList"
           :sort-by="sortBy"
           :sort-desc="isDesc"
           @update:sort-by="onSort"
           @update:sort-desc="onSortOrder"
+          hide-default-footer
+          no-data-text=""
+          density="compact"
         >
-          <template #item.unnType="{ item }">
+          <template #item.UnNType="{ item }">
             <span :class="colorFor(item.UnNType)">
               {{ labelFor(item.UnNType) }}
             </span>
           </template>
+
           <template #item.sendEmail="{ item }">
             <v-btn
               small
@@ -35,12 +45,12 @@
       <v-card>
         <v-card-title>Send mail to “{{ emailTo }}”?</v-card-title>
         <v-card-actions>
-          <v-btn text @click="dialogOpen = false">{{
-            t("common.cancel")
-          }}</v-btn>
-          <v-btn color="primary" @click="confirmTerminate">{{
-            t("common.confirm")
-          }}</v-btn>
+          <v-btn text @click="dialogOpen = false">
+            {{ t("common.cancel") }}
+          </v-btn>
+          <v-btn color="primary" @click="confirmTerminate">
+            {{ t("common.confirm") }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -83,13 +93,13 @@ const sortBy = ref<SortItem[]>([{ key: "Time", order: false }])
 const isDesc = ref(false)
 
 const headers = [
-  { text: t("monitor.user"), value: "User" },
-  { text: t("monitor.device-address"), value: "Ip" },
-  { text: t("monitor.unnormal-type"), value: "UnNType" },
-  { text: t("monitor.over-allowed-value"), value: "OverAllowedValue" },
-  { text: t("monitor.capture-time"), value: "Time" },
-  { text: t("monitor.duration-time"), value: "DurationTimes" },
-  { text: "Send Email", value: "sendEmail", sortable: false },
+  { title: t("monitor.user"), key: "User" },
+  { title: t("monitor.device-address"), key: "Ip" },
+  { title: t("monitor.unnormal-type"), key: "UnNType" },
+  { title: t("monitor.over-allowed-value"), key: "OverAllowedValue" },
+  { title: t("monitor.capture-time"), key: "Time" },
+  { title: t("monitor.duration-time"), key: "DurationTimes" },
+  { title: "Send Email", key: "sendEmail", sortable: false },
 ]
 
 const canTerminate = computed(() => store.getters.userInfo.isAdmin)
@@ -97,11 +107,11 @@ const canTerminate = computed(() => store.getters.userInfo.isAdmin)
 function colorFor(type: number) {
   switch (type) {
     case 1:
-      return "orange--text"
+      return "text-yellow-darken-4"
     case 2:
-      return "cyan--text"
+      return "text-cyan accent-2"
     case 3:
-      return "red--text"
+      return "text-red"
     default:
       return ""
   }
@@ -147,6 +157,7 @@ async function loadDeviceList() {
 
 async function refreshLogs() {
   if (!deviceIp.value) return
+
   const res = await apiGetUnnormalUseData()
   const arr = res.data as LicenseLog[]
   arr.forEach(i => (i.OverAllowedValue = i.OverAllowedValue))
@@ -157,8 +168,20 @@ let timer: number
 onMounted(async () => {
   await loadDeviceList()
   await refreshLogs()
+
   timer = window.setInterval(refreshLogs, 60000)
 })
 
 onBeforeUnmount(() => clearInterval(timer))
 </script>
+<style>
+.v-table table thead {
+  background-color: #04233d;
+  color: white;
+}
+
+:deep(.v-table__wrapper th),
+:deep(.v-table__wrapper td) {
+  border: none !important; /* 去除表線 */
+}
+</style>
