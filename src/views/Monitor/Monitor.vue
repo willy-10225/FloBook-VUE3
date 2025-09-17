@@ -17,100 +17,103 @@
     </v-tabs>
 
     <!-- 添加key來強制重新渲染，防止組件狀態衝突 -->
-    <v-window v-model="tabNo">
-      <v-window-item :value="0">
+    <v-window v-model="tabNo" :key="`window-${windowKey}`">
+      <v-window-item :value="0" :key="`item-0-${windowKey}`">
         <MonitorMatrix2
-          v-show="!isUnmounting && tabNo === 0"
+          v-if="!isUnmounting && tabNo === 0"
           :rawData="filteredData"
           :rawLicensesList="rawLicensesList"
         />
       </v-window-item>
 
-      <v-window-item :value="1">
+      <v-window-item :value="1" :key="`item-1-${windowKey}`">
         <MonitorMatrix
-          v-show="!isUnmounting && tabNo === 1"
+          v-if="!isUnmounting && tabNo === 1"
           :rawData="filteredData"
           :rawLicensesList="rawLicensesList"
         />
       </v-window-item>
 
-      <v-window-item :value="2">
-        <div v-show="!isUnmounting && tabNo === 2" class="gauge-container">
+      <v-window-item :value="2" :key="`item-2-${windowKey}`">
+        <div v-if="!isUnmounting && tabNo === 2" class="gauge-container">
           <MonitorGauge
             v-for="(item, index) in rawData"
+            :key="`mg-${item.Ip}-${index}-${windowKey}`"
             :gauge="item"
             :i="index"
           />
         </div>
       </v-window-item>
 
-      <v-window-item :value="3">
+      <v-window-item :value="3" :key="`item-3-${windowKey}`">
         <MonitorList
-          v-show="!isUnmounting && tabNo === 3"
+          v-if="!isUnmounting && tabNo === 3"
           :rawData="filteredData"
         />
       </v-window-item>
     </v-window>
-
-    <v-dialog v-model="dialog" width="360" :attach="false">
-      <v-card>
-        <v-card-title>{{ $t("monitor.Filter") }}</v-card-title>
-        <v-card-text>
-          <div
-            v-for="(cond, index) in conditions"
-            class="d-flex align-center mb-3"
-          >
-            <v-select
-              v-model="cond.field"
-              :items="['CPU', 'RAM', 'Disk', 'Users']"
-              label="Field"
-              dense
-              outlined
-              style="width: 100px"
-            />
-            <v-select
-              v-model="cond.operator"
-              :items="['=', '>', '<', '>=', '<=', 'Not', 'Include']"
-              label="Operator"
-              dense
-              outlined
-              style="width: 100px; margin-left: 8px"
-            />
-            <v-text-field
-              v-model="cond.value"
-              type="number"
-              label="Value (%)"
-              dense
-              outlined
-              style="width: 100px; margin-left: 8px"
-            />
-            <v-btn
-              icon
-              color="red"
-              @click="removeCondition(index)"
-              style="margin-left: 8px"
+    <Teleport to="body">
+      <v-dialog v-model="dialog" width="360" persistent>
+        <v-card>
+          <v-card-title>{{ $t("monitor.Filter") }}</v-card-title>
+          <v-card-text>
+            <div
+              v-for="(cond, index) in conditions"
+              :key="index"
+              class="d-flex align-center mb-3"
             >
-              <v-icon>mdi-close</v-icon>
+              <v-select
+                v-model="cond.field"
+                :items="['CPU', 'RAM', 'Disk', 'Users']"
+                label="Field"
+                dense
+                outlined
+                style="width: 100px"
+              />
+              <v-select
+                v-model="cond.operator"
+                :items="['<', '>', '=', '>=', '<=', 'Not', 'Include']"
+                label="Operator"
+                dense
+                outlined
+                style="width: 100px; margin-left: 8px"
+              />
+              <v-text-field
+                v-model="cond.value"
+                type="number"
+                label="Value (%)"
+                dense
+                outlined
+                style="width: 100px; margin-left: 8px"
+              />
+              <v-btn
+                icon
+                color="red"
+                @click="removeCondition(index)"
+                style="margin-left: 8px"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="addCondition"> + </v-btn>
+            <v-btn text @click="dialog = false">
+              {{ $t("account.close") }}
             </v-btn>
-          </div>
-          <v-btn color="primary" @click="addCondition">
-            + {{ $t("monitor.AddCondition") }}
-          </v-btn>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="dialog = false">{{ $t("monitor.Close") }}</v-btn>
-          <v-btn color="primary" @click="applyFilter">
-            {{ $t("monitor.Apply") }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            <v-btn color="primary" @click="applyFilter">
+              {{ $t("monitor.Filter") }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick, watch } from "vue"
+import { ref, onMounted, onBeforeUnmount, nextTick, watch, Teleport } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
@@ -133,7 +136,15 @@ const rawLicensesList = ref<any[]>([])
 const filteredData = ref<any[]>([])
 const conditions = ref<Condition[]>([])
 const dialog = ref(false)
-
+const priority = new Map([
+  ["192.168.33.112", 0],
+  ["192.168.33.113", 1],
+  ["192.168.33.114", 2],
+  ["192.168.33.115", 3],
+  ["192.168.33.116", 4],
+  ["192.168.168.112", 5],
+  ["192.168.168.113", 6],
+])
 // 添加狀態管理
 const windowKey = ref(0)
 const isUnmounting = ref(false)
@@ -148,7 +159,7 @@ const hardwareMonitorTimerPeriod = 2000
 const licenseMonitorTimerPeriod = 10000
 
 // 監聽標籤切換，強制重新渲染防止狀態衝突
-watch(tabNo, async (newTab, oldTab) => {
+watch(tabNo, async () => {
   if (isUnmounting.value) return
 
   try {
@@ -228,17 +239,17 @@ function checkCondition(item: any, conds: Condition[]) {
         case "=":
           return dataValue == value
         case ">":
-          return dataValue > value
+          return dataValue > value / 100
         case "<":
-          return dataValue < value
+          return dataValue < value / 100
         case ">=":
-          return dataValue >= value
+          return dataValue >= value / 100
         case "<=":
-          return dataValue <= value
+          return dataValue <= value / 100
         case "Not":
-          return dataValue != value
+          return dataValue != value / 100
         case "Include":
-          return String(dataValue).includes(String(value))
+          return String(dataValue).includes(String(value / 100))
         default:
           return true
       }
@@ -253,10 +264,17 @@ function applyFilter() {
   if (isUnmounting.value) return
 
   try {
+    const wasDialogOpen = dialog.value
     filteredData.value = rawData.value.filter(item =>
       checkCondition(item, conditions.value)
     )
-    dialog.value = false
+    if (wasDialogOpen) {
+      nextTick(() => {
+        dialog.value = true
+      })
+    } else {
+      dialog.value = false
+    }
   } catch (error) {
     console.error("Error applying filter:", error)
   }
@@ -276,10 +294,30 @@ async function updateHardwareMonitor() {
   if (isUnmounting.value) return
 
   try {
+    // 保存 dialog 狀態
+    const wasDialogOpen = dialog.value
     const res = await apiMonitorList()
     if (res.data && !isUnmounting.value) {
-      rawData.value = res.data
-      applyFilter()
+      // 排序
+      rawData.value = res.data.sort((a, b) => {
+        const ia = priority.get(a.Ip)
+        const ib = priority.get(b.Ip)
+        if (ia !== undefined && ib !== undefined) return ia - ib
+        if (ia !== undefined) return -1
+        if (ib !== undefined) return 1
+
+        return 0 // 兩個都不在 priority，保持原順序 (或額外加排序規則)
+      })
+
+      // 只有在 dialog 關閉時才自動應用篩選
+      if (!wasDialogOpen) {
+        applyFilter()
+      } else {
+        filteredData.value = rawData.value.filter(item =>
+          checkCondition(item, conditions.value)
+        )
+      }
+
       store.dispatch(
         "setDeviceIpList",
         res.data.map((item: any) => ({
