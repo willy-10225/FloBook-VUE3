@@ -1,32 +1,55 @@
 <template>
-  <mu-dialog width="380" :overlay-close="false" :esc-press-close="false" :open.sync="progress.show">
-    <h2>{{progress.title}}</h2>
-    <progress class="qi-progress" :value="percent" max="100"></progress>
-    <div class="dialog-footer">
-      <span>{{percent}} %</span>
-    </div>
-  </mu-dialog>
+  <v-dialog v-model="progress.show" max-width="380" persistent>
+    <v-card>
+      <v-card-title class="text-h6">{{ progress.title }}</v-card-title>
+
+      <v-card-text>
+        <v-progress-linear
+          :value="percent"
+          height="8"
+          color="primary"
+          rounded
+        ></v-progress-linear>
+      </v-card-text>
+
+      <v-card-actions class="justify-end">
+        <span>{{ percent }} %</span>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
-<script>
-export default {
-  name: 'QiProgress',
-  props: {
-    progress: Object
-  },
-  computed: {
-    percent() {
-      return Math.round((this.progress.done / this.progress.total) * 90) + 10
-    }
-  }
+<script lang="ts">
+import { defineComponent, computed, PropType } from "vue"
+
+interface Progress {
+  show: boolean
+  title: string
+  done: number
+  total: number
 }
+
+export default defineComponent({
+  name: "QiProgress",
+  props: {
+    progress: {
+      type: Object as PropType<Progress>,
+      required: true,
+    },
+  },
+  setup(props) {
+    const percent = computed(() => {
+      // 保留你原本的算法：done / total * 90 + 10
+      return Math.round((props.progress.done / props.progress.total) * 90) + 10
+    })
+
+    return { percent }
+  },
+})
 </script>
 
 <style scoped>
-.dialog-footer {
-  text-align: right;
-}
-.qi-progress {
-  width: 100%;
+.v-card-actions {
+  justify-content: flex-end;
 }
 </style>

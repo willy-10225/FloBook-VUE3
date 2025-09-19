@@ -64,14 +64,14 @@ const routes: Array<RouteRecordRaw> = [
         props: true,
         component: () => import("@/views/Monitor/UnnormalUseList.vue"),
       },
-      // {
-      //   path: "Track/Index",
-      //   name: "Track",
-      //   component: () => import("@/views/Track/Track.vue"),
-      // },
+      {
+        path: "Track/Index",
+        name: "Track",
+        component: () => import("@/views/Track/Track.vue"),
+      },
       {
         path: "Track/Knowledge",
-        name: "KnowledgeDatabase",
+        name: "Knowledge Database",
         component: () => import("@/views/Track/Knowledge.vue"),
       },
       // {
@@ -79,17 +79,17 @@ const routes: Array<RouteRecordRaw> = [
       //   name: "Files",
       //   component: () => import("@/views/Track/Files.vue"),
       // },
-      // {
-      //   path: "Track/ProjectCreate",
-      //   name: "CreateProject",
-      //   component: () => import("@/views/Track/ProjectCreate.vue"),
-      // },
-      // {
-      //   path: "Track/ProjectDetail",
-      //   name: "ProjectDetail",
-      //   props: true,
-      //   component: () => import("@/views/Track/ProjectDetail.vue"),
-      // },
+      {
+        path: "Track/ProjectCreate",
+        name: "Create Project",
+        component: () => import("@/views/Track/ProjectCreate.vue"),
+      },
+      {
+        path: "Track/ProjectDetail",
+        name: "Project Detail",
+        props: true,
+        component: () => import("@/views/Track/ProjectDetail.vue"),
+      },
       // {
       //   path: "Track/TeamStatistic",
       //   name: "TeamStatistic",

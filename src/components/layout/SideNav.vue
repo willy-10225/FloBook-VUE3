@@ -7,15 +7,23 @@
     :scrim="false"
     :temporary="isMobile"
   >
-    <!-- LOGO 區 -->
-    <router-link to="/" class="qi-sidenav-head">
-      <v-img src="/img/Home/logo-flobook-wbg.png" alt="Home" width="170" />
-    </router-link>
+    <template #default>
+      <div>
+        <!-- LOGO 區 -->
+        <router-link to="/" class="qi-sidenav-head">
+          <v-img src="/img/Home/logo-flobook-wbg.png" alt="Home" width="170" />
+        </router-link>
 
-    <!-- 主選單項目 -->
-    <v-list class="qi-sidenav-body">
-      <SideNavItem v-for="(item, index) in items" :key="index" :item="item" />
-    </v-list>
+        <!-- 主選單項目 -->
+        <v-list class="qi-sidenav-body">
+          <SideNavItem
+            v-for="(item, index) in items"
+            :key="index"
+            :item="item"
+          />
+        </v-list>
+      </div>
+    </template>
   </v-navigation-drawer>
 </template>
 
@@ -47,7 +55,7 @@ const items = reactive([
     childrens: [
       {
         text: "Knowledge",
-        routeName: "KnowledgeDatabase",
+        routeName: "Knowledge Database",
         icon: "mdi-book-open",
       },
     ],

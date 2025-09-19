@@ -1,5 +1,5 @@
 import axios from "axios"
-
+const DUTY_URL = "http://61.219.187.38:100"
 const flobookApi = axios.create({
   baseURL: "/api", // 這裡走 Vite proxy，不直接寫死 http://61.219.187.38:100
 })
@@ -179,12 +179,12 @@ export function apiAddProjectInit() {
   return flobookApi.get("/AddProjectInit")
 }
 
-interface AddProjectPayload {
-  projectDetail: FormData
-  projectFiles: FormData
-}
-export function apiAddProject(payload: AddProjectPayload) {
-  return flobookApi.post("/AddProject", payload)
+export function apiAddProject(payload: FormData) {
+  return flobookApi.post("/AddProject", payload, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  })
 }
 
 interface ProjectListInitPayload {
@@ -199,6 +199,7 @@ interface GetProjectByIdPayload {
 }
 
 export function apiGetProjectById(payload: GetProjectByIdPayload) {
+  console.log("GetProjectByIdPayload", payload)
   return flobookApi.post("/GetProjectById", payload)
 }
 
@@ -209,10 +210,7 @@ export function apiGetFilePreview(payload: GetFilePreviewPayload) {
   return flobookApi.post("/GetFilePreview", payload)
 }
 
-interface UploadBigFilePayload {
-  iprojectFilesd: FormData
-}
-export function apiUploadBigFile(payload: UploadBigFilePayload) {
+export function apiUploadBigFile(payload: FormData) {
   return flobookApi.post("/UploadBigFile", payload)
 }
 
@@ -234,7 +232,7 @@ interface ModifyProjectPayload {
   security: String
   startTime: String
   status: String
-  manager: String
+  manager?: String
 }
 export function apiModifyProject(payload: ModifyProjectPayload) {
   return flobookApi.post("/ModifyProject", payload)

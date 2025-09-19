@@ -10,46 +10,47 @@
       <v-col cols="10">
         <v-autocomplete
           v-model="searchWord"
-          :items="
-            results.map(item =>
-              item.length < 70 ? item : item.slice(0, 70) + '...'
-            )
-          "
+          :items="searchItems"
           :label="$t('track.search')"
           hide-details
-          @change="search"
+          @update:model-value="search"
           @keyup="searchByKeyup"
           clearable
+          variant="outlined"
         />
       </v-col>
       <v-col cols="2" class="d-flex justify-end">
-        <v-btn icon color="primary" :to="{ name: 'Create Project' }">
-          <v-icon>mdi-plus</v-icon>
-        </v-btn>
+        <v-btn
+          icon="mdi-plus"
+          color="primary"
+          :to="{ name: 'Create Project' }"
+          variant="elevated"
+        />
       </v-col>
     </v-row>
 
     <v-data-table
       :headers="columns"
-      :items="
-        displayList.slice(
-          firstIndexOfCurrentPage,
-          firstIndexOfCurrentPage + entriesPerPage
-        )
-      "
+      :items="paginatedItems"
       :items-per-page="entriesPerPage"
-      :sort-by.sync="sortBy"
-      class="elevation-1"
+      v-model:sort-by="sortBy"
+      class="knowledge-table"
+      :loading="isLoading"
+      expand-on-click
+      hide-default-footer
     >
       <template #item.actions="{ item }">
         <v-btn
-          icon
-          color="error"
           @click.stop="openDeleteProjectAlert(item.id)"
+          color="red"
+          variant="text"
           v-if="checkDeletePermission(item)"
         >
           <v-icon>mdi-delete</v-icon>
         </v-btn>
+      </template>
+      <template #item.projectId="{ item }">
+        <div>{{ item.id }}</div>
       </template>
 
       <template #item.customerName="{ item }">
@@ -58,7 +59,7 @@
 
       <template #item.domain="{ item }">
         <div v-for="(name, index) in item.domain" :key="name">
-          {{ index + 1 }}. {{ name }}
+          {{ index + 1 }}. {{ name }}12324
         </div>
       </template>
 
@@ -66,7 +67,7 @@
         {{ item.industryType.join(", ") }}
       </template>
 
-      <template #item.dateRange="{ item }">
+      <template #item.duration="{ item }">
         {{ item.startTime }} ~ {{ item.closeTime }}
       </template>
 
@@ -74,64 +75,83 @@
         {{ $t("track." + item.projectState) }}
       </template>
 
-      <template v-slot:item.data-table-expand="{ item }">
-        <v-list dense>
-          <v-list-item>
-            {{ $t("track.product") }}: {{ item.product }}
-          </v-list-item>
-          <v-list-item> {{ $t("track.deal") }}: {{ item.deal }} </v-list-item>
-          <v-list-item>
-            {{ $t("track.security") }}: {{ item.security }}
-          </v-list-item>
-          <v-list-item>
-            {{ $t("track.software") }}: {{ item.software.join(", ") }}
-          </v-list-item>
-          <v-list-item>
-            {{ $t("track.manager") }}: {{ item.manager }}
-          </v-list-item>
-          <v-list-item>
-            {{ $t("track.teammates") }}: {{ item.teammates.join(", ") }}
-          </v-list-item>
-          <v-list-item>
-            {{ $t("track.projectDescription") }}: {{ item.projectDescription }}
-          </v-list-item>
-          <v-list-item>
-            <v-btn
-              color="primary"
-              :to="{ name: 'Project Detail', params: { projectId: item.id } }"
-            >
-              {{ $t("track.detail") }}
-            </v-btn>
-          </v-list-item>
-        </v-list>
+      <template #expanded-row="{ columns, item }">
+        <tr>
+          <td :colspan="columns.length" class="text-left pa-4 pl-16">
+            <div class="expanded-content">
+              <div class="detail-item">
+                <strong>{{ $t("track.product") }}:</strong> {{ item.product }}
+              </div>
+              <div class="detail-item">
+                <strong>{{ $t("track.deal") }}:</strong> {{ item.deal }}
+              </div>
+              <div class="detail-item">
+                <strong>{{ $t("track.security") }}:</strong> {{ item.security }}
+              </div>
+              <div class="detail-item">
+                <strong>{{ $t("track.software") }}:</strong>
+                {{ item.software.join(", ") }}
+              </div>
+              <div class="detail-item">
+                <strong>{{ $t("track.manager") }}:</strong> {{ item.manager }}
+              </div>
+              <div class="detail-item">
+                <strong>{{ $t("track.teammates") }}:</strong>
+                {{ item.teammates.join(", ") }}
+              </div>
+              <div class="detail-item">
+                <strong>{{ $t("track.projectDescription") }}:</strong>
+                {{ item.projectDescription }}
+              </div>
+              <div class="detail-item mt-3">
+                <v-btn
+                  color="primary"
+                  @click.stop.prevent="navigateToDetail(item.id)"
+                  variant="elevated"
+                >
+                  {{ $t("track.detail") }}
+                </v-btn>
+              </div>
+            </div>
+          </td>
+        </tr>
       </template>
     </v-data-table>
 
-    <confirm-dialog
-      :open="alertDeleteProject"
-      :title="$t('track.confirm-delete')"
-      :safeOption="$t('common.cancel')"
-      :dangerOption="$t('common.delete')"
-      @close="deleteProject"
-    />
+    <v-dialog v-model="alertDeleteProject" max-width="300">
+      <v-card>
+        <v-card-title class="text-h5">
+          {{ $t("track.confirm-delete") }}
+        </v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="deleteProject(false)">
+            {{ $t("common.cancel") }}
+          </v-btn>
+          <v-btn color="error" variant="text" @click="deleteProject(true)">
+            {{ $t("common.delete") }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-row justify="center" class="mt-4">
       <v-pagination
         v-model="currentPage"
         :length="Math.ceil(displayList.length / entriesPerPage)"
+        @update:model-value="changePage"
       />
     </v-row>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, watch } from "vue"
 import { useStore } from "vuex"
 import { useRouter } from "vue-router"
-import ConfirmDialog from "@/components/common/ConfirmDialog.vue"
 import { apiProjectListInit, apiDeleteProject } from "@/assets/ts/api"
 import { drySort } from "@/assets/ts/dry"
-import type { DataTableHeader } from "vuetify"
+import { useI18n } from "vue-i18n"
 
 interface Project {
   id: number
@@ -154,107 +174,121 @@ interface Project {
   industryType: string[]
 }
 
+interface SortItem {
+  key: string
+  order: "asc" | "desc"
+}
+
 const store = useStore()
 const router = useRouter()
-const sortBy = ref<{ key: string; order: "asc" | "desc" | boolean }[]>([
-  { key: "id", order: "asc" },
-])
+
+// Reactive data
+const sortBy = ref<SortItem[]>([{ key: "id", order: "asc" }])
 const dataList = ref<Project[]>([])
 const displayList = ref<Project[]>([])
 const results = ref<string[]>([])
-
-const firstIndexOfCurrentPage = ref(0)
 const currentPage = ref(1)
-const totalPages = ref(10)
 const entriesPerPage = ref(10)
 const searchWord = ref("")
-
-const sort = ref<{
-  name: keyof Project
-  order: "asc" | "desc"
-}>({
-  name: "id",
-  order: "desc",
-})
-
 const alertDeleteProject = ref(false)
 const deleteProjectId = ref(-1)
+const isLoading = ref(false)
 
 const currentUser = ref(sessionStorage.getItem("userName") || "")
 
-const columns = computed<DataTableHeader[]>(() => [
+// Computed properties
+const searchItems = computed(() =>
+  results.value.map(item =>
+    item.length < 70 ? item : item.slice(0, 70) + "..."
+  )
+)
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * entriesPerPage.value
+  return displayList.value.slice(start, start + entriesPerPage.value)
+})
+const { t } = useI18n()
+const columns = computed(() => [
   {
-    text: "Delete",
-    value: "actions",
+    title: t("common.delete"),
+    key: "actions",
     width: 100,
     sortable: false,
     align: "center" as const,
   },
   {
-    text: "ID",
-    value: "id",
+    title: t("track.id"),
+    key: "projectId",
     width: 100,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Project Type",
-    value: "projectType",
+    title: t("track.ip"),
+    key: "ip",
+    width: 100,
+    sortable: true,
+    align: "center" as const,
+  },
+  {
+    title: t("track.projectType"),
+    key: "projectType",
     width: 120,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Project Name",
-    value: "projectName",
+    title: t("track.projectName"),
+    key: "projectName",
     width: 350,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Customer",
-    value: "customerName",
+    title: t("track.customerName"),
+    key: "customerName",
     width: 200,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Domain",
-    value: "domain",
+    title: t("track.domain"),
+    key: "domain",
     width: 250,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Industry",
-    value: "industryType",
+    title: t("track.industryType"),
+    key: "industryType",
     width: 200,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Executor",
-    value: "executor",
+    title: t("track.executor"),
+    key: "executor",
     width: 200,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "Duration",
-    value: "checkPoint",
+    title: t("track.duration"),
+    key: "duration",
     width: 240,
     sortable: true,
     align: "center" as const,
   },
   {
-    text: "State",
-    value: "projectState",
+    title: t("track.projectState"),
+    key: "projectState",
     width: 150,
     sortable: true,
     align: "center" as const,
   },
 ])
 
+// Helper functions
 function shortType(type: string): string {
   switch (type) {
     case "Benchmark":
@@ -271,11 +305,19 @@ function shortType(type: string): string {
       return type
   }
 }
-
+function navigateToDetail(itemId: number) {
+  router.push({
+    name: "Project Detail",
+    query: { projectId: itemId.toString() },
+  })
+}
 function getProjectListInit() {
+  isLoading.value = true
   store.dispatch("changeLoadingState", true)
+
   apiProjectListInit({ id: parseInt(store.getters.userInfo.userId) })
     .then(res => {
+      console.log("apiProjectListInit", res)
       const raw = res.data.map(
         (item: any): Project => ({
           id: item.id,
@@ -316,13 +358,15 @@ function getProjectListInit() {
       )
 
       dataList.value = raw
-      displayList.value = drySort(raw, sort.value.name, sort.value.order)
+      displayList.value = [...raw]
       resultsInit()
-      store.dispatch("changeLoadingState", false)
     })
     .catch(err => {
-      store.dispatch("changeLoadingState", false)
       console.error(err)
+    })
+    .finally(() => {
+      isLoading.value = false
+      store.dispatch("changeLoadingState", false)
     })
 }
 
@@ -337,18 +381,18 @@ function resultsInit() {
 }
 
 function search(value: string) {
-  value = value.replace(/\\/g, "\\\\").replace(/\[/g, "\\[")
   if (!value) {
     displayList.value = [...dataList.value]
     return
   }
 
+  const searchValue = value.replace(/\\/g, "\\\\").replace(/\[/g, "\\[")
   displayList.value = dataList.value.filter(item =>
     Object.values(item).some(v =>
-      v?.toString().toLowerCase().includes(value.toLowerCase())
+      v?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   )
-  firstIndexOfCurrentPage.value = 0
+  currentPage.value = 1
 }
 
 function searchByKeyup(e: KeyboardEvent) {
@@ -357,36 +401,29 @@ function searchByKeyup(e: KeyboardEvent) {
   search(searchWord.value)
 }
 
-function handleSortChange(payload: {
-  name: keyof Project
-  order: "asc" | "desc"
-}) {
-  sort.value = payload
-  displayList.value = drySort(displayList.value, payload.name, payload.order)
-}
-
 function changePage(page: number) {
   currentPage.value = page
-  firstIndexOfCurrentPage.value = entriesPerPage.value * (page - 1)
 }
 
 function detialLink(project: Project) {
   router.push({
     name: "Project Detail",
     query: {
-      project: JSON.stringify(project), // ✅ 這裡就可以是 string
+      project: JSON.stringify(project),
     },
   })
 }
 
 function checkDeletePermission(project: Project) {
-  return (
-    currentUser.value === project.executor ||
-    project.teammates.includes(currentUser.value)
-  )
+  // return (
+  //   currentUser.value === project.executor ||
+  //   project.teammates.includes(currentUser.value)
+  // )
+  return true
 }
 
 function openDeleteProjectAlert(id: number) {
+  console.log("Opening delete dialog for ID:", id)
   alertDeleteProject.value = true
   deleteProjectId.value = id
 }
@@ -397,12 +434,15 @@ function deleteProject(isConfirm: boolean) {
     return
   }
 
+  isLoading.value = true
   store.dispatch("changeLoadingState", true)
   const userName = sessionStorage.getItem("userName")
+
   if (!userName) {
     console.error("userName 不存在，無法刪除")
     return
   }
+
   apiDeleteProject({
     id: deleteProjectId.value,
     userName,
@@ -412,10 +452,27 @@ function deleteProject(isConfirm: boolean) {
     })
     .catch(console.error)
     .finally(() => {
+      isLoading.value = false
       store.dispatch("changeLoadingState", false)
       alertDeleteProject.value = false
     })
 }
+
+// Watch for sort changes
+watch(
+  sortBy,
+  newSort => {
+    if (newSort.length > 0) {
+      const sortItem = newSort[0]
+      displayList.value = drySort(
+        displayList.value,
+        sortItem.key as keyof Project,
+        sortItem.order
+      )
+    }
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   getProjectListInit()
@@ -428,7 +485,19 @@ onMounted(() => {
   border-radius: 10px;
   padding: 16px;
 }
-.search-box {
-  font-size: 18px;
+
+:deep(.v-table__wrapper tbody tr:last-child),
+:deep(.v-table__wrapper tbody tr:last-child) {
+  border-right: 1px solid gray;
+}
+:deep(.v-table__wrapper tbody tr:first-child),
+:deep(.v-table__wrapper tbody tr:first-child) {
+  border-left: 1px solid gray;
+}
+:deep(.v-table__wrapper tbody tr:nth-child(even)) {
+  background-color: #444;
+}
+:deep(.v-table__wrapper tbody tr:nth-child(odd)) {
+  background-color: #333;
 }
 </style>

@@ -7,22 +7,24 @@
   >
     <!-- 左邊 -->
     <template #prepend>
-      <v-btn icon @click="toggleSideNav">
-        <v-icon>mdi-menu</v-icon>
-      </v-btn>
-      <span
-        class="text-white text-h6 ml-2"
-        :style="{
-          backgroundColor: 'teal',
-          display: 'block',
-          width: '100%',
-          height: '100%',
-          lineHeight: '64px' /* 或 v-app-bar 的高度 */,
-          textAlign: 'center',
-          padding: '0px 15px 0px 15px',
-        }"
-        >{{ routeName }}</span
-      >
+      <v-toolbar>
+        <v-btn icon @click="toggleSideNav">
+          <v-icon>mdi-menu</v-icon>
+        </v-btn>
+        <span
+          class="text-white text-h6 ml-2"
+          :style="{
+            backgroundColor: 'teal',
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            lineHeight: '64px' /* 或 v-app-bar 的高度 */,
+            textAlign: 'center',
+            padding: '0px 15px 0px 15px',
+          }"
+          >{{ routeName }}</span
+        >
+      </v-toolbar>
     </template>
 
     <!-- 右邊 -->

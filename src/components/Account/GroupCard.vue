@@ -128,7 +128,8 @@
               icon="mdi-cancel"
               variant="text"
               @click="kickMember(item)"
-              ><i class="material-icons">cancel</i>
+            >
+              <i class="material-icons">cancel</i>
             </v-btn>
             <confirm-button
               v-else-if="
@@ -419,7 +420,6 @@ const memberOptions = ref<Member[]>([])
 const isEditing = ref(false)
 const memberObjects = ref<Member[]>([])
 const newMember = ref<Member | null>(null)
-
 
 const sortBy = ref<Array<{ key: string; order?: "asc" | "desc" }>>([
   { key: "id", order: "asc" },
@@ -929,19 +929,19 @@ onMounted(async () => {
   z-index: 100;
 }
 /* 針對 v-select 的 input 背景 */
-::v-deep(.v-field__input input) {
+:deep(.v-field__input input) {
   background-color: transparent !important; /* 背景透明 */
   color: white !important; /* 文字白色 */
   border: none !important; /* 去掉邊框 */
 }
 
 /* optional: 去掉整個 v-input__control 背景 */
-::v-deep(.v-input__control) {
+:deep(.v-input__control) {
   background-color: transparent !important;
 }
 
 /* label 白色 */
-::v-deep(.v-field-label) {
+:deep(.v-field-label) {
   color: white !important;
 }
 

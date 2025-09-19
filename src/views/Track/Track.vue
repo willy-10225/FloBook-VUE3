@@ -1,7 +1,7 @@
 <template>
   <mu-container>
     <h1>Track</h1>
-    <router-link :to="{ name: 'KnowledgeDatabase' }">
+    <router-link :to="{ name: 'Knowledge Database' }">
       <div class="big-button">Knowledge Database</div>
     </router-link>
     <router-link v-if="versionOption.beta" :to="{ name: 'Team Statistic' }">

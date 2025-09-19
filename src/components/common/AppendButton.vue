@@ -1,40 +1,44 @@
 <template>
-  <div
+  <VBtn
     class="add-file-button"
-    @click="onClick"
+    variant="outlined"
+    color="white"
+    size="large"
+    elevation="0"
+    ripple
+    @click="handleClick"
   >
-    <mu-ripple>+</mu-ripple>
-  </div>
+    +
+  </VBtn>
 </template>
 
-<script>
-export default {
-  name: 'AppendButton',
-  methods: {
-    onClick(e) {
-      this.$emit('click', e)
-    }
-  }
+<script lang="ts" setup>
+import { defineEmits } from "vue"
+
+const emit = defineEmits<{
+  (e: "click", event: MouseEvent): void
+}>()
+
+function handleClick(e: MouseEvent) {
+  emit("click", e)
 }
 </script>
 
 <style scoped>
 .add-file-button {
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0 -8px;
+  margin: 0 -8px 20px -8px;
   height: 70px;
   font-size: 30px;
-  text-align: center;
-  padding: 5px;
-  margin-bottom: 20px;
   cursor: pointer;
-  border: dashed 1px gray;
-  color: white;
+  border-style: dashed;
+  border-color: gray;
   user-select: none;
+  color: white;
 }
+
 .add-file-button:hover {
   background-color: #aaa;
   opacity: 0.9;

@@ -287,7 +287,7 @@ export default {
             this.$store.dispatch('changeLoadingState', false)
             setTimeout(() => {
               this.$router.push({
-                name: 'KnowledgeDatabase'
+                name: 'Knowledge Database'
               })
             }, 500)
           })

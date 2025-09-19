@@ -17,7 +17,7 @@
 
         <RouterLink
           v-else
-          :to="{ name: 'KnowledgeDatabase' }"
+          :to="{ name: 'Knowledge Database' }"
           class="d-flex flex-column align-center no-style-link"
         >
           <div id="icon-knowledge" class="link-icon"></div>
@@ -33,7 +33,6 @@
           <span>Booking</span>
         </div>
       </v-col>
-
 
       <v-col cols="12" md="2">
         <RouterLink
