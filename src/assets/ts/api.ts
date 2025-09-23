@@ -1,7 +1,11 @@
 import axios from "axios"
-const DUTY_URL = "http://61.219.187.38:100"
+
+const baseDomain = "http://61.219.187.38:100"
+const apiAccessor = "api"
+const baseURL = `${baseDomain}/${apiAccessor}`
+
 const flobookApi = axios.create({
-  baseURL: "/api", // 這裡走 Vite proxy，不直接寫死 http://61.219.187.38:100
+  baseURL: baseURL, // 這裡走 Vite proxy，不直接寫死 http://61.219.187.38:100
 })
 
 flobookApi.interceptors.request.use(config => {
@@ -199,7 +203,6 @@ interface GetProjectByIdPayload {
 }
 
 export function apiGetProjectById(payload: GetProjectByIdPayload) {
-  console.log("GetProjectByIdPayload", payload)
   return flobookApi.post("/GetProjectById", payload)
 }
 

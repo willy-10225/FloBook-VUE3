@@ -147,7 +147,7 @@ function changeLang(lang: string) {
 }
 
 function signUp() {
-  router.push({ name: "Sign Up" })
+  router.push({ name: "SignUp" })
 }
 
 async function login() {

@@ -307,7 +307,7 @@ function shortType(type: string): string {
 }
 function navigateToDetail(itemId: number) {
   router.push({
-    name: "Project Detail",
+    name: "ProjectDetailLight",
     query: { projectId: itemId.toString() },
   })
 }
@@ -317,7 +317,6 @@ function getProjectListInit() {
 
   apiProjectListInit({ id: parseInt(store.getters.userInfo.userId) })
     .then(res => {
-      console.log("apiProjectListInit", res)
       const raw = res.data.map(
         (item: any): Project => ({
           id: item.id,

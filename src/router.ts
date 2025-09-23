@@ -74,11 +74,11 @@ const routes: Array<RouteRecordRaw> = [
         name: "Knowledge Database",
         component: () => import("@/views/Track/Knowledge.vue"),
       },
-      // {
-      //   path: "Track/Files",
-      //   name: "Files",
-      //   component: () => import("@/views/Track/Files.vue"),
-      // },
+      {
+        path: "Track/Files",
+        name: "Files",
+        component: () => import("@/views/Track/Files.vue"),
+      },
       {
         path: "Track/ProjectCreate",
         name: "Create Project",
@@ -90,16 +90,16 @@ const routes: Array<RouteRecordRaw> = [
         props: true,
         component: () => import("@/views/Track/ProjectDetail.vue"),
       },
-      // {
-      //   path: "Track/TeamStatistic",
-      //   name: "TeamStatistic",
-      //   component: () => import("@/views/Track/TeamStatistic.vue"),
-      // },
-      // {
-      //   path: "Track/PersonalStatistic",
-      //   name: "PersonalStatistic",
-      //   component: () => import("@/views/Track/PersonalStatistic.vue"),
-      // },
+      {
+        path: "Track/TeamStatistic",
+        name: "Team Statistic",
+        component: () => import("@/views/Track/TeamStatistic.vue"),
+      },
+      {
+        path: "Track/PersonalStatistic",
+        name: "Personal Statistic",
+        component: () => import("@/views/Track/PersonalStatistic.vue"),
+      },
       {
         path: "Solve/JobSubmission",
         name: "JobSubmission",
@@ -115,22 +115,22 @@ const routes: Array<RouteRecordRaw> = [
         name: "SolveConfig",
         component: () => import("@/views/Solve/SolveConfig.vue"),
       },
-      // {
-      //   path: "Light/MonitorDetailLight",
-      //   name: "MonitorDetailLight",
-      //   component: () => import("@/views/Light/MonitorDetailLight.vue"),
-      // },
-      // {
-      //   path: "Light/ProjectDetailLight",
-      //   name: "ProjectDetailLight",
-      //   props: true,
-      //   component: () => import("@/views/Light/ProjectDetailLight.vue"),
-      // },
-      // {
-      //   path: "Light/StatisticLight",
-      //   name: "StatisticLight",
-      //   component: () => import("@/views/Light/StatisticLight.vue"),
-      // },
+      {
+        path: "Light/MonitorDetailLight",
+        name: "MonitorDetailLight",
+        component: () => import("@/views/Light/MonitorDetailLight.vue"),
+      },
+      {
+        path: "Light/ProjectDetailLight",
+        name: "ProjectDetailLight",
+        props: route => ({ projectId: route.query.projectId }),
+        component: () => import("@/views/Light/ProjectDetailLight.vue"),
+      },
+      {
+        path: "Light/StatisticLight",
+        name: "Statistic Light",
+        component: () => import("@/views/Light/StatisticLight.vue"),
+      },
       {
         path: "Account/Setting",
         name: "Setting",
@@ -143,16 +143,16 @@ const routes: Array<RouteRecordRaw> = [
       },
     ],
   },
-  // {
-  //   path: "/Lab1",
-  //   name: "Lab1",
-  //   component: () => import("@/views/Labs/Lab1.vue"),
-  // },
-  // {
-  //   path: "/Lab2",
-  //   name: "Lab2",
-  //   component: () => import("@/views/Labs/Lab2.vue"),
-  // },
+  {
+    path: "/Lab1",
+    name: "Lab1",
+    component: () => import("@/views/Labs/Lab1.vue"),
+  },
+  {
+    path: "/Lab2",
+    name: "Lab2",
+    component: () => import("@/views/Labs/Lab2.vue"),
+  },
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",

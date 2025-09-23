@@ -1,309 +1,397 @@
 <template>
   <div>
-    <div class="project-detail-container">
+    <v-container class="project-detail-container">
       <h2>{{ abstract.projectName }}</h2>
       <div class="panel-header">
-        {{ $t('track.abstract') }}
-        <mu-button v-if="!isEditing" color="teal" @click="takeSnapshot">{{
-          $t('common.edit')
-        }}</mu-button>
+        {{ $t("track.abstract") }}
+        <v-btn
+          v-if="!isEditing"
+          color="teal"
+          variant="elevated"
+          @click="takeSnapshot"
+        >
+          {{ $t("common.edit") }}
+        </v-btn>
       </div>
       <div class="panel-body">
         <abstract
-          ref="abstract"
+          ref="abstractRef"
           :abstract="abstract"
-          :selectOptions="selectOptions"
-          :isEditing="isEditing"
-        ></abstract>
+          :select-options="selectOptions"
+          :is-editing="isEditing"
+        />
       </div>
       <div class="panel-modify">
-        <mu-button
+        <v-btn
           v-if="isEditing"
-          color="#aaa"
+          color="grey"
+          variant="outlined"
+          class="me-2"
           @click="getBackSnapShot"
-          style="margin-right:5px;"
-          >{{ $t('common.cancel') }}</mu-button
         >
-        <mu-button v-if="isEditing" color="primary" @click="validateForm">{{
-          $t('common.confirm')
-        }}</mu-button>
+          {{ $t("common.cancel") }}
+        </v-btn>
+        <v-btn
+          v-if="isEditing"
+          color="primary"
+          variant="elevated"
+          @click="validateForm"
+        >
+          {{ $t("common.confirm") }}
+        </v-btn>
       </div>
-    </div>
-    <h2>
-      {{ $t('light.more-features') }}
-      <p class="contact" v-html="$t('common.cae-support')"></p>
-    </h2>
-    <img
-      class="ad"
-      src="@/assets/images/light/track.png"
-      alt="Project Detail"
-    />
+    </v-container>
+
+    <v-container>
+      <h2>
+        {{ $t("light.more-features") }}
+        <p
+          class="contact"
+          style="white-space: pre-line"
+          v-html="$t('common.cae-support')"
+        ></p>
+      </h2>
+      <v-img class="ad" :src="trackImg" alt="Project Detail" max-width="1000" />
+    </v-container>
   </div>
 </template>
 
-<script>
-import Abstract from '@/components/Track/Abstract.vue'
-import { mapGetters } from 'vuex'
-import API from '@/assets/js/api'
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted } from "vue"
+import { useStore } from "vuex"
+import { useI18n } from "vue-i18n"
+import { useRouter } from "vue-router"
+import Abstract from "@/components/Track/Abstract.vue"
+import API from "@/assets/ts/api"
+import trackImg from "@/assets/images/light/track.png"
+// Props
+interface Props {
+  projectId: string
+}
 
-export default {
-  name: 'ProjectDetailLight',
-  props: { projectId: Number },
-  components: { Abstract },
-  data() {
-    return {
-      // Abstract
-      abstract: {
-        id: 0,
-        projectCreater: '',
-        projectType: [],
-        projectName: '',
-        projectDescription: '',
-        customerName: '',
-        domain: [],
-        industryType: [],
-        product: '',
-        executor: '',
-        teammates: [],
-        software: [],
-        status: '',
-        security: '',
-        deal: '',
-        startTime: '',
-        closeTime: '',
-        manager: ''
-      },
-      isEditing: false,
-      abstractBeforeModify: {},
-      openDeleteProjectDialog: false,
-      // Modify Project
-      selectOptions: {
-        statusOptions: ['PROCESSING', 'CLOSED'],
-        securityOptions: ['無', '有'],
-        dealOptions: [
-          '成功導入',
-          '客戶評估中',
-          '短期內未能導入(因技術面)',
-          '短期內未能導入(非技術面)',
-          '不明'
-        ],
-        projectTypeOptions: [this.dataLoading],
-        softwareOptions: [this.dataLoading],
-        engineerOptions: [this.dataLoading],
-        customerOptions: [this.dataLoading],
-        domainOptions: [this.dataLoading],
-        industryOptions: [this.dataLoading],
-        productOptions: [this.dataLoading],
-        controlOptions: [this.dataLoading]
-      }
-    }
-  },
-  computed: {
-    ...mapGetters(['userInfo']),
-    dataLoading() {
-      return this.$t('common.data-loading')
-    },
-    statusStyle() {
-      return {
-        'project-state-normal': this.abstract.status == 'PROCESSING',
-        'project-state-close': this.abstract.status != 'CLOSED'
-      }
-    },
-    dealStateStyle() {
-      return {
-        'project-state-close-dealt':
-          this.abstract.deal == this.selectOptions.dealOptions[0]
-      }
-    }
-  },
-  mounted() {
-    this.getProjectDetail()
-    this.getInitialOptions()
-  },
-  methods: {
-    // Get Data
-    getProjectDetail() {
-      this.isEditing = false
-      this.$store.dispatch('changeLoadingState', true)
-      // Avoid the situation that user cannot get the id if they reload the page.
-      if (!isNaN(this.projectId))
-        sessionStorage.setItem('projectId', this.projectId)
-      let payload = {
-        id: parseInt(sessionStorage.getItem('projectId')),
-        userId: this.userInfo.userId
-      }
-      API.apiGetProjectById(payload)
-        .then(res => {
-          this.writable = res.data.writable
-          this.readable = res.data.readable
+const props = defineProps<Props>()
 
-          this.abstract.id = res.data.id
-          this.abstract.projectCreater = res.data.manager
-          this.abstract.projectType = res.data.type
-            .split(',')
-            .map(x => x.replace(/%2C/g, ','))
-          this.abstract.projectDescription = res.data.describe
-          this.abstract.executor = res.data.executor
-          this.abstract.status = res.data.status
-          this.abstract.security = res.data.security
-          this.abstract.projectName = res.data.subject.replace(/%2C/g, ',')
-          this.abstract.customerName = res.data.client.replace(/%2C/g, ',')
-          this.abstract.product = res.data.product.replace(/%2C/g, ',')
-          this.abstract.domain = res.data.field
-            .split(',')
-            .map(x => x.replace(/%2C/g, ','))
-          this.abstract.industryType = res.data.industry
-            .split(',')
-            .map(x => x.replace(/%2C/g, ','))
-          this.abstract.teammates = res.data.team
-            .split(',')
-            .map(x => x.replace(/%2C/g, ','))
-          this.abstract.software = res.data.software
-            .split(',')
-            .map(x => x.replace(/%2C/g, ','))
-          this.abstract.deal =
-            res.data.deal == '' ? this.$t('common.unknown') : res.data.deal
-          this.abstract.startTime = res.data.start_time
-          this.abstract.closeTime = res.data.close_time
-          this.abstract.manager = sessionStorage.getItem('userName')
+// Composables
+const store = useStore()
+const { t } = useI18n()
+const router = useRouter()
 
-          this.checkpoints =
-            res.data.checkpoint && JSON.parse(res.data.checkpoint)
-          this.flow = res.data.flow
+// Types
+interface ProjectAbstract {
+  id: number
+  projectCreater: string
+  projectType: string[]
+  projectName: string
+  projectDescription: string
+  customerName: string
+  domain: string[]
+  industryType: string[]
+  product: string
+  executor: string
+  teammates: string[]
+  software: string[]
+  status: string
+  security: string
+  deal: string
+  startTime: string
+  closeTime: string
+  manager: string
+}
 
-          this.$store.dispatch('changeLoadingState', false)
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    },
-    // Modify Project
-    getInitialOptions() {
-      this.$store.dispatch('changeLoadingState', true)
-      API.apiAddProjectInit()
-        .then(res => {
-          this.controlOptions = res.data.control
-          let keyword = res.data.keyword
-          this.selectOptions.projectTypeOptions = keyword.type
-          this.selectOptions.customerOptions = keyword.client.map(str =>
-            str.replace(/%2C/g, ',')
-          )
-          this.selectOptions.domainOptions = keyword.field.map(str =>
-            str.replace(/%2C/g, ',')
-          )
-          this.selectOptions.industryOptions = keyword.industry.map(str =>
-            str.replace(/%2C/g, ',')
-          )
-          this.selectOptions.productOptions = keyword.product.map(str =>
-            str.replace(/%2C/g, ',')
-          )
-          this.selectOptions.softwareOptions = keyword.software.map(str =>
-            str.replace(/%2C/g, ',')
-          )
-          this.selectOptions.engineerOptions = res.data.member.map(str =>
-            str.replace(/%2C/g, ',')
-          )
+interface SelectOptions {
+  statusOptions: string[]
+  securityOptions: string[]
+  dealOptions: string[]
+  projectTypeOptions: string[]
+  softwareOptions: string[]
+  engineerOptions: string[]
+  customerOptions: string[]
+  domainOptions: string[]
+  industryOptions: string[]
+  productOptions: string[]
+  controlOptions: string[]
+}
 
-          this.$store.dispatch('changeLoadingState', false)
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    },
-    takeSnapshot() {
-      this.isEditing = true
-      this.abstractBeforeModify = Object.assign({}, this.abstract)
-    },
-    getBackSnapShot() {
-      this.isEditing = false
-      this.abstract = Object.assign({}, this.abstractBeforeModify)
-    },
-    validateForm() {
-      if (
-        JSON.stringify(this.abstractBeforeModify) ==
-        JSON.stringify(this.abstract)
-      ) {
-        this.isEditing = false
-      } else {
-        let componentAbstract = this.$refs.abstract
-        componentAbstract.$refs.abstract.validate().then(isValidated => {
-          if (isValidated) this.modifyProject()
-        })
-      }
-    },
-    modifyProject() {
-      this.$store.dispatch('changeLoadingState', true)
+// Refs
+const abstractRef = ref<InstanceType<typeof Abstract> | null>(null)
+const isEditing = ref<boolean>(false)
+const openDeleteProjectDialog = ref<boolean>(false)
+const writable = ref<boolean>(false)
+const readable = ref<boolean>(false)
+const checkpoints = ref<any>(null)
+const flow = ref<string>("")
 
-      let payload = Object.assign({}, this.abstract)
-      payload.domain = payload.domain.map(x => x.replace(/,/g, '%2C'))
-      payload.industryType = payload.industryType.map(x =>
-        x.replace(/,/g, '%2C')
-      )
-      payload.software = payload.software.map(x => x.replace(/,/g, '%2C'))
-      payload.teammates = payload.teammates.map(x => x.replace(/,/g, '%2C'))
-      payload.customerName = payload.customerName.replace(/,/g, '%2C')
-      payload.projectName = payload.projectName.replace(/,/g, '%2C')
-      payload.product = payload.product.replace(/,/g, '%2C')
-      function logPayloadTypes(payload) {
-        for (let key in payload) {
-          if (payload.hasOwnProperty(key)) {
-            console.log(`${key}: ${typeof payload[key]}`)
-          }
+// Computed (需要先定義，因為在 reactive data 中會用到)
+const userInfo = computed(() => store.getters.userInfo)
+const dataLoading = computed(() => t("common.data-loading"))
+
+// Reactive data
+const abstract = reactive<ProjectAbstract>({
+  id: 0,
+  projectCreater: "",
+  projectType: [],
+  projectName: "",
+  projectDescription: "",
+  customerName: "",
+  domain: [],
+  industryType: [],
+  product: "",
+  executor: "",
+  teammates: [],
+  software: [],
+  status: "",
+  security: "",
+  deal: "",
+  startTime: "",
+  closeTime: "",
+  manager: "",
+})
+
+const abstractBeforeModify = ref<ProjectAbstract>({} as ProjectAbstract)
+
+const selectOptions = reactive<SelectOptions>({
+  statusOptions: ["PROCESSING", "CLOSED"],
+  securityOptions: ["無", "有"],
+  dealOptions: [
+    "成功導入",
+    "客戶評估中",
+    "短期內未能導入(因技術面)",
+    "短期內未能導入(非技術面)",
+    "不明",
+  ],
+  projectTypeOptions: [dataLoading.value],
+  softwareOptions: [dataLoading.value],
+  engineerOptions: [dataLoading.value],
+  customerOptions: [dataLoading.value],
+  domainOptions: [dataLoading.value],
+  industryOptions: [dataLoading.value],
+  productOptions: [dataLoading.value],
+  controlOptions: [dataLoading.value],
+})
+
+// 其他 computed properties
+const statusStyle = computed(() => ({
+  "project-state-normal": abstract.status === "PROCESSING",
+  "project-state-close": abstract.status !== "CLOSED",
+}))
+
+const dealStateStyle = computed(() => ({
+  "project-state-close-dealt": abstract.deal === selectOptions.dealOptions[0],
+}))
+
+// Methods
+const getProjectDetail = async (): Promise<void> => {
+  isEditing.value = false
+  store.dispatch("changeLoadingState", true)
+
+  // Avoid the situation that user cannot get the id if they reload the page.
+  if (!isNaN(Number(props.projectId))) {
+    sessionStorage.setItem("projectId", props.projectId.toString())
+  }
+
+  const payload = {
+    id: parseInt(sessionStorage.getItem("projectId") || "0"),
+    userId: userInfo.value.userId,
+  }
+
+  try {
+    const res = await API.apiGetProjectById(payload)
+
+    writable.value = res.data.writable
+    readable.value = res.data.readable
+
+    abstract.id = res.data.id
+    abstract.projectCreater = res.data.manager
+    abstract.projectType = res.data.type
+      .split(",")
+      .map((x: string) => x.replace(/%2C/g, ","))
+    abstract.projectDescription = res.data.describe
+    abstract.executor = res.data.executor
+    abstract.status = res.data.status
+    abstract.security = res.data.security
+    abstract.projectName = res.data.subject.replace(/%2C/g, ",")
+    abstract.customerName = res.data.client.replace(/%2C/g, ",")
+    abstract.product = res.data.product.replace(/%2C/g, ",")
+    abstract.domain = res.data.field
+      .split(",")
+      .map((x: string) => x.replace(/%2C/g, ","))
+    abstract.industryType = res.data.industry
+      .split(",")
+      .map((x: string) => x.replace(/%2C/g, ","))
+    abstract.teammates = res.data.team
+      .split(",")
+      .map((x: string) => x.replace(/%2C/g, ","))
+    abstract.software = res.data.software
+      .split(",")
+      .map((x: string) => x.replace(/%2C/g, ","))
+    abstract.deal = res.data.deal === "" ? t("common.unknown") : res.data.deal
+    abstract.startTime = res.data.start_time
+    abstract.closeTime = res.data.close_time
+    abstract.manager = sessionStorage.getItem("userName") || ""
+
+    checkpoints.value = res.data.checkpoint && JSON.parse(res.data.checkpoint)
+    flow.value = res.data.flow
+
+    store.dispatch("changeLoadingState", false)
+  } catch (err) {
+    console.error(err)
+    store.dispatch("changeLoadingState", false)
+  }
+}
+
+const getInitialOptions = async (): Promise<void> => {
+  store.dispatch("changeLoadingState", true)
+
+  try {
+    const res = await API.apiAddProjectInit()
+
+    selectOptions.controlOptions = res.data.control
+    const keyword = res.data.keyword
+
+    selectOptions.projectTypeOptions = keyword.type
+    selectOptions.customerOptions = keyword.client.map((str: string) =>
+      str.replace(/%2C/g, ",")
+    )
+    selectOptions.domainOptions = keyword.field.map((str: string) =>
+      str.replace(/%2C/g, ",")
+    )
+    selectOptions.industryOptions = keyword.industry.map((str: string) =>
+      str.replace(/%2C/g, ",")
+    )
+    selectOptions.productOptions = keyword.product.map((str: string) =>
+      str.replace(/%2C/g, ",")
+    )
+    selectOptions.softwareOptions = keyword.software.map((str: string) =>
+      str.replace(/%2C/g, ",")
+    )
+    selectOptions.engineerOptions = res.data.member.map((str: string) =>
+      str.replace(/%2C/g, ",")
+    )
+
+    store.dispatch("changeLoadingState", false)
+  } catch (err) {
+    console.error(err)
+    store.dispatch("changeLoadingState", false)
+  }
+}
+
+const takeSnapshot = (): void => {
+  isEditing.value = true
+  abstractBeforeModify.value = { ...abstract }
+}
+
+const getBackSnapShot = (): void => {
+  isEditing.value = false
+  Object.assign(abstract, abstractBeforeModify.value)
+}
+
+const validateForm = async (): Promise<void> => {
+  if (JSON.stringify(abstractBeforeModify.value) === JSON.stringify(abstract)) {
+    isEditing.value = false
+  } else {
+    if (abstractRef.value) {
+      try {
+        // Assuming the Abstract component has a validate method
+        const isValidated = await (abstractRef.value as any).validate()
+        if (isValidated) {
+          await modifyProject()
         }
+      } catch (err) {
+        console.error("Validation failed:", err)
       }
-      logPayloadTypes(payload)
-      API.apiModifyProject(payload)
-        .then(() => {
-          this.isEditing = false
-          this.$store.dispatch('changeLoadingState', {
-            showDialog: true,
-            isLoading: false,
-            isSuccess: true,
-            showAction: true
-          })
-        })
-        .catch(err => {
-          console.log(err)
-          this.$store.dispatch('changeLoadingState', {
-            showDialog: true,
-            isLoading: false,
-            isSuccess: false,
-            showAction: true
-          })
-        })
-    },
-    deleteProject(isConfirm) {
-      this.openDeleteProjectDialog = false
-
-      if (isConfirm) {
-        this.$store.dispatch('changeLoadingState', true)
-        let payload = {
-          id: this.projectId,
-          userName: sessionStorage.getItem('userName')
-        }
-        API.apiDeleteProject(payload)
-          .then(res => {
-            console.log(res)
-            this.$store.dispatch('changeLoadingState', false)
-            setTimeout(() => {
-              this.$router.push({
-                name: 'Knowledge Database'
-              })
-            }, 500)
-          })
-          .catch(err => {
-            console.log(err)
-          })
-      }
-    },
-    openConfirmDialog(dialogStatus) {
-      this[dialogStatus] = true
     }
   }
 }
+
+const modifyProject = async (): Promise<void> => {
+  store.dispatch("changeLoadingState", true)
+
+  const payload = { ...abstract }
+  payload.domain = payload.domain.map(x => x.replace(/,/g, "%2C"))
+  payload.industryType = payload.industryType.map(x => x.replace(/,/g, "%2C"))
+  payload.software = payload.software.map(x => x.replace(/,/g, "%2C"))
+  payload.teammates = payload.teammates.map(x => x.replace(/,/g, "%2C"))
+  payload.customerName = payload.customerName.replace(/,/g, "%2C")
+  payload.projectName = payload.projectName.replace(/,/g, "%2C")
+  payload.product = payload.product.replace(/,/g, "%2C")
+
+  const logPayloadTypes = (payload: any) => {
+    for (const key in payload) {
+      if (payload.hasOwnProperty(key)) {
+        console.log(`${key}: ${typeof payload[key]}`)
+      }
+    }
+  }
+  logPayloadTypes(payload)
+
+  try {
+    await API.apiModifyProject(payload)
+    isEditing.value = false
+    store.dispatch("changeLoadingState", {
+      showDialog: true,
+      isLoading: false,
+      isSuccess: true,
+      showAction: true,
+    })
+  } catch (err) {
+    console.error(err)
+    store.dispatch("changeLoadingState", {
+      showDialog: true,
+      isLoading: false,
+      isSuccess: false,
+      showAction: true,
+    })
+  }
+}
+
+const deleteProject = async (isConfirm: boolean): Promise<void> => {
+  openDeleteProjectDialog.value = false
+
+  if (isConfirm) {
+    store.dispatch("changeLoadingState", true)
+    const payload = {
+      id: Number(props.projectId),
+      userName: sessionStorage.getItem("userName") || "",
+    }
+
+    try {
+      const res = await API.apiDeleteProject(payload)
+      console.log(res)
+      store.dispatch("changeLoadingState", false)
+      setTimeout(() => {
+        router.push({ name: "Knowledge Database" })
+      }, 500)
+    } catch (err) {
+      console.error(err)
+      store.dispatch("changeLoadingState", false)
+    }
+  }
+}
+
+const openConfirmDialog = (dialogStatus: string): void => {
+  ;(window as any)[dialogStatus] = true
+}
+
+// Lifecycle
+onMounted(async () => {
+  await getProjectDetail()
+  await getInitialOptions()
+})
+
+// Expose methods for template refs
+defineExpose({
+  getProjectDetail,
+  getInitialOptions,
+  takeSnapshot,
+  getBackSnapShot,
+  validateForm,
+  modifyProject,
+  deleteProject,
+  openConfirmDialog,
+})
 </script>
 
-<style>
+<style scoped>
 .project-detail-container {
   background-color: #444;
   max-width: 1000px;
@@ -314,52 +402,67 @@ export default {
   margin-top: 20px;
   border-radius: 10px;
 }
-.mu-input.disabled .mu-input-content {
+
+.project-detail-container :deep(.v-field--disabled) {
   cursor: default;
 }
-.project-detail-container .mu-input,
-.project-detail-container .mu-chip {
+
+.project-detail-container :deep(.v-field),
+.project-detail-container :deep(.v-chip) {
   font-size: 20px !important;
 }
+
 .project-detail-textarea {
   padding: 5px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   overflow-y: auto;
 }
+
 .project-detail-textarea.disabled {
   border: none;
   padding: 0px;
   border-bottom: 2px dotted rgba(255, 255, 255, 0.3);
 }
+
 h2 {
   color: white;
 }
+
 h3 {
   color: white;
   text-align: left;
   margin-bottom: 10px;
 }
-.mu-form-item-label {
+
+:deep(.v-label) {
   font-size: 20px;
 }
-.emphasis .mu-form-item-label {
+
+.emphasis :deep(.v-label) {
   color: #43c5b8;
 }
+
 .project-state-normal {
   color: #3ad840;
 }
+
 .project-state-close {
   color: #e4c362;
 }
+
 .project-state-close-dealt {
   color: #367ec5;
 }
+
 .panel-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 26px;
   margin-left: 10px;
+  color: white;
 }
+
 .panel-body {
   margin-left: 10px;
   margin-right: 10px;
@@ -368,18 +471,22 @@ h3 {
   text-align: left;
   font-size: 18px;
 }
+
 .panel-modify {
   width: 100%;
   margin-right: 10px;
   color: white;
   text-align: right;
   font-size: 18px;
+  margin-top: 20px;
 }
-img.ad {
+
+.ad {
   max-width: 1000px;
   margin: auto;
   padding: 30px;
 }
+
 .contact {
   color: deepskyblue;
   margin: 20px 0;

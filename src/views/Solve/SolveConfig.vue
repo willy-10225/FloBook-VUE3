@@ -1,6 +1,13 @@
 <template>
-  <v-container class="py-8">
-    <v-card class="pa-6" elevation="4">
+  <v-container
+    class="py-8"
+    style="width: 70%; margin-left: 15%; margin-right: 15%"
+  >
+    <v-card
+      class="pa-6 mx-auto"
+      elevation="4"
+      style="background-color: #444444"
+    >
       <v-card-title class="text-h5">Solve Config</v-card-title>
 
       <v-form ref="formRef" v-model="valid" class="mt-4" fast-fail>

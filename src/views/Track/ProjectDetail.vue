@@ -4,7 +4,7 @@
 
     <v-expansion-panels v-model="panel" multiple>
       <!-- Abstract Panel -->
-      <v-expansion-panel value="panel1">
+      <v-expansion-panel bg-color="transparent" value="panel1">
         <v-expansion-panel-title class="panel-header">
           {{ $t("track.abstract") }}
           <template v-slot:actions>
@@ -223,12 +223,13 @@ import ConfirmDialog from "@/components/common/ConfirmDialog.vue"
 import QiProgress from "@/components/common/QiProgress.vue"
 import AppendButton from "@/components/common/AppendButton.vue"
 import API from "@/assets/ts/api"
+
 import { useRoute } from "vue-router"
 
 // Props
 const route = useRoute()
 const projectId = route.query.projectId || route.params.projectId
-console.log("projectId", projectId)
+
 // Composables
 const store = useStore()
 const { t } = useI18n()
@@ -434,7 +435,7 @@ const getProjectDetail = (isInit?: boolean) => {
   }
 
   const payload = {
-    id: parseInt(sessionStorage.getItem("projectId") || "0"),
+    id: Number(projectId) || 0,
     userId: userInfo.value.userId,
   }
   console.log("apiGetProjectById", payload)

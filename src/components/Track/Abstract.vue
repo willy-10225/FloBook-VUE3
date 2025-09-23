@@ -272,7 +272,13 @@
             <td class="td-title font-weight-bold">
               {{ $t("track.projectState") }}
             </td>
-            <td>{{ $t("track." + componentAbstract.status) }}</td>
+            <td>
+              {{
+                componentAbstract.status
+                  ? $t("track." + componentAbstract.status)
+                  : ""
+              }}
+            </td>
           </tr>
           <tr>
             <td class="td-title font-weight-bold">{{ $t("track.deal") }}</td>
@@ -351,7 +357,7 @@ const componentAbstract = computed({
     emit("changeAbstract", abstract)
   },
 })
-console.log("componentAbstract", componentAbstract)
+
 // Validation rules
 const necessaryRules = computed(() => [
   (val: any) => {
