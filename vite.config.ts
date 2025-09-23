@@ -3,6 +3,7 @@ import vue from "@vitejs/plugin-vue"
 import path from "path"
 
 export default defineConfig({
+  base: "/FlobookMaster/Monitor/",
   plugins: [vue()],
   resolve: {
     alias: {
@@ -10,14 +11,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve(__dirname, "src/build"), // 用絕對路徑試試
-  },
-  server: {
-    proxy: {
-      "/api": {
-        target: "http://61.219.187.38:100/",
-        changeOrigin: true,
-      },
-    },
+    chunkSizeWarningLimit: 2000,
+    outDir: path.resolve(__dirname, "build"), // 用絕對路徑試試
   },
 })

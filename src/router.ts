@@ -74,11 +74,11 @@ const routes: Array<RouteRecordRaw> = [
         name: "Knowledge Database",
         component: () => import("@/views/Track/Knowledge.vue"),
       },
-      {
-        path: "Track/Files",
-        name: "Files",
-        component: () => import("@/views/Track/Files.vue"),
-      },
+      // {
+      //   path: "Track/Files",
+      //   name: "Files",
+      //   component: () => import("@/views/Track/Files.vue"),
+      // },
       {
         path: "Track/ProjectCreate",
         name: "Create Project",
@@ -143,16 +143,16 @@ const routes: Array<RouteRecordRaw> = [
       },
     ],
   },
-  {
-    path: "/Lab1",
-    name: "Lab1",
-    component: () => import("@/views/Labs/Lab1.vue"),
-  },
-  {
-    path: "/Lab2",
-    name: "Lab2",
-    component: () => import("@/views/Labs/Lab2.vue"),
-  },
+  // {
+  //   path: "/Lab1",
+  //   name: "Lab1",
+  //   component: () => import("@/views/Labs/Lab1.vue"),
+  // },
+  // {
+  //   path: "/Lab2",
+  //   name: "Lab2",
+  //   component: () => import("@/views/Labs/Lab2.vue"),
+  // },
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",

@@ -109,17 +109,17 @@ onBeforeUnmount(() => {
 .ansys-table {
   width: 100%;
 
-  /* 資料列交替顏色：命中 Vuetify 產生的 tbody row class */
-  :deep tbody tr:nth-child(odd) {
+  /* 資料列交替顏色 */
+  :deep(tbody tr:nth-child(odd)) {
     background-color: #1b3a66 !important; /* 深藍 */
   }
-  :deep tbody tr:nth-child(even) {
-    background-color: #111418 !important; /* 深黑/深灰 (搭配更明顯的條紋) */
+  :deep(tbody tr:nth-child(even)) {
+    background-color: #111418 !important; /* 深黑/深灰 */
   }
 
-  /* 表頭 (th) */
-  :deep .v-data-table__th {
-    background-color: #0d2d52 !important; /* 深藍表頭 */
+  /* 表頭 */
+  :deep(.v-data-table__th) {
+    background-color: #0d2d52 !important;
     color: #ffffff !important;
     font-weight: 700;
     vertical-align: middle;
@@ -127,18 +127,18 @@ onBeforeUnmount(() => {
   }
 
   /* 儲存格文字顏色、內距 */
-  :deep tbody td {
+  :deep(tbody td) {
     color: #ffffff !important;
-    padding: 0 8px !important; /* ✅ 上下 0，左右 8px */
+    padding: 0 8px !important;
     font-size: 13px;
-    line-height: 1.4; /* ✅ 避免字擠在一起 */
+    line-height: 1.4;
     vertical-align: middle;
     border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
   }
 
-  /* 如果想要更窄的字體或小字版可以調整 */
-  :deep .v-data-table__td,
-  :deep .v-data-table__th {
+  /* 更窄字體 */
+  :deep(.v-data-table__td),
+  :deep(.v-data-table__th) {
     font-size: 10px;
   }
 }

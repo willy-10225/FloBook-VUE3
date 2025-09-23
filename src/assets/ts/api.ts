@@ -1,16 +1,12 @@
 import axios from "axios"
 
-const baseDomain = "http://61.219.187.38:100"
-const apiAccessor = "api"
-const baseURL = `${baseDomain}/${apiAccessor}`
-
 const flobookApi = axios.create({
-  baseURL: baseURL, // 這裡走 Vite proxy，不直接寫死 http://61.219.187.38:100
+  baseURL: import.meta.env.VITE_BASE_URL, // 自動依開發/生產切換
 })
-
+console.log("flobookApi", import.meta.env.VITE_BASE_URL)
 flobookApi.interceptors.request.use(config => {
   if (config.headers) {
-    config.headers.set?.("Flobook-License", "1, 1, 0")
+    config.headers["Flobook-License"] = "1, 1, 0"
   }
   return config
 })
@@ -40,28 +36,33 @@ interface LoginPayload {
 export function apiLogin(payload: LoginPayload) {
   return flobookApi.post("/Login", payload)
 }
-interface AddListPayload {
-  ip: string
-}
-export function apiAddList(payload: AddListPayload) {
-  return flobookApi.post("/AddList", payload)
-}
-interface DeleteListPayload {
-  ip: string
-}
-export function apiDeleteList(payload: DeleteListPayload) {
-  return flobookApi.post("/DeleteList", payload)
-}
 
+interface IpRange {
+  Range: string
+  RangeName: string
+}
 export function apiGetList() {
-  return flobookApi.get("/GetList")
+  return flobookApi.get<IpRange[]>("/ipRange")
 }
 
-export function apiAddmonitorList(payload: AddListPayload) {
+export function apiAddList(payload: IpRange) {
+  return flobookApi.post("/ipRange", payload)
+}
+
+export function apiDeleteList(range: string) {
+  return flobookApi.delete(`/ipRange/${range}`)
+}
+interface Range {
+  Range: string
+}
+
+export function apiAddmonitorList(payload: Range) {
   return flobookApi.post("/AddMonitorList", payload)
 }
-
-export function apiDeleteMonitorList(payload: DeleteListPayload) {
+interface MonitorRange {
+  Range: string
+}
+export function apiDeleteMonitorList(payload: MonitorRange) {
   return flobookApi.post("/DeleteMonitorList", payload)
 }
 

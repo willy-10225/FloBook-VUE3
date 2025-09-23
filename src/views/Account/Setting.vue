@@ -224,12 +224,12 @@
         <v-card class="input-box">
           <v-card-text>
             <v-text-field
-              v-model="listtablenewItem.ip"
+              v-model="listtablenewItem.Range"
               :label="$t('setting.InputBoxip')"
               variant="outlined"
             />
             <v-text-field
-              v-model="listtablenewItem.name"
+              v-model="listtablenewItem.RangeName"
               :label="$t('setting.InputBoxname')"
               variant="outlined"
             />
@@ -241,8 +241,8 @@
             </v-btn>
             <v-btn
               :disabled="
-                listtablenewItem.ip.trim() !== '' &&
-                listtablenewItem.name.trim() !== ''
+                listtablenewItem.Range.trim() !== '' &&
+                listtablenewItem.RangeName.trim() !== ''
               "
               @click="addItem"
             >
@@ -263,10 +263,10 @@
           hide-default-footer
         >
           <template #item.ip="{ item }">
-            <div class="text-center">{{ item.ip }}</div>
+            <div class="text-center">{{ item.Range }}</div>
           </template>
           <template #item.name="{ item }">
-            <div class="text-center">{{ item.name }}</div>
+            <div class="text-center">{{ item.RangeName }}</div>
           </template>
           <template #item.delete="{ item }">
             <div class="text-center">
@@ -274,7 +274,7 @@
                 icon="mdi-delete"
                 variant="text"
                 color="error"
-                @click="listRemove(item.ip)"
+                @click="listRemove(item.Range)"
               />
             </div>
           </template>
@@ -294,7 +294,7 @@
         <v-card class="input-box">
           <v-card-text>
             <v-text-field
-              v-model="addmonitorItem.ip"
+              v-model="addmonitorItem.Range"
               @input="validateIP"
               :label="$t('setting.InputBoxip')"
               variant="outlined"
@@ -324,7 +324,7 @@
           hide-default-footer
         >
           <template #item.ip="{ item }">
-            <div class="text-center">{{ item.ip }}</div>
+            <div class="text-center">{{ item.Range }}</div>
           </template>
           <template #item.delete="{ item }">
             <div class="text-center">
@@ -332,7 +332,7 @@
                 icon="mdi-delete"
                 variant="text"
                 color="error"
-                @click="monitorlistRemove(item.ip)"
+                @click="monitorlistRemove(item.Range)"
               />
             </div>
           </template>
@@ -410,12 +410,12 @@ interface Group {
 }
 
 interface ListItem {
-  ip: string
-  name: string
+  Range: string
+  RangeName: string
 }
 
 interface MonitorItem {
-  ip: string
+  Range: string
 }
 
 interface UserInfo {
@@ -458,12 +458,12 @@ const adminModifyCounter = ref(0)
 
 // List related
 const showInputBox = ref(false)
-const listtablenewItem = ref<ListItem>({ ip: "", name: "" })
+const listtablenewItem = ref<ListItem>({ Range: "", RangeName: "" })
 const listtableData = ref<ListItem[]>([])
 
 // Monitor related
 const monitorshowInputBox = ref(false)
-const addmonitorItem = ref<MonitorItem>({ ip: "" })
+const addmonitorItem = ref<MonitorItem>({ Range: "" })
 const monitorlisttableData = ref<MonitorItem[]>([])
 const ipError = ref("")
 const showLineQR = ref(false)
@@ -600,7 +600,7 @@ const ipValidator = (ip: string): boolean => {
 }
 
 const validateIP = () => {
-  if (!ipValidator(addmonitorItem.value.ip)) {
+  if (!ipValidator(addmonitorItem.value.Range)) {
     ipError.value = t("setting.IpErrorMessage")
   } else {
     ipError.value = ""
@@ -616,32 +616,32 @@ const addmonitor = () => {
   monitorlisttableData.value.push({ ...addmonitorItem.value })
 
   // 清空輸入
-  addmonitorItem.value.ip = ""
+  addmonitorItem.value.Range = ""
   monitorshowInputBox.value = false
 }
 
 const addItem = () => {
   API.apiAddList({ ...listtablenewItem.value })
 
-  if (listtablenewItem.value.ip && listtablenewItem.value.name) {
+  if (listtablenewItem.value.Range && listtablenewItem.value.RangeName) {
     listtableData.value.push({ ...listtablenewItem.value })
-    listtablenewItem.value.ip = ""
-    listtablenewItem.value.name = ""
+    listtablenewItem.value.Range = ""
+    listtablenewItem.value.RangeName = ""
     showInputBox.value = false
   }
 }
 
 const listRemove = (ip: string) => {
-  API.apiDeleteList({ ip: String(ip) })
+  API.apiDeleteList(String(ip))
   // 過濾掉 listtableData 中 ip 等於參數的項目
-  listtableData.value = listtableData.value.filter(item => item.ip !== ip)
+  listtableData.value = listtableData.value.filter(item => item.Range !== ip)
 }
 
 const monitorlistRemove = (ip: string) => {
-  API.apiDeleteMonitorList({ ip: String(ip) })
+  API.apiDeleteMonitorList({ Range: ip })
   // 過濾掉 monitorlisttableData 中 ip 等於參數的項目
   monitorlisttableData.value = monitorlisttableData.value.filter(
-    item => item.ip !== ip
+    item => item.Range !== ip
   )
 }
 

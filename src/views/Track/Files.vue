@@ -43,13 +43,13 @@
 <script>
 import TreeView from "@/components/common/TreeView.vue"
 import FileTable from "@/components/Track/FileTable.vue"
-import TreeviewConverter from "@/assets/js/treeview_converter"
+import TreeviewConverter from "@/assets/ts/treeview_converter"
 import { mapGetters, mapActions } from "vuex"
 import {
   apiUploadJobFile,
   apiUploadJobFinished,
   apiUploadBigFile,
-} from "@/assets/js/api.js"
+} from "@/assets/ts/api.js"
 
 var treeItemList = [
   {

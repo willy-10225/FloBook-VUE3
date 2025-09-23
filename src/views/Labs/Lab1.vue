@@ -1,17 +1,17 @@
 <template>
-  <div style="margin:30px">
+  <div style="margin: 30px">
     <mu-container>
-      <div style="margin-bottom:100px">
+      <div style="margin-bottom: 100px">
         <router-link to="/Lab2">Lab2</router-link>
       </div>
       <router-link :to="{ name: 'Lab2', params: { b2a: 123 } }">
         <button>b->a</button>
       </router-link>
 
-      <button style="position:fixed;top:0;left:0" @click="testAlet('1')">
+      <button style="position: fixed; top: 0; left: 0" @click="testAlet('1')">
         1
       </button>
-      <button style="position:fixed;top:0;left:0" @click="testAlet('2')">
+      <button style="position: fixed; top: 0; left: 0" @click="testAlet('2')">
         2
       </button>
 
@@ -39,29 +39,29 @@
 </template>
 
 <script>
-import Gantt from '@/components/Track/Gantt.vue'
-import VmodelParent from '@/components/lab/VmodelParent.vue'
-import auth from '@/assets/js/auth.js'
-import { apiUploadBigFile } from '@/assets/js/api'
+import Gantt from "@/components/Track/Gantt.vue"
+import VmodelParent from "@/components/lab/VmodelParent.vue"
+import auth from "@/assets/ts/auth.js"
+import { apiUploadBigFile } from "@/assets/ts/api"
 
 export default {
-  name: 'Lab1',
+  name: "Lab1",
   components: {
     Gantt,
-    VmodelParent
+    VmodelParent,
   },
   data() {
     return {
       totalCount: 0,
-      doneCount: 0
+      doneCount: 0,
     }
   },
   methods: {
     openRemoteFolder() {
-      window.location.href = 'OpenRemoteFolder:\\'
+      window.location.href = "OpenRemoteFolder:\\"
     },
     openLocalApp() {
-      window.location.href = 'LaunchApp:\\'
+      window.location.href = "LaunchApp:\\"
     },
     auth() {
       let token = auth.createToken({ a: 123, b: 456, c: new Date() })
@@ -95,22 +95,22 @@ export default {
         let end = Math.min(size, start + sliceSize)
         let fileSlices = file.slice(start, end)
         let formData = new FormData()
-        formData.append('index', i)
-        formData.append('total', totalCount)
-        formData.append('file' + 0, fileSlices)
-        formData.append('fileNames', [name])
-        formData.append('fileDescriptions', [])
-        formData.append('id', 52)
-        formData.append('manager', 'Star Wang[王星翔]')
-        formData.append('fileName', name)
+        formData.append("index", i)
+        formData.append("total", totalCount)
+        formData.append("file" + 0, fileSlices)
+        formData.append("fileNames", [name])
+        formData.append("fileDescriptions", [])
+        formData.append("id", 52)
+        formData.append("manager", "Star Wang[王星翔]")
+        formData.append("fileName", name)
         console.log(formData)
         apiUploadBigFile(formData).then(res => {
-          if (res.data == 'wait') this.doneCount++
-          if (res.data == 'success') this.doneCount = this.totalCount
+          if (res.data == "wait") this.doneCount++
+          if (res.data == "success") this.doneCount = this.totalCount
         })
       }
-    }
-  }
+    },
+  },
 }
 </script>
 
