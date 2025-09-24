@@ -34,10 +34,10 @@ import SideNavItem from "@/components/layout/SideNavItem.vue"
 
 const store = useStore()
 const layout = computed(() => store.getters.layout)
-const isMobile = ref(window.innerWidth < 1024)
+const isMobile = ref(window.innerWidth < 768)
 
 function handleResize() {
-  isMobile.value = window.innerWidth < 1024
+  isMobile.value = window.innerWidth < 768
 }
 
 const items = reactive([

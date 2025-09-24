@@ -3,7 +3,7 @@ import axios from "axios"
 const flobookApi = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL, // 自動依開發/生產切換
 })
-console.log("flobookApi", import.meta.env.VITE_BASE_URL)
+
 flobookApi.interceptors.request.use(config => {
   if (config.headers) {
     config.headers["Flobook-License"] = "1, 1, 0"
@@ -52,23 +52,21 @@ export function apiAddList(payload: IpRange) {
 export function apiDeleteList(range: string) {
   return flobookApi.delete(`/ipRange/${range}`)
 }
-interface Range {
-  Range: string
+interface MonitorIp {
+  Ip: string
 }
-
-export function apiAddmonitorList(payload: Range) {
-  return flobookApi.post("/AddMonitorList", payload)
-}
-interface MonitorRange {
-  Range: string
-}
-export function apiDeleteMonitorList(payload: MonitorRange) {
-  return flobookApi.post("/DeleteMonitorList", payload)
-}
-
 export function apiGetMonitorList() {
-  return flobookApi.get("/GetMonitorList")
+  return flobookApi.get<MonitorIp[]>("/IpMonitor")
 }
+
+export function apiAddmonitorList(payload: MonitorIp) {
+  return flobookApi.post("/IpMonitor", payload)
+}
+
+export function apiDeleteMonitorList(ip: string) {
+  return flobookApi.delete(`/IpMonitor/${ip}`)
+}
+
 /**
  * AdminConfig
  */

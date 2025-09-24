@@ -241,8 +241,8 @@
             </v-btn>
             <v-btn
               :disabled="
-                listtablenewItem.Range.trim() !== '' &&
-                listtablenewItem.RangeName.trim() !== ''
+                listtablenewItem.Range.trim() === '' ||
+                listtablenewItem.RangeName.trim() === ''
               "
               @click="addItem"
             >
@@ -294,7 +294,7 @@
         <v-card class="input-box">
           <v-card-text>
             <v-text-field
-              v-model="addmonitorItem.Range"
+              v-model="addmonitorItem.Ip"
               @input="validateIP"
               :label="$t('setting.InputBoxip')"
               variant="outlined"
@@ -324,7 +324,7 @@
           hide-default-footer
         >
           <template #item.ip="{ item }">
-            <div class="text-center">{{ item.Range }}</div>
+            <div class="text-center">{{ item.Ip }}</div>
           </template>
           <template #item.delete="{ item }">
             <div class="text-center">
@@ -332,7 +332,7 @@
                 icon="mdi-delete"
                 variant="text"
                 color="error"
-                @click="monitorlistRemove(item.Range)"
+                @click="monitorlistRemove(item.Ip)"
               />
             </div>
           </template>
@@ -415,7 +415,7 @@ interface ListItem {
 }
 
 interface MonitorItem {
-  Range: string
+  Ip: string
 }
 
 interface UserInfo {
@@ -463,7 +463,7 @@ const listtableData = ref<ListItem[]>([])
 
 // Monitor related
 const monitorshowInputBox = ref(false)
-const addmonitorItem = ref<MonitorItem>({ Range: "" })
+const addmonitorItem = ref<MonitorItem>({ Ip: "" })
 const monitorlisttableData = ref<MonitorItem[]>([])
 const ipError = ref("")
 const showLineQR = ref(false)
@@ -600,7 +600,7 @@ const ipValidator = (ip: string): boolean => {
 }
 
 const validateIP = () => {
-  if (!ipValidator(addmonitorItem.value.Range)) {
+  if (!ipValidator(addmonitorItem.value.Ip)) {
     ipError.value = t("setting.IpErrorMessage")
   } else {
     ipError.value = ""
@@ -616,7 +616,7 @@ const addmonitor = () => {
   monitorlisttableData.value.push({ ...addmonitorItem.value })
 
   // 清空輸入
-  addmonitorItem.value.Range = ""
+  addmonitorItem.value.Ip = ""
   monitorshowInputBox.value = false
 }
 
@@ -638,17 +638,16 @@ const listRemove = (ip: string) => {
 }
 
 const monitorlistRemove = (ip: string) => {
-  API.apiDeleteMonitorList({ Range: ip })
+  API.apiDeleteMonitorList(ip)
   // 過濾掉 monitorlisttableData 中 ip 等於參數的項目
   monitorlisttableData.value = monitorlisttableData.value.filter(
-    item => item.Range !== ip
+    item => item.Ip !== ip
   )
 }
 
 const getListData = () => {
   API.apiGetList()
     .then(res => {
-      console.log("apiGetList", res)
       listtableData.value = res.data || []
     })
     .catch(error => {
@@ -659,7 +658,6 @@ const getListData = () => {
 const getmonitorListData = () => {
   API.apiGetMonitorList()
     .then(res => {
-      console.log("apiGetMonitorList", res.data)
       monitorlisttableData.value = res.data || []
     })
     .catch(error => {

@@ -1,8 +1,7 @@
-import { createRouter, createWebHistory } from "vue-router"
+import { createRouter, createWebHashHistory } from "vue-router"
 import type { RouteRecordRaw } from "vue-router"
 import store from "@/store/index"
 import auth from "@/assets/ts/auth"
-import jwt_decode from "jwt-decode"
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -25,7 +24,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/views/Home.vue"),
   },
   {
-    path: "/FlobookMaster",
+    path: "/",
     name: "FlobookMaster",
     component: () => import("@/views/FlobookMaster.vue"),
     children: [
@@ -160,7 +159,7 @@ const routes: Array<RouteRecordRaw> = [
   },
 ]
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 })
 

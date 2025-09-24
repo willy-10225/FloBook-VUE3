@@ -434,7 +434,6 @@ const groupForm = ref<GroupForm>({
 
 // Computed
 const userInfo = computed((): UserInfo => store.getters.userInfo)
-console.log("userInfo", userInfo)
 const id = computed(() => props.group.id ?? null)
 
 const name = computed({
@@ -552,9 +551,6 @@ const showLeavingApplying = computed(
 )
 
 const showLeavingByGroup = computed(() => {
-  console.log("isInGroup", isInGroup)
-  console.log("isEditing", isEditing)
-  console.log("isLeavePendingByGroup", isLeavePendingByGroup)
   return isInGroup.value && !isEditing.value && isLeavePendingByGroup.value
 })
 
