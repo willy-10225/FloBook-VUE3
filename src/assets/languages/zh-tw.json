@@ -9,6 +9,9 @@
     "jobmanager": "作業管理器",
     "solveconfig": "作業配置"
   },
+  "knowledge": {
+    "title": "專案資料庫"
+  },
   "lang": {
     "languages": "語言",
     "en-us": "English",

@@ -246,5 +246,8 @@
   "light": {
     "cadmen-rd": "虎门研发",
     "more-features": "更多功能，请洽"
+  },
+  "knowledge": {
+    "title": "专案资料库"
   }
 }

@@ -2,7 +2,7 @@
   <v-container class="knowledge-container">
     <v-row>
       <v-col cols="12">
-        <h2>Knowledge Database</h2>
+        <h2>{{ $t("knowledge.title") }}</h2>
       </v-col>
     </v-row>
 
