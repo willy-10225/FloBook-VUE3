@@ -15,9 +15,9 @@
       <div style="flex: 1">
         <div class="table-title">
           <div style="display: flex; align-items: center">
-            <span class="block-title">{{
-              t("monitor.realtime-hardware")
-            }}</span>
+            <span class="block-title">
+              {{ t("monitor.realtime-hardware") }}
+            </span>
           </div>
           <v-btn
             class="history-button"
@@ -35,10 +35,10 @@
           :items="deviceIpList"
           item-title="id"
           item-value="ip"
+          @update:modelValue="changeDeviceIp"
           class="ip-selector"
           density="comfortable"
           variant="outlined"
-          @update:modelValue="changeDeviceIp"
         />
 
         <table class="infotable">
@@ -132,10 +132,9 @@
             <div style="flex: 1">
               <div style="width: 100%">
                 <div class="table-title">
-                  <span class="block-title">{{
-                    t("monitor.realtime-licenses-detail")
-                  }}</span>
-
+                  <span class="block-title">
+                    {{ t("monitor.realtime-licenses-detail") }}
+                  </span>
                   <div class="group">
                     <span class="grouptitle">{{ t("monitor.group") }}:</span>
                     <v-select
@@ -148,7 +147,7 @@
                     />
                   </div>
 
-                  <div>
+                  <div class="totalusagetime">
                     <label>{{ t("monitor.group-totaltime") }}:</label>
                     <label id="ansystotaltime">0</label>
                   </div>
@@ -395,29 +394,24 @@ const gaugeOption = reactive<any>({
           width: 3,
         },
       },
-      axisLabel: { color: "#fff", fontWeight: "bolder" },
-      axisTick: { length: 15, lineStyle: { color: "auto" } },
-      splitLine: { length: 25, lineStyle: { width: 3, color: "#fff" } },
+      axisLabel: { color: "#fff", fontWeight: "bolder", fontSize: 12 },
+      axisTick: { length: 10, lineStyle: { color: "auto" } },
+      splitLine: { length: 20, lineStyle: { width: 2, color: "#fff" } },
       pointer: { shadowColor: "#fff", shadowBlur: 5 },
-      title: {
-        color: "#fff",
-        fontWeight: "bolder",
-        fontSize: 20,
-        fontStyle: "italic",
-      },
+      title: { color: "#fff", fontWeight: "bolder", fontSize: 14 },
       detail: {
         offsetCenter: [0, "50%"],
         formatter: "{value}%",
         color: "#fff",
-        fontWeight: "bolder",
+        fontSize: 14,
       },
       data: [{ value: 0, name: "CPU" }],
     },
     {
       name: "RAM",
       type: "gauge",
-      center: ["19%", "55%"],
-      radius: "65%",
+      center: ["18%", "55%"],
+      radius: "70%",
       min: 0,
       max: 100,
       startAngle: 230,
@@ -433,31 +427,24 @@ const gaugeOption = reactive<any>({
           width: 2,
         },
       },
-      axisLabel: { color: "#fff" },
-      axisTick: { length: 12, lineStyle: { color: "auto" } },
-      splitLine: { length: 20, lineStyle: { width: 3, color: "#fff" } },
-      pointer: { width: 5 },
-      title: {
-        offsetCenter: [0, "-30%"],
-        color: "#fff",
-        fontWeight: "bolder",
-        fontStyle: "italic",
-      },
+      axisLabel: { color: "#fff", fontSize: 10 },
+      axisTick: { length: 8, lineStyle: { color: "auto" } },
+      splitLine: { length: 15, lineStyle: { width: 2, color: "#fff" } },
+      pointer: { width: 4 },
+      title: { offsetCenter: [0, "-25%"], color: "#fff", fontWeight: "bolder" },
       detail: {
-        width: 80,
-        height: 30,
-        offsetCenter: [5, "50%"],
+        offsetCenter: [0, "50%"],
         formatter: "{value}%",
         color: "#fff",
-        fontSize: 15,
+        fontSize: 12,
       },
       data: [{ value: 0, name: "RAM" }],
     },
     {
       name: "Disk",
       type: "gauge",
-      center: ["79%", "55%"],
-      radius: "65%",
+      center: ["82%", "55%"],
+      radius: "70%",
       min: 0,
       max: 100,
       startAngle: 120,
@@ -473,22 +460,16 @@ const gaugeOption = reactive<any>({
           width: 2,
         },
       },
-      axisTick: { length: 12, lineStyle: { color: "auto" } },
-      axisLabel: { color: "#fff" },
-      splitLine: { length: 15, lineStyle: { width: 3, color: "#fff" } },
+      axisTick: { length: 8, lineStyle: { color: "auto" } },
+      axisLabel: { color: "#fff", fontSize: 10 },
+      splitLine: { length: 15, lineStyle: { width: 2, color: "#fff" } },
       pointer: { width: 2 },
-      title: {
-        color: "#fff",
-        fontWeight: "bolder",
-        fontStyle: "italic",
-      },
+      title: { color: "#fff", fontWeight: "bolder" },
       detail: {
-        width: 80,
-        height: 30,
         offsetCenter: [0, "50%"],
         formatter: "{value}%",
         color: "#fff",
-        fontSize: 15,
+        fontSize: 12,
       },
       data: [{ value: 0, name: "Disk" }],
     },
@@ -1156,6 +1137,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
+.totalusagetime label {
+  font-size: 18px;
+}
 .group-selector {
   width: 100px;
   padding: 20% 0%;
@@ -1169,17 +1153,19 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 .grouptitle {
+  font-size: 18px;
   margin-right: 8px; /* 讓標題和選單有點間距 */
 }
 
 .detail-container {
   margin: 20px;
+  font-size: 14px; /* 基础文字大小，可改为 15px / 16px */
   padding: 0px;
 }
 #detailGauge {
   width: 100%;
   height: 300px;
-  max-width: 520px;
+  max-width: 590px;
   display: block;
   margin: auto;
 }
@@ -1190,7 +1176,7 @@ onBeforeUnmount(() => {
   float: left;
 }
 .block-title {
-  font-size: 22px;
+  font-size: 18px; /* 標題文字 */
   text-align: left;
 }
 #UserBarChart {
@@ -1260,7 +1246,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: x-large;
+  font-size: 14px;
   font-weight: bolder;
   color: white;
   margin: auto;
@@ -1301,9 +1287,12 @@ onBeforeUnmount(() => {
     color: black;
   }
 }
+.v-btn {
+  text-transform: none;
+}
 .history-button {
   color: white;
-  font-size: large;
+  font-size: 18px;
   background-color: rgba(49, 99, 142, 0.6);
   border-radius: 20px;
   border: 1px solid #aaa;
@@ -1332,5 +1321,8 @@ onBeforeUnmount(() => {
   .ansys-table {
     width: 100%;
   }
+}
+.v-chart {
+  font-size: 14px !important;
 }
 </style>

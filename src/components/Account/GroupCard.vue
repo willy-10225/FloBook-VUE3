@@ -356,7 +356,7 @@ import {
   apiCreateGroup,
   apiDeleteGroup,
 } from "@/assets/ts/api"
-import { shallowRef } from "vue"
+
 // Types
 interface Member {
   id: number
@@ -918,6 +918,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.v-btn {
+  text-transform: none !important;
+}
 .red-dot-position {
   position: absolute;
   top: 10px;
@@ -950,7 +953,7 @@ onMounted(async () => {
   position: absolute;
   display: inline-block;
   right: 20px;
-  width: 88px;
+  
 }
 .group-delete {
   position: absolute;

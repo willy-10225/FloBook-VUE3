@@ -1,4 +1,14 @@
 {
+  "sidenav": {
+    "monitor": "監控",
+    "detail": "詳情",
+    "track": "跟蹤",
+    "knowledge": "專案",
+    "solve": "求解",
+    "jobsubmission": "作業提交",
+    "jobmanager": "作業管理器",
+    "solveconfig": "作業配置"
+  },
   "lang": {
     "languages": "語言",
     "en-us": "English",

@@ -45,19 +45,27 @@
             hide-details
           />
         </v-col>
-        <v-col cols="3" v-html="item.user" class="matrix-block gray-col" />
-        <v-col cols="3" v-html="item.Ip" class="matrix-block gray-col" />
+        <v-col
+          cols="3"
+          v-html="item.user"
+          class="matrix-block gray-col text-black"
+        />
+        <v-col
+          cols="3"
+          v-html="item.Ip"
+          class="matrix-block gray-col text-black"
+        />
         <v-col
           cols="2"
           :class="getBlockColor(item.cpu)"
-          class="matrix-block gray-col"
+          class="matrix-block gray-col text-black"
         >
           {{ item.cpu }}
         </v-col>
         <v-col
           cols="3"
           :class="getBlockColor(item.ram)"
-          class="matrix-block gray-col"
+          class="matrix-block gray-col text-black"
         >
           {{ item.ram }}
         </v-col>
@@ -303,6 +311,7 @@ function getBlockColor(value: string | number) {
   min-height: 40px;
   display: flex;
   align-items: center;
+  justify-content: center;
   transition: background-color 0.2s ease;
 }
 

@@ -84,6 +84,9 @@ const emitConfirm = (isConfirm: boolean) => {
 </script>
 
 <style scoped>
+.v-btn {
+  text-transform: none !important;
+}
 .confirm-button {
   display: inline-block;
 }

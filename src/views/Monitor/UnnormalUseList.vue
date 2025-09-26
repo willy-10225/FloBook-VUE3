@@ -5,7 +5,7 @@
         {{ t("monitor.unnormaluse-list") }}
       </v-card-title>
       <v-card-text class="text-start">
-        <div style="font-size: 8px">
+        <div style="font-size: 10px">
           {{ t("monitor.over-allowed-value-cpu") }} 4<br />
           {{ t("monitor.over-allowed-value-ram") }} 0.3
         </div>
@@ -92,7 +92,7 @@ const emailTo = ref("")
 const sortBy = ref<SortItem[]>([{ key: "Time", order: false }])
 const isDesc = ref(false)
 
-const headers = [
+const headers = computed(() => [
   { title: t("monitor.user"), key: "User" },
   { title: t("monitor.device-address"), key: "Ip" },
   { title: t("monitor.unnormal-type"), key: "UnNType" },
@@ -100,7 +100,7 @@ const headers = [
   { title: t("monitor.capture-time"), key: "Time" },
   { title: t("monitor.duration-time"), key: "DurationTimes" },
   { title: "Send Email", key: "sendEmail", sortable: false },
-]
+])
 
 const canTerminate = computed(() => store.getters.userInfo.isAdmin)
 

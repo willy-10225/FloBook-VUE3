@@ -417,6 +417,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.v-tab {
+  text-transform: none !important;
+}
 .monitor-container {
   width: 100%;
   margin: 0;

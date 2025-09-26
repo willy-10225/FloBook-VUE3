@@ -384,6 +384,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.v-btn {
+  text-transform: none !important;
+}
 .info-table {
   width: 100%;
   table-layout: fixed;

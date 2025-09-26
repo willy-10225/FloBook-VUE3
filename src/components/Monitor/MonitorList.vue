@@ -317,23 +317,41 @@ function moveTooltip(event: MouseEvent, row: TableRow) {
 function hideTooltip() {
   tooltip.visible = false
 }
-
+interface IpRange {
+  Range: string
+  RangeName: string
+}
 // 取回 IP 對應名稱（容錯：支援回傳陣列或 axios response）
 onMounted(async () => {
   try {
     const res = await apiGetList()
     console.log()
-    const list: Array<{ ip: string; name: string }> = Array.isArray(res.data)
-      ? res.data
-      : []
+    const list: IpRange[] = Array.isArray(res.data) ? res.data : []
+    console.log("apiGetList", list)
     if (list.length) {
       someMapping.value = Object.fromEntries(
-        list.map(({ ip, name }) => [ip, name])
+        list.map(({ Range, RangeName }) => [Range, RangeName])
       )
     }
   } catch (err) {
     // 這裡不阻塞畫面；若 CORS/網路錯誤，維持預設 someMapping
     console.error("API apiGetList error:", err)
+    // 當 API 出錯時，使用預設的清單
+    const fallbackList: IpRange[] = [
+      { Range: "192.168.12.", RangeName: "Taichung Classroom" },
+      { Range: "192.168.13.", RangeName: "Tainan Classroom" },
+      { Range: "192.168.33.112~192.168.33.116", RangeName: "server" },
+      { Range: "192.168.168.112~192.168.168.113", RangeName: "server" },
+      {
+        Range: "192.168.11.111~192.168.11.130",
+        RangeName: "Banqiao Classroom A",
+      },
+      { Range: "192.168.11.1~192.168.11.10", RangeName: "Banqiao Classroom C" },
+    ]
+
+    someMapping.value = Object.fromEntries(
+      fallbackList.map(({ Range, RangeName }) => [Range, RangeName])
+    )
   }
 })
 </script>

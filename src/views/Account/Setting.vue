@@ -941,6 +941,10 @@ onMounted(() => {
 </script>
 
 <style>
+.v-tab,
+.v-btn {
+  text-transform: none !important;
+}
 /* 針對特定表格 */
 .setting-account-table {
   background-color: transparent !important; /* 無背景 */

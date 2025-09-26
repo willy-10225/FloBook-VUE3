@@ -39,7 +39,7 @@
       <!-- CPU -->
       <v-col
         cols="2"
-        :class="getBlockColor(item.cpu)"
+        :style="getBlockColor(item.cpu)"
         @mousemove="e => moveTooltip(e, item, 'cpu')"
         @mouseleave="hideTooltip"
       >
@@ -75,7 +75,7 @@
       <!-- RAM -->
       <v-col
         cols="2"
-        :class="getBlockColor(item.ram)"
+        :style="getBlockColor(item.ram)"
         @mousemove="e => moveTooltip(e, item, 'ram')"
         @mouseleave="hideTooltip"
       >
@@ -85,7 +85,7 @@
       <!-- Disk -->
       <v-col
         cols="2"
-        :class="getBlockColor(item.disk)"
+        :style="getBlockColor(item.disk)"
         @mousemove="e => moveTooltip(e, item, 'disk')"
         @mouseleave="hideTooltip"
       >
@@ -462,22 +462,60 @@ export default defineComponent({
     // Color class generator based on value string like "30 / 100"
     function getBlockColor(value: string) {
       if (typeof value !== "string" || !value.includes("/")) {
-        return "normal-block"
+        return {
+          backgroundColor: "#48b56d",
+          color: "black",
+          fontWeight: "bold",
+        fontSize: "26px"
+        }
       }
       const parts = value.split("/")
       if (parts.length !== 2) {
-        return "normal-block"
+        return {
+          backgroundColor: "#48b56d",
+          color: "black",
+          fontWeight: "bold",
+        fontSize: "26px"
+        }
       }
       const numerator = parseFloat(parts[0].trim())
       const denominator = parseFloat(parts[1].trim())
       if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
-        return "normal-block"
+        return {
+          backgroundColor: "#48b56d",
+          color: "black",
+          fontWeight: "bold",
+        fontSize: "26px"
+        }
       }
       const percent = (numerator / denominator) * 100
-      if (percent > 0 && percent <= 40) return "normal-block"
-      if (percent > 40 && percent <= 70) return "warn-block"
-      if (percent > 70) return "error-block"
-      return "unable-block"
+      if (percent > 0 && percent <= 40)
+        return {
+          backgroundColor: "#48b56d",
+          color: "black",
+          fontWeight: "bold",
+        fontSize: "26px"
+        }
+      if (percent > 40 && percent <= 70)
+        return {
+          backgroundColor: "#f3cc60",
+          color: "black",
+          fontWeight: "bold",
+        fontSize: "26px"
+        }
+      if (percent > 70)
+        return {
+          backgroundColor: "#e65b70",
+          color: "black",
+          fontWeight: "bold",
+        fontSize: "26px"
+        }
+      return {
+        backgroundColor: "#999999",
+        color: "black",
+        fontWeight: "bold",
+        fontSize: "26px"
+      }
     }
 
     // Color string from index for dot icon
@@ -716,7 +754,7 @@ export default defineComponent({
   background-color: #a93a3a;
 }
 .normal-block {
-  background-color: #0bae55;
+  background-color: #48b56d;
   color: black;
   font-family: sans-serif, "微軟正黑體";
   font-weight: bold;

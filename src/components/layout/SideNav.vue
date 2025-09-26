@@ -31,7 +31,7 @@
 import { computed, reactive, ref, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import SideNavItem from "@/components/layout/SideNavItem.vue"
-
+import { useI18n } from "vue-i18n"
 const store = useStore()
 const layout = computed(() => store.getters.layout)
 const isMobile = ref(window.innerWidth < 768)
@@ -39,38 +39,54 @@ const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
 }
-
-const items = reactive([
+const { t } = useI18n()
+const items = computed(() => [
   {
-    text: "Monitor",
+    text: t("sidenav.monitor"),
     icon: "mdi-monitor",
     childrens: [
-      { text: "Monitor", routeName: "Monitor", icon: "mdi-chart-line" },
-      { text: "Detail", routeName: "MonitorDetail", icon: "mdi-information" },
+      {
+        text: t("sidenav.monitor"),
+        routeName: "Monitor",
+        icon: "mdi-chart-line",
+      },
+      {
+        text: t("sidenav.detail"),
+        routeName: "MonitorDetail",
+        icon: "mdi-information",
+      },
     ],
   },
   {
-    text: "Track",
+    text: t("sidenav.track"),
     icon: "mdi-trackpad",
     childrens: [
       {
-        text: "Knowledge",
+        text: t("sidenav.knowledge"),
         routeName: "Knowledge Database",
         icon: "mdi-book-open",
       },
     ],
   },
   {
-    text: "Solve",
+    text: t("sidenav.solve"),
     icon: "mdi-tools",
     childrens: [
-      { text: "Job Submission", routeName: "JobSubmission", icon: "mdi-send" },
       {
-        text: "Job Manager",
+        text: t("sidenav.jobsubmission"),
+        routeName: "JobSubmission",
+        icon: "mdi-send",
+      },
+      {
+        text: t("sidenav.jobmanager"),
         routeName: "JobManager",
         icon: "mdi-clipboard-list",
       },
-      { text: "Solve Config", routeName: "SolveConfig", icon: "mdi-cog" },
+      {
+        text: t("sidenav.solveconfig"),
+        routeName: "SolveConfig",
+        icon: "mdi-cog",
+      },
     ],
   },
 ])

@@ -240,6 +240,7 @@ export default {
               width: 4,
             },
             title: {
+              offsetCenter: [3, "-30%"],
               show: true,
               fontWeight: "normal",
               fontStyle: "italic",

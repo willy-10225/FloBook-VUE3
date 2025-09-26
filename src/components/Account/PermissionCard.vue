@@ -280,6 +280,9 @@ const modifyPermissionSetting = async (isConfirmed: boolean) => {
 </script>
 
 <style scoped>
+.v-btn {
+  text-transform: none !important;
+}
 .no-color-table {
   background-color: transparent !important;
   color: white !important; /* 全表格字體白色 */

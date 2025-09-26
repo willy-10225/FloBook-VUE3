@@ -1,4 +1,14 @@
 {
+  "sidenav": {
+    "monitor": "Monitor",
+    "detail": "Detail",
+    "track": "Track",
+    "knowledge": "Knowledge",
+    "solve": "Solve",
+    "jobsubmission": "Job Submission",
+    "jobmanager": "Job Manager",
+    "solveconfig": "Solve Config"
+  },
   "lang": {
     "languages": "Languages",
     "en-us": "English",
