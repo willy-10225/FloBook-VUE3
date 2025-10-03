@@ -58,37 +58,23 @@
           style="min-width: 100%"
         >
           <!-- No -->
-          <template #item.no="{ item }">
-            <div class="text-center" style="width: 15px">{{ item.no }}</div>
-          </template>
-
-          <!-- Status -->
-          <template #item.status="{ item }">
-            <div class="text-center" style="width: 15px">
-              <span v-if="item.status === 'green'" style="font-size: 22px"
-                >🟢</span
-              >
-              <span v-else-if="item.status === 'yellow'" style="font-size: 22px"
-                >🟡</span
-              >
-              <span v-else-if="item.status === 'red'" style="font-size: 22px"
-                >🔴</span
-              >
-              <span v-else-if="item.status === 'alert'" style="font-size: 22px"
-                >⚠️</span
-              >
-            </div>
-          </template>
-
-          <!-- IP + 自訂 Tooltip（保留你的外觀與行為） -->
-          <template #item.ip="{ item }">
-            <span
-              class="ip-hover"
+          <template #item="{ item }">
+            <tr
               @mousemove="moveTooltip($event, item)"
               @mouseleave="hideTooltip"
+              @click="goToDetail(item.ip)"
             >
-              {{ item.ip.replace(/^192\.168/, "*") }}
-            </span>
+              <td class="text-center">
+                {{ item.no }}
+              </td>
+              <td class="status-icon">
+                <span v-if="item.status === 'green'">🟢</span>
+                <span v-else-if="item.status === 'yellow'">🟡</span>
+                <span v-else-if="item.status === 'red'">🔴</span>
+                <span v-else-if="item.status === 'alert'">⚠️</span>
+              </td>
+              <td>{{ item.ip.replace(/^192\.168/, "*") }}</td>
+            </tr>
           </template>
         </v-data-table>
       </div>
@@ -108,7 +94,9 @@
 import { computed, reactive, ref, onMounted, nextTick } from "vue"
 import { apiGetList } from "@/assets/ts/api"
 import { classdict, serverdict } from "@/assets/ts/classdict"
+import { useRouter } from "vue-router"
 
+const router = useRouter()
 type LicenseLog = { Task?: number }
 
 interface DiskData {
@@ -257,7 +245,9 @@ const splitTables = computed<Record<string, TableRow[]>>(() => {
 
   return categorizedData
 })
-
+function goToDetail(ip: string) {
+  router.push({ name: "MonitorDetail", params: { ip: ip } })
+}
 function getOverallStatus(tableChunk: TableRow[]): TableRow["status"] {
   if (!tableChunk?.length) return "green"
   if (tableChunk.some(i => i.status === "red")) return "red"
@@ -386,6 +376,9 @@ onMounted(async () => {
 }
 </style>
 <style scoped>
+.status-icon span {
+  font-size: 22px;
+}
 .tooltip {
   max-width: 280px;
   position: fixed;

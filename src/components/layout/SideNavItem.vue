@@ -11,20 +11,36 @@
         elevation="0"
         rounded="md"
         dense
+        role="button"
+        :aria-expanded="open.toString()"
+        :aria-controls="'submenu-' + id"
+        :aria-label="item.text"
       >
         <span class="text-start">{{ item.text }}</span>
-        <v-icon class="ml-auto" :class="{ rotated: open }" size="20">
+        <v-icon
+          class="ml-auto"
+          :class="{ rotated: open }"
+          size="20"
+          aria-hidden="true"
+        >
           mdi-chevron-right
         </v-icon>
       </v-btn>
 
       <v-expand-transition>
-        <div v-show="open" class="sidenav-accordion-panel">
+        <div
+          v-show="open"
+          class="sidenav-accordion-panel"
+          :id="'submenu-' + id"
+          role="menu"
+        >
           <RouterLink
             v-for="(child, index) in item.childrens"
             :key="index"
             class="sub-link"
             :to="buildLink(child)"
+            role="menuitem"
+            :aria-label="child.text"
           >
             {{ child.text }}
           </RouterLink>
@@ -37,6 +53,8 @@
       v-else
       class="sidenav-accordion-self"
       :to="{ name: item.routeName }"
+      role="menuitem"
+      :aria-label="item.text"
     >
       <v-btn
         block
@@ -67,6 +85,7 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
+const id = Math.random().toString(36).substr(2, 9)
 
 function togglePanel() {
   open.value = !open.value

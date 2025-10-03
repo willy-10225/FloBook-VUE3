@@ -231,7 +231,7 @@
                         <v-btn
                           v-else
                           size="small"
-                          color="error"
+                          color="red"
                           :disabled="!enableTerminateButton(item.StartTime)"
                           @click="openTerminateAlert(item)"
                         >
@@ -881,7 +881,7 @@ function updateViewData() {
     let diskTitle = ""
     let cpuUtilization = 0
     let ramUtilization = 0
-
+    
     if (data.DiskData?.length) {
       for (const d of data.DiskData) {
         diskTitle += t("monitor.diskTitle", {
@@ -906,14 +906,8 @@ function updateViewData() {
       )
 
       hardwareInfo.ipText = data.Ip
-      hardwareInfo.cpuText = t(
-        "monitor.core",
-        data.CpuData?.Number || 0
-      ) as unknown as string
-      hardwareInfo.remainingCpuText = t(
-        "monitor.core",
-        remainingCpu
-      ) as unknown as string
+      hardwareInfo.cpuText = data.CpuData?.Number || 0
+      hardwareInfo.remainingCpuText = remainingCpu as unknown as string
       hardwareInfo.ramText = (data.MemoryData?.Size || 0) + " (MB)"
       hardwareInfo.remainingRamText = remainingRam + " (MB)"
       hardwareInfo.totalDiskText = totalCapacity.toFixed(0) + " (GB)"

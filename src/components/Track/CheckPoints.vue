@@ -93,7 +93,7 @@
                 icon="mdi-close"
                 size="small"
                 variant="text"
-                color="error"
+                color="red"
                 @click="removeItem(index)"
                 class="cp-remove"
               />

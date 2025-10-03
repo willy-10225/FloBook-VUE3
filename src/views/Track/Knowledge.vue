@@ -128,7 +128,7 @@
           <v-btn color="grey" variant="text" @click="deleteProject(false)">
             {{ $t("common.cancel") }}
           </v-btn>
-          <v-btn color="error" variant="text" @click="deleteProject(true)">
+          <v-btn color="red" variant="text" @click="deleteProject(true)">
             {{ $t("common.delete") }}
           </v-btn>
         </v-card-actions>

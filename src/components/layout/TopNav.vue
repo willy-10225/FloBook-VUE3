@@ -8,7 +8,7 @@
     <!-- 左邊 -->
     <template #prepend>
       <v-toolbar>
-        <v-btn icon @click="toggleSideNav">
+        <v-btn icon @click="toggleSideNav" aria-label="Toggle Side Navigation">
           <v-icon>mdi-menu</v-icon>
         </v-btn>
         <span
@@ -43,6 +43,7 @@
         variant="text"
         class="qi-topnav-item"
         to="../Account/setting"
+        aria-label="Settings"
       >
         <v-icon>mdi-cog</v-icon>
       </v-btn>
@@ -50,7 +51,7 @@
       <!-- 語言選單 -->
       <v-menu v-model="openLangMenu" location="bottom">
         <template #activator="{ props }">
-          <v-btn icon v-bind="props">
+          <v-btn icon v-bind="props" aria-label="Change Language">
             <v-icon>mdi-earth</v-icon>
           </v-btn>
         </template>

@@ -407,7 +407,7 @@ onBeforeUnmount(() => {
   // 清理定時器
   if (hardwareMonitorTimer) {
     clearInterval(hardwareMonitorTimer)
-    hardwareMonitorTimer = undefined
+    licenseMonitorTimer = undefined
   }
   if (licenseMonitorTimer) {
     clearInterval(licenseMonitorTimer)
@@ -417,7 +417,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.v-tab {
+.v-tab,
+.v-btn {
   text-transform: none !important;
 }
 .monitor-container {

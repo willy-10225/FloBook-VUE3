@@ -10,12 +10,18 @@
     <template #default>
       <div>
         <!-- LOGO 區 -->
-        <router-link to="/" class="qi-sidenav-head">
-          <v-img src="/img/Home/logo-flobook-wbg.png" alt="Home" width="170" />
+        <router-link to="/" class="qi-sidenav-head" aria-label="首頁">
+          <img
+            src="/img/Home/logo-flobook-wbg.png"
+            alt="FloBook"
+            width="170"
+            fetchpriority="high"
+            decoding="async"
+          />
         </router-link>
 
         <!-- 主選單項目 -->
-        <v-list class="qi-sidenav-body">
+        <v-list class="qi-sidenav-body" role="menu" aria-label="側邊選單">
           <SideNavItem
             v-for="(item, index) in items"
             :key="index"
@@ -28,10 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onMounted, onBeforeUnmount } from "vue"
+import { computed, ref, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import SideNavItem from "@/components/layout/SideNavItem.vue"
 import { useI18n } from "vue-i18n"
+
 const store = useStore()
 const layout = computed(() => store.getters.layout)
 const isMobile = ref(window.innerWidth < 768)
@@ -39,7 +46,9 @@ const isMobile = ref(window.innerWidth < 768)
 function handleResize() {
   isMobile.value = window.innerWidth < 768
 }
+
 const { t } = useI18n()
+
 const items = computed(() => [
   {
     text: t("sidenav.monitor"),
@@ -90,13 +99,9 @@ const items = computed(() => [
     ],
   },
 ])
-onMounted(() => {
-  window.addEventListener("resize", handleResize)
-})
 
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", handleResize)
-})
+onMounted(() => window.addEventListener("resize", handleResize))
+onBeforeUnmount(() => window.removeEventListener("resize", handleResize))
 </script>
 
 <style scoped>
@@ -111,9 +116,9 @@ onBeforeUnmount(() => {
   position: fixed !important;
   top: 0;
   left: 0;
-  height: 100vh !important; /* 滿版高度 */
-  overflow-y: auto; /* 側邊選單內部可滾動 */
-  z-index: 1000; /* 確保在最上層 */
+  height: 100vh !important;
+  overflow-y: auto;
+  z-index: 1000;
 }
 .qi-sidenav a {
   width: 100%;
@@ -142,15 +147,6 @@ onBeforeUnmount(() => {
   display: block;
   margin: auto;
 }
-.qi-sidenav .closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
-  cursor: pointer;
-}
-
 .sidenav-footer {
   width: 100%;
   height: fit-content;

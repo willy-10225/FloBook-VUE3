@@ -6,16 +6,29 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="icon" href="%BASE_URL%img/Home/littleicon.png" />
-    <link rel="stylesheet" href="./iconfont/material-icons.css" />
+    <!-- Material Icons 延遲加載 -->
     <link
-      rel="stylesheet"
-      href="https://unpkg.com/primevue/resources/themes/aura-light-blue/theme.css"
+      rel="preload"
+      href="/iconfont/material-icons.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="/iconfont/material-icons.css" />
+    </noscript>
+    <link
+      rel="preload"
+      as="image"
+      href="/img/Home/logo-flobook-wbg.png"
+      fetchpriority="high"
     />
     <link
-      rel="stylesheet"
-      href="https://unpkg.com/primevue/resources/primevue.min.css"
+      rel="preload"
+      as="font"
+      href="/path/MaterialIcons-Regular.woff2"
+      type="font/woff2"
+      crossorigin
     />
-    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css" />
   </head>
 
   <body>
@@ -27,6 +40,6 @@
     </noscript>
 
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/main.ts" defer></script>
   </body>
 </html>

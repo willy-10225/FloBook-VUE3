@@ -466,7 +466,7 @@ export default defineComponent({
           backgroundColor: "#48b56d",
           color: "black",
           fontWeight: "bold",
-        fontSize: "26px"
+          fontSize: "26px",
         }
       }
       const parts = value.split("/")
@@ -475,7 +475,7 @@ export default defineComponent({
           backgroundColor: "#48b56d",
           color: "black",
           fontWeight: "bold",
-        fontSize: "26px"
+          fontSize: "26px",
         }
       }
       const numerator = parseFloat(parts[0].trim())
@@ -485,7 +485,7 @@ export default defineComponent({
           backgroundColor: "#48b56d",
           color: "black",
           fontWeight: "bold",
-        fontSize: "26px"
+          fontSize: "26px",
         }
       }
       const percent = (numerator / denominator) * 100
@@ -494,27 +494,27 @@ export default defineComponent({
           backgroundColor: "#48b56d",
           color: "black",
           fontWeight: "bold",
-        fontSize: "26px"
+          fontSize: "26px",
         }
       if (percent > 40 && percent <= 70)
         return {
           backgroundColor: "#f3cc60",
           color: "black",
           fontWeight: "bold",
-        fontSize: "26px"
+          fontSize: "26px",
         }
       if (percent > 70)
         return {
           backgroundColor: "#e65b70",
           color: "black",
           fontWeight: "bold",
-        fontSize: "26px"
+          fontSize: "26px",
         }
       return {
         backgroundColor: "#999999",
         color: "black",
         fontWeight: "bold",
-        fontSize: "26px"
+        fontSize: "26px",
       }
     }
 

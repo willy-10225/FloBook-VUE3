@@ -249,7 +249,7 @@
             {{ $t("setting.deny") }}
           </v-btn>
           <v-btn
-            color="error"
+            color="red"
             variant="flat"
             @click="confirmLeaveByGroup(true)"
           >
@@ -258,7 +258,7 @@
         </div>
 
         <div v-if="showInvitingByGroup" class="d-flex ga-2 justify-center">
-          <v-btn color="error" @click="denyInviting">
+          <v-btn color="red" @click="denyInviting">
             {{ $t("setting.deny") }}
           </v-btn>
           <v-btn color="primary" @click="applyGroup">
@@ -290,7 +290,7 @@
 
             <v-col cols="auto">
               <confirm-button
-                color="error"
+                color="red"
                 danger
                 fab
                 class="group-leave"

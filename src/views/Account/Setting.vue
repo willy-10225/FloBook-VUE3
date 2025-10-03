@@ -56,7 +56,7 @@
               <v-btn
                 icon="mdi-delete"
                 variant="text"
-                color="error"
+                color="red"
                 @click="openRemoveAccountAlert(item.id)"
               />
             </div>
@@ -99,7 +99,7 @@
               <td>{{ item.display_name }}</td>
               <td>{{ item.email }}</td>
               <td>
-                <v-btn color="error" @click="onRejectClick(item.id)">
+                <v-btn color="red" @click="onRejectClick(item.id)">
                   {{ $t("setting.deny") }}
                 </v-btn>
               </td>
@@ -191,7 +191,7 @@
     <v-tab-item v-if="activeTab === 3">
       <v-card class="setting-function-card" elevation="5">
         <h2 class="text-white my-5">{{ $t("setting.group-management") }}</h2>
-        <section class="group-card-wrapper">
+        <section>
           <group-card
             v-for="(group, index) in groups"
             :key="'group' + index"
@@ -273,7 +273,7 @@
               <v-btn
                 icon="mdi-delete"
                 variant="text"
-                color="error"
+                color="red"
                 @click="listRemove(item.Range)"
               />
             </div>
@@ -331,7 +331,7 @@
               <v-btn
                 icon="mdi-delete"
                 variant="text"
-                color="error"
+                color="red"
                 @click="monitorlistRemove(item.Ip)"
               />
             </div>
