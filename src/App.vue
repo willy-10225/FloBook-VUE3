@@ -78,10 +78,7 @@ body,
   color: white !important;
 }
 
-.v-navigation-drawer {
-  background-color: #2a2a2a !important;
-  color: white !important;
-}
+
 
 .v-footer {
   background-color: #2a2a2a !important;

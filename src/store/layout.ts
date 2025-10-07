@@ -2,7 +2,7 @@ import { defineStore } from "pinia"
 
 export const useLayoutStore = defineStore("layout", {
   state: () => ({
-    isSidenavShown: true,
+    isSidenavShown: false,
     sidenavWidth: 280,
   }),
   actions: {

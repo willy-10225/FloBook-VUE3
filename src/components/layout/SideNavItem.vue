@@ -11,7 +11,7 @@
         elevation="0"
         rounded="md"
         dense
-        role="button"
+        role="menuitem"
         :aria-expanded="open.toString()"
         :aria-controls="'submenu-' + id"
         :aria-label="item.text"
@@ -33,6 +33,7 @@
           class="sidenav-accordion-panel"
           :id="'submenu-' + id"
           role="menu"
+          aria-label="子選單"
         >
           <RouterLink
             v-for="(child, index) in item.childrens"

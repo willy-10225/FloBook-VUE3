@@ -46,13 +46,11 @@
         {{ item.cpu }}
       </v-col>
       <span
-        class="tooltip"
+        class="monitortooltip"
         v-show="tooltip.visible"
         :style="{
-          position: 'absolute',
-          top: tooltip.y + 'px',
+          top: tooltip.y - 80 + 'px',
           left: tooltip.x + 'px',
-          zIndex: 9999,
         }"
       >
         <table class="tooltip-table" v-if="tooltip.users.length > 0">
@@ -122,7 +120,7 @@ import {
   watch,
   ref,
   reactive,
-  toRefs,
+  nextTick,
   computed,
 } from "vue"
 import { useStore } from "vuex"
@@ -259,72 +257,66 @@ export default defineComponent({
     )
 
     function moveTooltip(e: MouseEvent, items: MatrixItem, type: string) {
-      const margin = 10
-      const tooltipWidth = 220
-      const tooltipHeight = 160
+      const offset = 8 // tooltip 與滑鼠的最小間距，設定小一些即可
 
-      let x = e.clientX
-      let y = e.clientY + window.scrollY + 10
-
-      if (x + tooltipWidth + margin > window.innerWidth) {
-        x = window.innerWidth - tooltipWidth - margin
-      }
-      if (x < margin) x = margin
-
-      if (y + tooltipHeight > window.innerHeight + window.scrollY) {
-        y = e.clientY + window.scrollY - tooltipHeight - 10
-        if (y < window.scrollY + margin) y = window.scrollY + margin
-      }
-      if (type === "cpu") {
-        tooltip.users = items.userCPU.map((e, i) => {
-          return {
-            user: e.user,
-            value:
-              Math.round((e.cpu / 100) * items.cpuDenominator).toString() +
-              " Core",
-          }
-        })
-      } else if (type === "ram") {
-        tooltip.users = items.userRAM.map((e, i) => {
-          return {
-            user: e.user,
-            value:
-              Math.round((e.ram / 100) * items.ramDenominator).toString() +
-              " GB",
-          }
-        })
-      } else if (type === "disk") {
-        tooltip.users = items.diskCapacity.map((e, i) => {
-          return {
-            user: e,
-            value:
-              items.diskUsespace[i].toString() +
-              "/" +
-              items.diskTotalspace[i].toString() +
-              " (GB)",
-          }
-        })
-      } else if (type === "users") {
-        tooltip.users = items.userCPU.map((e, i) => {
-          return {
-            user: e.user,
-            value: e.cpu > 0 ? "running" : "idle",
-          }
-        })
-      } else if (type === "licenses") {
-        tooltip.users = (items?.FeatureList ?? []).map((e, i) => {
-          return {
-            user: e,
-            value: items?.licenseList?.[i] ?? "N/A",
-            cpu: undefined, // 可選填，或填 0
-            ram: undefined, // 可選填，或填 0
-          }
-        })
-      }
-
-      tooltip.x = x - 180
-      tooltip.y = y - 90
       tooltip.visible = true
+      tooltip.users = []
+
+      nextTick(() => {
+        const tooltipEl = document.querySelector(
+          ".monitortooltip"
+        ) as HTMLElement | null
+        const tooltipWidth = (tooltipEl && tooltipEl.offsetWidth) || 220
+        const tooltipHeight = (tooltipEl && tooltipEl.offsetHeight) || 160
+        const windowWidth = window.innerWidth
+        const windowHeight = window.innerHeight
+        const scrollY = window.scrollY
+
+        // X座標
+        let x = e.clientX + offset
+        if (x + tooltipWidth > windowWidth) {
+          x = e.clientX - tooltipWidth - offset // 往左顯示
+          if (x < offset) x = offset
+        }
+
+        // Y座標
+        let y = e.clientY + offset // 直接靠近滑鼠，避免加 scrollY 太遠
+        if (y + tooltipHeight > window.innerHeight) {
+          y = e.clientY - tooltipHeight - offset
+          if (y < offset) y = offset
+        }
+
+        tooltip.x = x
+        tooltip.y = y
+
+        // 根據 type 生成 tooltip.users
+        if (type === "cpu") {
+          tooltip.users = items.userCPU.map(u => ({
+            user: u.user,
+            value: `${Math.round((u.cpu / 100) * items.cpuDenominator)} Core`,
+          }))
+        } else if (type === "ram") {
+          tooltip.users = items.userRAM.map(u => ({
+            user: u.user,
+            value: `${Math.round((u.ram / 100) * items.ramDenominator)} GB`,
+          }))
+        } else if (type === "disk") {
+          tooltip.users = items.diskCapacity.map((d, i) => ({
+            user: d,
+            value: `${items.diskUsespace[i]}/${items.diskTotalspace[i]} (GB)`,
+          }))
+        } else if (type === "users") {
+          tooltip.users = items.userCPU.map(u => ({
+            user: u.user,
+            value: u.cpu > 0 ? "running" : "idle",
+          }))
+        } else if (type === "licenses") {
+          tooltip.users = (items?.FeatureList ?? []).map((f, i) => ({
+            user: f,
+            value: items?.licenseList?.[i] ?? "N/A",
+          }))
+        }
+      })
     }
 
     function hideTooltip() {
@@ -722,7 +714,7 @@ export default defineComponent({
 .matrix-block:not(:first-child):hover {
   opacity: 1;
 }
-.tooltip {
+.monitortooltip {
   position: absolute;
   border-radius: 6px;
   padding: 6px;
@@ -742,7 +734,7 @@ export default defineComponent({
   text-align: left;
   white-space: nowrap;
 }
-.matrix-block:not(:first-child):hover .tooltip {
+.matrix-block:not(:first-child):hover .monitortooltip {
   display: inline-block;
 }
 .dot {

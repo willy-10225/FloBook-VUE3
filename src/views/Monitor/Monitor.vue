@@ -1,20 +1,28 @@
 <template>
   <div class="monitor-container">
-    <v-tabs v-model="tabNo" color="yellow" background-color="transparent" grow>
-      <v-tab :value="0">{{ $t("monitor.matrix") }}</v-tab>
-      <v-tab :value="1">{{ $t("monitor.User-matrix") }}</v-tab>
-      <v-tab :value="2">{{ $t("monitor.gauge") }}</v-tab>
-      <v-tab :value="3">{{ $t("monitor.List") }}</v-tab>
+    <div class="monitor-header d-flex align-center justify-space-between">
+      <v-tabs
+        v-model="tabNo"
+        color="yellow"
+        background-color="transparent"
+        grow
+      >
+        <v-tab :value="0">{{ $t("monitor.matrix") }}</v-tab>
+        <v-tab :value="1">{{ $t("monitor.User-matrix") }}</v-tab>
+        <v-tab :value="2">{{ $t("monitor.gauge") }}</v-tab>
+        <v-tab :value="3">{{ $t("monitor.List") }}</v-tab>
+      </v-tabs>
 
-      <v-spacer></v-spacer>
-
-      <v-btn class="ma-2" color="primary" @click="dialog = true">
-        {{ $t("monitor.Filter") }}
-      </v-btn>
-      <v-btn class="ma-2" color="primary" @click="OverAllowedListLink">
-        {{ $t("monitor.unnormaluse-list") }}
-      </v-btn>
-    </v-tabs>
+      <!-- ✅ 移出來但維持同一橫列 -->
+      <div class="d-flex">
+        <v-btn class="ma-2" color="primary" @click="dialog = true">
+          {{ $t("monitor.Filter") }}
+        </v-btn>
+        <v-btn class="ma-2" color="primary" @click="OverAllowedListLink">
+          {{ $t("monitor.unnormaluse-list") }}
+        </v-btn>
+      </div>
+    </div>
 
     <!-- 添加key來強制重新渲染，防止組件狀態衝突 -->
     <v-window v-model="tabNo" :key="`window-${windowKey}`">

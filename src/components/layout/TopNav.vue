@@ -56,13 +56,13 @@
           </v-btn>
         </template>
         <v-list>
-          <v-list-item @click="changeLang('en-us')">
+          <v-list-item role="menuitem" @click="changeLang('en-us')">
             <v-list-item-title>{{ $t("lang.en-us") }}</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="changeLang('zh-tw')">
+          <v-list-item role="menuitem" @click="changeLang('zh-tw')">
             <v-list-item-title>{{ $t("lang.zh-tw") }}</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="changeLang('zh-cn')">
+          <v-list-item role="menuitem" @click="changeLang('zh-cn')">
             <v-list-item-title>{{ $t("lang.zh-cn") }}</v-list-item-title>
           </v-list-item>
         </v-list>

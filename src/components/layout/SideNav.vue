@@ -16,7 +16,7 @@
             alt="FloBook"
             width="170"
             fetchpriority="high"
-            decoding="async"
+            decoding="auto"
           />
         </router-link>
 

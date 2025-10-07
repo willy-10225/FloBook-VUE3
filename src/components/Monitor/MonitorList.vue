@@ -275,22 +275,32 @@ function getLocation(ip: string): string {
 
 // Tooltip 行為（保留你原本的自訂 HTML 表格）
 function moveTooltip(event: MouseEvent, row: TableRow) {
-  const offset = 10
+  const offset = 8 // tooltip 與滑鼠的間距
   tooltip.top = -9999
   tooltip.left = -9999
   tooltip.visible = true
 
   nextTick(() => {
     const tooltipEl = document.querySelector(".tooltip") as HTMLElement | null
+    const tooltipWidth = (tooltipEl && tooltipEl.offsetWidth) || 200
     const tooltipHeight = (tooltipEl && tooltipEl.offsetHeight) || 150
+    const windowWidth = window.innerWidth
     const windowHeight = window.innerHeight
 
+    // 上下位置：如果滑鼠靠近下邊界就往上顯示
     const shouldDisplayAbove =
       event.clientY + tooltipHeight + offset > windowHeight
     tooltip.top = shouldDisplayAbove
       ? event.clientY - tooltipHeight - offset
       : event.clientY + offset
-    tooltip.left = event.clientX + offset
+
+    // 左右位置：預設在滑鼠右側，如果超出右邊界則改左側
+    const shouldDisplayLeft =
+      event.clientX + tooltipWidth + offset > windowWidth
+    tooltip.left = shouldDisplayLeft
+      ? event.clientX - tooltipWidth - offset
+      : event.clientX + offset
+
     tooltip.content = `
       <table class="listtooltip-table">
         <tr><td class="tooltd1">IP</td><td class="tooltd2">:</td><td class="tooltd3">${row.ip}</td></tr>
@@ -304,6 +314,7 @@ function moveTooltip(event: MouseEvent, row: TableRow) {
     `
   })
 }
+
 function hideTooltip() {
   tooltip.visible = false
 }
