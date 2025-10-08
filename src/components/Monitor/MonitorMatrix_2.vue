@@ -49,7 +49,7 @@
         class="monitortooltip"
         v-show="tooltip.visible"
         :style="{
-          top: tooltip.y - 80 + 'px',
+          top: tooltip.y + 'px',
           left: tooltip.x + 'px',
         }"
       >
@@ -257,8 +257,7 @@ export default defineComponent({
     )
 
     function moveTooltip(e: MouseEvent, items: MatrixItem, type: string) {
-      const offset = 8 // tooltip 與滑鼠的最小間距，設定小一些即可
-
+      const offset = 10 // tooltip 與滑鼠的最小間距，設定小一些即可
       tooltip.visible = true
       tooltip.users = []
 
@@ -269,8 +268,6 @@ export default defineComponent({
         const tooltipWidth = (tooltipEl && tooltipEl.offsetWidth) || 220
         const tooltipHeight = (tooltipEl && tooltipEl.offsetHeight) || 160
         const windowWidth = window.innerWidth
-        const windowHeight = window.innerHeight
-        const scrollY = window.scrollY
 
         // X座標
         let x = e.clientX + offset
@@ -715,18 +712,12 @@ export default defineComponent({
   opacity: 1;
 }
 .monitortooltip {
-  position: absolute;
+  position: fixed;
   border-radius: 6px;
   padding: 6px;
   min-width: 100px;
   background: #333;
-  text-align: center;
-  font-weight: normal;
   font-size: 16px;
-  color: white;
-  opacity: 0.8;
-  z-index: 999;
-  pointer-events: none;
 }
 
 .list-wrap {

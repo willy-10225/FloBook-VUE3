@@ -2,15 +2,18 @@
   <v-app-bar
     app
     dark
-    class="qi-topnav"
-    :class="{ 'qi-topnav-hidden': hideTopnav }"
+    :clipped-left="!props.isMobile"
+    :style="{
+      transition: 'margin-left 0.3s',
+      marginLeft: props.drawer && !props.isMobile ? '0px' : '0px',
+    }"
   >
     <!-- 左邊 -->
     <template #prepend>
       <v-toolbar>
-        <v-btn icon @click="toggleSideNav" aria-label="Toggle Side Navigation">
-          <v-icon>mdi-menu</v-icon>
-        </v-btn>
+        <v-app-bar-nav-icon
+          @click.stop="$emit('toggle-drawer')"
+        ></v-app-bar-nav-icon>
         <span
           class="text-white text-h6 ml-2"
           :style="{
@@ -88,7 +91,11 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue"
 import { useStore } from "vuex"
 import { useRouter, useRoute } from "vue-router"
 import i18n from "@/assets/ts/i18n"
-import { color } from "echarts"
+
+const props = defineProps({
+  drawer: { type: Boolean, required: true },
+  isMobile: { type: Boolean, required: true },
+})
 
 const store = useStore()
 const router = useRouter()
@@ -100,21 +107,13 @@ const hideTopnav = ref(false)
 let prevScrollTop = 0
 
 const userInfo = computed(() => store.getters.userInfo)
-const layout = computed(() => store.getters.layout)
 
 const routeName = computed(() => route.name)
-const isMobile = ref(window.innerWidth < 1024)
-
-function handleResize() {
-  isMobile.value = window.innerWidth < 1024
-}
 
 onMounted(() => {
-  window.addEventListener("resize", handleResize)
   window.addEventListener("scroll", displayOnScroll)
 })
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", handleResize)
   window.removeEventListener("scroll", displayOnScroll)
 })
 
@@ -138,10 +137,6 @@ function changeLang(lang: "zh-tw" | "en-us" | "zh-cn") {
   i18n.global.locale.value = lang
 }
 
-function toggleSideNav() {
-  store.dispatch("toggleSideNav")
-}
-
 function displayOnScroll() {
   const currScrollTop = window.pageYOffset
   hideTopnav.value = currScrollTop > prevScrollTop
@@ -150,21 +145,11 @@ function displayOnScroll() {
 </script>
 
 <style scoped>
-.qi-topnav {
-  z-index: 10190225;
-  transition: 0.1s ease;
-}
-.qi-topnav-hidden {
-  top: -60px !important;
-  transition: 0.3s ease;
-}
+
 .qi-topnav-item {
   color: #f2f2f2;
   font-size: 17px;
   text-transform: none;
   letter-spacing: 1px;
-}
-.qi-topnav-item:hover {
-  color: #0b9c9c;
 }
 </style>

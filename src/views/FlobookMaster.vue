@@ -1,25 +1,34 @@
 <template>
   <v-app>
-    <SideNav />
+    <SideNav
+      :drawer="drawer"
+      :isMobile="isMobile"
+      @update:drawer="drawer = $event"
+    />
+    <TopNav
+      :drawer="drawer"
+      :isMobile="isMobile"
+      @toggle-drawer="drawer = !drawer"
+    />
     <v-main>
-      <TopNav />
       <router-view />
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount } from "vue"
-import { useStore } from "vuex"
+import { ref, onMounted, onBeforeUnmount } from "vue"
 import TopNav from "@/components/layout/TopNav.vue"
 import SideNav from "@/components/layout/SideNav.vue"
 
+const drawer = ref(false)
+const isMobile = ref(window.innerWidth < 768)
 // Vuex Store
-const store = useStore()
 
 // Resize 時觸發 sideNav 收合動作（連續兩次）
 const resizeHandler = () => {
-  store.dispatch("toggleSideNav")
+  isMobile.value = window.innerWidth < 768
+  if (isMobile.value) drawer.value = false
 }
 
 onMounted(() => {

@@ -81,7 +81,7 @@ interface NavItem {
   params?: Record<string, any>
 }
 
-const props = defineProps<{
+defineProps<{
   item: NavItem
 }>()
 

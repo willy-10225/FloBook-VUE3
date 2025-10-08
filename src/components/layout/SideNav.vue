@@ -1,11 +1,12 @@
 <template>
   <v-navigation-drawer
-    app
     class="qi-sidenav fixed-sidenav"
-    :model-value="layout.isSidenavShown"
+    v-model="localDrawer"
+    app
     :width="layout.sidenavWidth"
-    :scrim="false"
-    :temporary="isMobile"
+    :clipped="$vuetify.display.mdAndUp"
+    :temporary="props.isMobile"
+    location="start"
   >
     <template #default>
       <div>
@@ -15,13 +16,19 @@
             src="/img/Home/logo-flobook-wbg.png"
             alt="FloBook"
             width="170"
+            decoding="async"
+            loading="lazy"
             fetchpriority="high"
-            decoding="auto"
           />
         </router-link>
 
         <!-- 主選單項目 -->
-        <v-list class="qi-sidenav-body" role="menu" aria-label="側邊選單">
+        <v-list
+          class="qi-sidenav-body"
+          role="menu"
+          aria-label="側邊選單"
+          density="comfortable"
+        >
           <SideNavItem
             v-for="(item, index) in items"
             :key="index"
@@ -34,18 +41,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from "vue"
+import { ref, computed, watch } from "vue"
 import { useStore } from "vuex"
-import SideNavItem from "@/components/layout/SideNavItem.vue"
 import { useI18n } from "vue-i18n"
+import SideNavItem from "@/components/layout/SideNavItem.vue"
 
+const props = defineProps<{
+  drawer: boolean
+  isMobile?: boolean
+}>()
+
+// 發送事件
+const emit = defineEmits<{
+  (e: "update:drawer", value: boolean): void
+}>()
+
+// 狀態控制
+const localDrawer = ref(props.drawer)
 const store = useStore()
 const layout = computed(() => store.getters.layout)
-const isMobile = ref(window.innerWidth < 768)
 
-function handleResize() {
-  isMobile.value = window.innerWidth < 768
-}
+// 父子雙向同步
+watch(
+  () => props.drawer,
+  val => (localDrawer.value = val)
+)
+watch(localDrawer, val => emit("update:drawer", val))
 
 const { t } = useI18n()
 
@@ -99,19 +120,10 @@ const items = computed(() => [
     ],
   },
 ])
-
-onMounted(() => window.addEventListener("resize", handleResize))
-onBeforeUnmount(() => window.removeEventListener("resize", handleResize))
 </script>
 
 <style scoped>
-.qi-sidenav-head {
-  position: relative;
-  top: 0;
-}
-.qi-sidenav {
-  background-color: #222;
-}
+
 .fixed-sidenav {
   position: fixed !important;
   top: 0;
@@ -134,40 +146,5 @@ onBeforeUnmount(() => window.removeEventListener("resize", handleResize))
   overflow: hidden;
   background-color: inherit;
   padding: 10px 8px 8px 20px;
-}
-.qi-sidenav > a:first-child {
-  padding: 5px;
-}
-.qi-sidenav a:hover {
-  color: #f1f1f1;
-  background-color: #888;
-}
-.qi-sidenav a img {
-  width: 170px;
-  display: block;
-  margin: auto;
-}
-.sidenav-footer {
-  width: 100%;
-  height: fit-content;
-  position: absolute;
-  bottom: 0;
-}
-.sidenav-footer a {
-  padding: 5px;
-  height: 55px;
-  background: #333;
-  bottom: 0;
-}
-.sidenav-footer a img {
-  width: 145px;
-  display: block;
-  margin: auto;
-  height: 100%;
-}
-@media screen and (max-height: 450px) {
-  .qi-sidenav a {
-    font-size: 18px;
-  }
 }
 </style>
