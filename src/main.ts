@@ -4,8 +4,6 @@ import router from "./router"
 import store from "./store"
 import i18n from "@/assets/ts/i18n" // ✅ 你的 i18n.ts
 import directive from "@/directive/index"
-import ElementPlus from "element-plus"
-import "element-plus/dist/index.css"
 import {
   TitleComponent,
   TooltipComponent,
@@ -53,7 +51,6 @@ const vuetify = createVuetify({
 })
 
 const app = createApp(App)
-app.use(ElementPlus)
 app.use(vuetify)
 app.use(VueShortkey)
 app.use(store)

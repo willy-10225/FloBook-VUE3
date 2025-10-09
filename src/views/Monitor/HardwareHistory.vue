@@ -20,24 +20,56 @@
         </div>
       </v-col>
       <v-col cols="12" lg="3" sm="6">
-        <h4 class="mb-2 text-left">{{ $t("monitor.start-date") }}</h4>
-        <el-date-picker
-          v-model="startDate"
-          type="date"
-          :placeholder="$t('monitor.start-date')"
-          @change="alertFn"
-          style="width: 100%"
-        ></el-date-picker>
+        <v-menu
+          v-model="startMenu"
+          :close-on-content-click="false"
+          transition="scale-transition"
+          offset-y
+          min-width="auto"
+        >
+          <template #activator="{ props }">
+            <v-text-field
+              v-model="formattedStartDate"
+              v-bind="props"
+              :label="$t('monitor.start-date')"
+              readonly
+              style="width: 100%"
+            ></v-text-field>
+          </template>
+
+          <v-date-picker
+            v-model="startDate"
+            @update:model-value="alertFn"
+            :locale="$i18n.locale"
+            no-title
+          ></v-date-picker>
+        </v-menu>
       </v-col>
       <v-col cols="12" lg="3" sm="6">
-        <h4 class="mb-2 text-left">{{ $t("monitor.end-date") }}</h4>
-        <el-date-picker
-          v-model="endDate"
-          type="date"
-          :placeholder="$t('monitor.end-date')"
-          @change="alertFn"
-          style="width: 100%"
-        ></el-date-picker>
+        <v-menu
+          v-model="endmenu"
+          :close-on-content-click="false"
+          transition="scale-transition"
+          offset-y
+          min-width="auto"
+        >
+          <template #activator="{ props }">
+            <v-text-field
+              v-model="formattedEndDate"
+              v-bind="props"
+              :label="$t('monitor.end-date')"
+              readonly
+              style="width: 100%"
+            ></v-text-field>
+          </template>
+
+          <v-date-picker
+            v-model="endDate"
+            @update:model-value="alertFn"
+            :locale="$i18n.locale"
+            no-title
+          ></v-date-picker>
+        </v-menu>
       </v-col>
       <v-col cols="12" lg="2" sm="6" v-if="time">
         <v-select
@@ -167,7 +199,9 @@ const isDisplay = ref<boolean>(false)
 const startDate = ref<Date>(
   new Date(new Date().toISOString().split("T")[0] + " 00:00:00")
 )
+const startMenu = ref(false)
 const endDate = ref<Date>(new Date())
+const endmenu = ref(false)
 const userName = ref<string>("")
 const time_interval = ref<string>("10min")
 const numericalAlert = ref<boolean>(false)
@@ -307,7 +341,30 @@ const hwHistoryOption = ref<any>({
     },
   ],
 })
-
+const formattedEndDate = computed({
+  get: () => {
+    const d = endDate.value
+    const y = d.getFullYear()
+    const m = (d.getMonth() + 1).toString().padStart(2, "0")
+    const day = d.getDate().toString().padStart(2, "0")
+    return `${y}-${m}-${day}`
+  },
+  set: (val: string) => {
+    endDate.value = val ? new Date(val) : new Date()
+  },
+})
+const formattedStartDate = computed({
+  get: () => {
+    const d = startDate.value
+    const y = d.getFullYear()
+    const m = (d.getMonth() + 1).toString().padStart(2, "0")
+    const day = d.getDate().toString().padStart(2, "0")
+    return `${y}-${m}-${day}`
+  },
+  set: (val: string) => {
+    startDate.value = val ? new Date(val) : new Date()
+  },
+})
 const layout = computed(() => store.getters.layout)
 
 const changeLoadingState = (

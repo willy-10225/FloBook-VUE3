@@ -11,24 +11,56 @@
 
       <!-- 起始日期 -->
       <v-col cols="12" lg="4" sm="6">
-        <h4 class="mb-2 text-left">{{ $t("monitor.start-date") }}</h4>
-        <el-date-picker
-          v-model="startDateByUserPicked"
-          type="date"
-          placeholder="Start Date"
-          style="width: 100%"
-        />
+        <v-menu
+          v-model="startMenu"
+          :close-on-content-click="false"
+          transition="scale-transition"
+          offset-y
+          min-width="auto"
+        >
+          <template #activator="{ props }">
+            <v-text-field
+              v-model="formattedStartDate"
+              v-bind="props"
+              :label="$t('monitor.start-date')"
+              readonly
+              style="width: 100%"
+            ></v-text-field>
+          </template>
+
+          <v-date-picker
+            v-model="startDate"
+            :locale="$i18n.locale"
+            no-title
+          ></v-date-picker>
+        </v-menu>
       </v-col>
 
       <!-- 結束日期 -->
       <v-col cols="12" lg="4" sm="6">
-        <h4 class="mb-2 text-left">{{ $t("monitor.end-date") }}</h4>
-        <el-date-picker
-          v-model="endDateByUserPicked"
-          type="date"
-          placeholder="End Date"
-          style="width: 100%"
-        />
+        <v-menu
+          v-model="endmenu"
+          :close-on-content-click="false"
+          transition="scale-transition"
+          offset-y
+          min-width="auto"
+        >
+          <template #activator="{ props }">
+            <v-text-field
+              v-model="formattedEndDate"
+              v-bind="props"
+              :label="$t('monitor.end-date')"
+              readonly
+              style="width: 100%"
+            ></v-text-field>
+          </template>
+
+          <v-date-picker
+            v-model="endDate"
+            :locale="$i18n.locale"
+            no-title
+          ></v-date-picker>
+        </v-menu>
       </v-col>
 
       <!-- 群組選擇 -->
@@ -37,7 +69,6 @@
           v-model="groupname"
           :items="grouplist"
           :label="$t('monitor.group')"
-          class="group-selector"
           @update:modelValue="changelicense"
         />
       </v-col>
@@ -142,10 +173,12 @@ const licenseLogList = ref<LicenseLogItem[]>([])
 const AlllicenseLogList = ref<LicenseLogItem[]>([])
 const softwarename = ref<string>("ANSYS")
 const isDisplay = ref<boolean>(false)
-const startDateByUserPicked = ref<Date>(
+const startDate = ref<Date>(
   new Date(new Date().toISOString().split("T")[0] + " 00:00:00")
 )
-const endDateByUserPicked = ref<Date>(new Date())
+const startMenu = ref(false)
+const endDate = ref<Date>(new Date())
+const endmenu = ref(false)
 const numericalAlert = ref<boolean>(false)
 const emptyAlert = ref<boolean>(false)
 const groupname = ref<string>("ALL")
@@ -209,7 +242,30 @@ const barChartOption = {
   series: [],
   color: Color, // 這裡 Color 必須是一個顏色陣列，確保已定義
 }
-
+const formattedEndDate = computed({
+  get: () => {
+    const d = endDate.value
+    const y = d.getFullYear()
+    const m = (d.getMonth() + 1).toString().padStart(2, "0")
+    const day = d.getDate().toString().padStart(2, "0")
+    return `${y}-${m}-${day}`
+  },
+  set: (val: string) => {
+    endDate.value = val ? new Date(val) : new Date()
+  },
+})
+const formattedStartDate = computed({
+  get: () => {
+    const d = startDate.value
+    const y = d.getFullYear()
+    const m = (d.getMonth() + 1).toString().padStart(2, "0")
+    const day = d.getDate().toString().padStart(2, "0")
+    return `${y}-${m}-${day}`
+  },
+  set: (val: string) => {
+    startDate.value = val ? new Date(val) : new Date()
+  },
+})
 const userHistoryData = ref<ChartData>({
   legendData: [],
   yAxisData: [],
@@ -352,16 +408,9 @@ const validateInput = () => {
     groupname.value = "ALL"
   })
 
-  if (
-    startDateByUserPicked.value !== undefined &&
-    endDateByUserPicked.value !== undefined
-  ) {
-    if (startDateByUserPicked.value <= endDateByUserPicked.value) {
-      getLicenseHistory(
-        props.ip,
-        startDateByUserPicked.value,
-        endDateByUserPicked.value
-      )
+  if (startDate.value !== undefined && endDate.value !== undefined) {
+    if (startDate.value <= endDate.value) {
+      getLicenseHistory(props.ip, startDate.value, endDate.value)
       isDisplay.value = true
       emptyAlert.value = false
       numericalAlert.value = false
@@ -482,8 +531,8 @@ const showHistoryChart = (
               }
               totalTime =
                 getDuration(
-                  startDateByUserPicked.value.toISOString(),
-                  endDateByUserPicked.value.toISOString(),
+                  startDate.value.toISOString(),
+                  endDate.value.toISOString(),
                   1
                 ) * productTask
               usageRate = ((params.value / totalTime) * 100).toFixed(1)
@@ -533,14 +582,13 @@ const getDuration = (startTime: string, endTime: string, task: number) => {
   const MS_PER_HOUR = 60 * 60 * 1000
   let start: Date, end: Date, pickedStart: Date, pickedEnd: Date
 
-  pickedStart = new Date(startDateByUserPicked.value)
+  pickedStart = new Date(startDate.value)
 
-  if (!isToday(endDateByUserPicked.value)) {
-    const endDateStr =
-      endDateByUserPicked.value.toISOString().split("T")[0] + " 23:59:59"
+  if (!isToday(endDate.value)) {
+    const endDateStr = endDate.value.toISOString().split("T")[0] + " 23:59:59"
     pickedEnd = new Date(endDateStr)
   } else {
-    pickedEnd = new Date(endDateByUserPicked.value)
+    pickedEnd = new Date(endDate.value)
   }
 
   if (startTime && endTime) {
@@ -716,14 +764,6 @@ const groupprintdict = (key: string) => {
 </script>
 
 <style scoped>
-.group-selector {
-  width: 100px;
-  margin: 0;
-  padding: 20% 0%;
-  min-height: unset;
-  text-align: center;
-}
-
 h2 {
   margin: 0px;
 }
